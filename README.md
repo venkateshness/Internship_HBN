@@ -10,7 +10,7 @@
         * Total samples = Duration X Sampling Frequency -> 174369
         * Dimension = (total samples, no. of channels)
         * Events (States during the EEG): 90, 20, 30 which represents start of the recording, eyes-open and eyes-closed respectively
-        * Subjects: NDARAK738BGC, NDARBF851NH6
+        * Subjects: 
   * Resource (Project-related): https://docs.google.com/document/d/1YkX0Mfeq030oCQQDL4xb87XxXjqXyLqncg1FA7nANp0
   * Tool: https://mne.tools/stable/index.html, among other typical data-manipulating packages
   

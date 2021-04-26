@@ -5,13 +5,19 @@
     * Source: http://fcon_1000.projects.nitrc.org/indi/cmi_healthy_brain_network/
     * Characteristics: 
         * Number of Electrodes (no. of channels) : 128
-        * Sampling Frequency: 500hz (In other words 500 samples per second)
+        * Sampling Frequency: 500hz
         * Duration: ~348.73 seconds
         * Total samples = Duration X Sampling Frequency -> 174369
         * Dimension = (total samples, no. of channels)
-# Goal:
-  * Source Signal Reconstruction
-  * Inter-subjects Study
+        * Events (States during the EEG): 90, 20, 30 which represents start of the recording, eyes-open and eyes-closed respectively
+        * Subjects: NDARAK738BGC, NDARBF851NH6
+  * Resource (Project-related): https://docs.google.com/document/d/1YkX0Mfeq030oCQQDL4xb87XxXjqXyLqncg1FA7nANp0
+  * Tool: https://mne.tools/stable/index.html, among other typical data-manipulating packages
+  
+  
+# Goal: Of two folds
+  * Source Signal Reconstruction (Activation region's)
+  * Inter-subjects Study = End goal
   
   
 

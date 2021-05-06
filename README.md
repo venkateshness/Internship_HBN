@@ -6,8 +6,8 @@
     * Characteristics: 
         * Number of Electrodes (no. of channels) : 128
         * Sampling Frequency: 500hz
-        * Duration: ~348.73 seconds
-        * Total samples = Duration X Sampling Frequency -> 174369
+        * Duration: ~352.77 seconds
+        * Total samples = Duration X Sampling Frequency -> 176386
         * Dimension = (total samples, no. of channels)
         * Events (States during the EEG): 90, 20, 30 which represents start of the recording, eyes-open and eyes-closed respectively
         * Subjects: NDARBF805EHN, NDARBG574KF4 (from https://partage.imt.fr/index.php/s/97wDFxzLQ5NgkNJ *not* on HBN link)

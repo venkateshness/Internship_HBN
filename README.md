@@ -16,7 +16,7 @@
   * Tool: https://mne.tools/stable/index.html, among other typical data-manipulating packages
   
 
-# Details related to the project as part-time:
+# Specifics to the project as part-time:
 ### Goal: EEG-data
   * Source Signal Reconstruction (Activation region's)
   * Inter-subjects Study = End goal
@@ -25,8 +25,8 @@
 ### Goal: (Subjected to change)
  * Integration of EEG-fMRI for the inter-subjects Study 
  * Exploiting Graph Signal Processing to understand the neuronal connectomes
-### Features:
- * Dataset:
+### Features: 
+ * Dataset:(In addition to the information from commonalities)
    * Events: 83, 103 (Video-watching starts and ends respectively)
 
 

@@ -6,10 +6,10 @@
   * Inter-subjects Study = End goal
   
 # Details related to the project as full-time (internship)
-## Goal: (Subjected to change)
+### Goal: (Subjected to change)
  * Integration of EEG-fMRI for the inter-subjects Study 
  * Exploiting Graph Signal Processing to understand the neuronal connectomes
-## Number of Subjects: 10
+### Number of Subjects: 10
 
 # Commonalities:
   * Dataset: 

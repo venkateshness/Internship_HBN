@@ -1,7 +1,7 @@
 # This project has been started as a part-time project during the 3rd semester of my masters program and has been continued as part of the final-year internship
 
 # Details related to the project as part-time:
-## Goal: EEG-data
+### Goal: EEG-data
   * Source Signal Reconstruction (Activation region's)
   * Inter-subjects Study = End goal
   

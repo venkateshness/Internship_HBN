@@ -1,1 +1,1 @@
-numpy matplotlib sns mne pandas scipy nilearn surfplot plotly chart_studio
+numpy matplotlib seaborn mne pandas scipy nilearn surfplot plotly chart_studio

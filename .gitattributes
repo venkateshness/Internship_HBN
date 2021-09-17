@@ -1,4 +1,0 @@
-$ git clone git@github.com:venky4/Internship_HBN.git
-$ cd typescript-library-starter
-$ linguist --breakdown .
-* linguist-vendored

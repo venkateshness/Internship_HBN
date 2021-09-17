@@ -1,6 +1,7 @@
 import mne
 import numpy as np
 
+
 def csv_to_raw_mne(path_to_file,path_to_montage_ses,fs,path_to_events,filename,state,montage = 'GSN-HydroCel-129'):
     ''' Load csv files of data, chan locations and events and return a raw mne instance'''
     data = np.loadtxt(path_to_file,delimiter =',')

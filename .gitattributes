@@ -2,6 +2,3 @@ $ git clone git@github.com:venky4/Internship_HBN.git
 $ cd typescript-library-starter
 $ linguist --breakdown .
 * linguist-vendored
-*.c linguist-vendored=false
-*.h linguist-vendored=false
-*.m linguist-vendored=false

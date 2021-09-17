@@ -2,7 +2,7 @@
 
 # Commonalities:
   * Dataset: 
-    * Source: <dt> fcon_1000.projects.nitrc.org/indi/cmi_healthy_brain_network/ </dt>
+    * Source: http://fcon_1000.projects.nitrc.org/indi/cmi_healthy_brain_network/
     * Characteristics: 
         * Number of Electrodes (no. of channels) : 128
         * Sampling Frequency: 500hz

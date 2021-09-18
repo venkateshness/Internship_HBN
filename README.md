@@ -1,4 +1,4 @@
-# This project has been started as a part-time project during the 3rd semester of my masters program and has been continued as part of the final-year internship
+# This project has been carried out as part of the final-year internship of the MSc program
 
 # Commonalities:
   * Dataset: 

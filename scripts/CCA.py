@@ -2,7 +2,7 @@ import numpy as np
 from scipy.linalg import eigh
 from timeit import default_timer
 
-
+# Source : https://github.com/pa-ak/ISC-Inter-Subject-Correlations
 def train_cca(data):
     """Run Correlated Component Analysis on your training data.
         Parameters:
@@ -34,11 +34,11 @@ def train_cca(data):
 
         # Rij
         Rij = np.swapaxes(np.reshape(np.cov(cond), (N, D, N, D)), 1, 2)
-        
+
         # Rw
         Rw = Rw + np.mean([Rij[i, i, :, :]
                            for i in range(0, N)], axis=0)
-        
+
         # Rb
         Rb = Rb + np.mean([Rij[i, j, :, :]
                            for i in range(0, N)
@@ -48,14 +48,15 @@ def train_cca(data):
     Rw, Rb = Rw/C, Rb/C
 
     # Regularization
-    Rw_reg = (1 - gamma) * Rw + gamma * np.mean(eigh(Rw)[0]) * np.identity(Rw.shape[0])
+    Rw_reg = (1 - gamma) * Rw + gamma * \
+        np.mean(eigh(Rw)[0]) * np.identity(Rw.shape[0])
 
     # ISCs and Ws
-    [ISC, W] = eigh(Rb, Rw_reg) #Eigen values, W matrix
-    
+    [ISC, W] = eigh(Rb, Rw_reg)  # Eigen values, W matrix
+
     # Make descending order
-    ISC, W = ISC[::-1], W[:, ::-1] 
-    #print(ISC[0])
+    ISC, W = ISC[::-1], W[:, ::-1]
+    # print(ISC[0])
     stop = default_timer()
 
     print(f'Elapsed time: {round(stop - start)} seconds.')
@@ -91,7 +92,7 @@ def apply_cca(X, W, fs):
     # gamma = 0.1
     window_sec = 5
     X = X.reshape(D * N, T)
-    
+
     # Rij
     Rij = np.swapaxes(np.reshape(np.cov(X), (N, D, N, D)), 1, 2)
 
@@ -106,11 +107,12 @@ def apply_cca(X, W, fs):
                   for j in range(0, N) if i != j], axis=0)
 
     # ISCs
-    ISC = np.sort(np.diag(np.transpose(W) @ Rb @ W) / np.diag(np.transpose(W) @ Rw @ W))[::-1]
+    ISC = np.sort(np.diag(np.transpose(W) @ Rb @ W) /
+                  np.diag(np.transpose(W) @ Rw @ W))[::-1]
 
     # Scalp projections
-    A = np.linalg.solve(Rw @ W, np.transpose(W) @ Rw @ W)  # a, b. 
-    
+    A = np.linalg.solve(Rw @ W, np.transpose(W) @ Rw @ W)  # a, b.
+
     # ISC by subject
     print('by subject is calculating')
     ISC_bysubject = np.empty((D, N))
@@ -122,38 +124,38 @@ def apply_cca(X, W, fs):
         Rb = np.mean([Rb + 1 / (N - 1) * (Rij[subj_k, subj_l, :, :] + Rij[subj_l, subj_k, :, :])
                       for subj_l in range(0, N) if subj_k != subj_l], axis=0)
 
-        ISC_bysubject[:, subj_k] = np.diag(np.transpose(W) @ Rb @ W) / np.diag(np.transpose(W) @ Rw @ W)
+        ISC_bysubject[:, subj_k] = np.diag(np.transpose(
+            W) @ Rb @ W) / np.diag(np.transpose(W) @ Rw @ W)
 
     # ISC per second
     print('by persecond is calculating')
-    ISC_persecond = np.empty((D, int(T / fs) ))
+    ISC_persecond = np.empty((D, int(T / fs)))
     window_i = 0
 
     for t in range(0, T, fs):
 
-        Xt = X[:, t:t+window_sec*fs] #[subj 1, subj 2........subj 10]
-       
+        Xt = X[:, t:t+window_sec*fs]  # [subj 1, subj 2........subj 10]
+
         # the covariance
-        Rij = np.cov(Xt) #910, 910for all the subjects 
+        Rij = np.cov(Xt)  # 910, 910for all the subjects
         # <----10 subjects---->
         #  [sub1, sub2... sub10 ] sub 1
         #  [sub1, sub2... sub10 ] sub 2
         #  [sub1, sub2... sub10 ] ..
         #  [sub1, sub2... sub10 ] ..
         #   [sub1, sub2... sub10 ] sub 10
-        
-        
-        
-        Rw = np.mean([Rij[i:i + D, i:i + D] # Correlation diagonally (itself)
-                      for i in range(0, D * N, D)], axis=0) 
-        
+
+        Rw = np.mean([Rij[i:i + D, i:i + D]  # Correlation diagonally (itself)
+                      for i in range(0, D * N, D)], axis=0)
+
         Rb = np.mean([Rij[i:i + D, j:j + D]
                       for i in range(0, D * N, D)
-                      for j in range(0, D * N, D) if i != j], axis=0) #Correlation with other subjects
-        
-        ISC_persecond[:, window_i] = np.diag(np.transpose(W) @ Rb @ W) / np.diag(np.transpose(W) @ Rw @ W)
+                      for j in range(0, D * N, D) if i != j], axis=0)  # Correlation with other subjects
+
+        ISC_persecond[:, window_i] = np.diag(np.transpose(
+            W) @ Rb @ W) / np.diag(np.transpose(W) @ Rw @ W)
         window_i += 1
-        
+
     stop = default_timer()
     print(f'Elapsed time: {round(stop - start)} seconds.')
 

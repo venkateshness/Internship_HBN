@@ -14,6 +14,8 @@ bem = op.join(fs_dir, 'bem', 'fsaverage-5120-5120-5120-bem-sol.fif')
 
 
 def fwd(raw):
+#    """Produces the fsaverage-based forward model with 20484 vertices across both hemispheres
+
     fwd_model = mne.make_forward_solution(
         raw.info, trans=trans, src=source_space, bem=bem, eeg=True, mindist=5.0)
 

@@ -6,6 +6,7 @@ lambda2 = 1. / snr ** 2
 
 
 def compute(raw, fwd_model):
+    
     freq_bands = dict(
         delta=(2, 4), theta=(5, 7), alpha=(8, 13), beta=(15, 29), gamma=(30, 45))
     topos = dict(vv=dict(), opm=dict())

@@ -6,7 +6,7 @@ import epochs_slicing
 import matplotlib.pyplot as plt
 import mne
 import raw_time_domain
-from imp import reload # force the mouse pointer to take the changes into account
+from imp import reload  # force the mouse pointer to take the changes into account
 import numpy as np
 
 #'exec(%matplotlib qt)'
@@ -90,7 +90,7 @@ noise_covariance = mne.compute_covariance(
 
 '''Forward Model & Inverse Operator set up'''
 
-reload(source_inversion) 
+reload(source_inversion)
 forward_model = fwd_model.fwd(resting_state_sub2_raw)
 resting_state_cov, resting_state_inverse_operator = source_inversion.inversion(
     raw=resting_state_sub2_raw, fwd_model=forward_model, cov=noise_covariance)
@@ -103,4 +103,3 @@ reload(inverse_epochs)
 stc = inverse_epochs.apply(
     data=epochs_resampled['20'], inverse_operator=resting_state_inverse_operator, raw=False)
 # %%
-

@@ -17,7 +17,7 @@ method = "eLORETA"
 snr = 3.
 lambda2 = 1. / snr ** 2
 
-def inversion(raw, epochs,fwd_model,tmax,tmin,method,cov):
+def inversion(raw,fwd_model,cov):
     #fwd_model = mne.make_forward_solution(raw.info, trans=trans, src=source_space, bem=bem, eeg=True, mindist=5.0)
     
     #cov = mne.compute_covariance(epochs,tmax=tmax,method=method,tmin=tmin)

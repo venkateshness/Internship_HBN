@@ -1,26 +1,50 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+<<<<<<< HEAD
 # In[1]:
 
 
 from logging import error
+=======
+# In[2]:
+
+
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 import numpy as np
 import matplotlib.pyplot as plt
 from pygsp import graphs, filters
 from pygsp import plotting as gsp_plt
 from nilearn import image, plotting, datasets
+<<<<<<< HEAD
 
+=======
+'exec(%matplotlib tk)'
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 # In[2]:
 
 
+<<<<<<< HEAD
 from pathlib import Path
 from scipy import io as sio
 from pygsp import graphs
 from seaborn.utils import axis_ticklabels_overlap
 
 path_Glasser='/homes/v20subra/S4B2/GSP/Glasser_masker.nii.gz'
+=======
+
+
+
+# In[3]:
+
+
+from pathlib import Path
+from scipy import io as sio
+from pygsp import graphs
+
+path_Glasser='S4B2/GSP/Glasser_masker.nii.gz'
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 res_path=''
 
 # Load structural connectivity matrix
@@ -30,7 +54,11 @@ coordinates = sio.loadmat('/homes/v20subra/S4B2/GSP/Glasser360_2mm_codebook.mat'
 
 
 #G_Comb = graphs.Graph(connectivity,gtype='HCP subject',lap_type='combinatorial',coords=coordinates)# combinatorial laplacian
+<<<<<<< HEAD
 G=graphs.Graph(connectivity,gtype='HCP subject',lap_type='combinatorial',coords=coordinates) #
+=======
+G=graphs.Graph(connectivity,gtype='HCP subject',lap_type='normalized',coords=coordinates) #
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 #G_RandW=graphs.Graph(connectivity,gtype='HCP subject',lap_type='normalized',coords=coordinates) #
 print(G.is_connected())
 
@@ -41,13 +69,21 @@ D=np.array(G.dw)
 D.shape
 
 
+<<<<<<< HEAD
 # In[3]:
+=======
+# In[4]:
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 
 G.compute_fourier_basis()
 
 
+<<<<<<< HEAD
 # In[4]:
+=======
+# In[5]:
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 
 import numpy as np
@@ -55,7 +91,11 @@ with np.load(f"/homes/v20subra/S4B2/GSP/hcp/atlas.npz") as dobj:
     atlas = dict(**dobj)
 
 
+<<<<<<< HEAD
 # In[5]:
+=======
+# In[6]:
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 
 high = np.load('/users/local/Venkatesh/Generated_Data/high_isc_averaged_with_cov.npz')['high_isc_averaged']
@@ -69,7 +109,11 @@ np.shape(low)
 np.shape(low[0])
 
 
+<<<<<<< HEAD
 # In[7]:
+=======
+# In[8]:
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 
 low_gft = [G.gft(np.array(low[0])),G.gft(np.array(low[1])), 
@@ -79,7 +123,11 @@ low_gft = [G.gft(np.array(low[0])),G.gft(np.array(low[1])),
        G.gft(np.array(low[8])), G.gft(np.array(low[9]))]
 
 
+<<<<<<< HEAD
 # In[8]:
+=======
+# In[9]:
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 
 high_gft = [G.gft(np.array(high[0])),G.gft(np.array(high[1])), 
@@ -91,7 +139,11 @@ high_gft = [G.gft(np.array(high[0])),G.gft(np.array(high[1])),
 differenced = np.array(high_gft) - np.array(low_gft)
 
 
+<<<<<<< HEAD
 # In[9]:
+=======
+# In[10]:
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 
 differenced_low_freq = differenced[:,1:51,:]
@@ -99,6 +151,7 @@ differenced_medium_freq = differenced[:,51:200,:]
 differenced_high_freq = differenced[:,200:,:]
 
 
+<<<<<<< HEAD
 # In[10]:
 
 
@@ -106,6 +159,16 @@ differenced_high_freq = differenced[:,200:,:]
 
 
 # In[ ]:
+=======
+# In[ ]:
+
+
+np.shape(np.std(differenced_high_freq,axis=0))
+
+
+# In[13]:
+
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 
 
@@ -138,16 +201,25 @@ heatmap(differenced_high_freq,'Spectrogram for 200-360 freqs (std thru subjs)',1
 
 # ### Subject-wise Spectra, while Time being variability
 
+<<<<<<< HEAD
 
 # ### Subject-wise Spectra, while Time being variability
 
 # In[44]:
+=======
+# In[37]:
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 
 def mean_std(freq,ax):
     if ax>2:
+<<<<<<< HEAD
         d = np.average(np.array(np.abs(freq)),axis=2)[:,1:]
     else: d = np.abs(freq[1:,:])
+=======
+        d = np.average(np.array(np.abs(freq)),axis=2)
+    else: d = np.abs(freq)
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
     mean_t = np.mean(d,axis=0)
     std_t = 2 * np.std(d,axis=0)
     top = mean_t + std_t
@@ -164,13 +236,18 @@ def mean_std(freq,ax):
 
 # ### Power distribution finding
 
+<<<<<<< HEAD
 # In[63]:
+=======
+# In[38]:
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 
 values,_,_,_ = mean_std(np.array(low_gft),3)
 np.sum(values)/2
 
 
+<<<<<<< HEAD
 # In[64]:
 
 
@@ -181,6 +258,18 @@ np.sum(values[:177])
 
 
 G.e[178]
+=======
+# In[39]:
+
+
+np.sum(values[:142])
+
+
+# In[42]:
+
+
+G.e[143]
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 
 # ### Dichotomy 
@@ -189,8 +278,13 @@ G.e[178]
 
 
 #1
+<<<<<<< HEAD
 l = np.where(G.e<=11.3275)[0][1:]
 h = np.where(G.e>11.3275)[0]
+=======
+l = np.where(G.e<=1.024)[0][1:]
+h = np.where(G.e>1.024)[0]
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 
 # In[65]:
@@ -255,12 +349,16 @@ plt.show()
 
 
 # ### Frequency-wise
+<<<<<<< HEAD
 # In[]
 
 
 b = np.arange(0,360)
 b
 
+=======
+# 
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 # In[54]:
 
@@ -302,11 +400,19 @@ plt.show()
 
 # ### Subject-wise
 
+<<<<<<< HEAD
 # In[ ]:
 
 """ 
 get_ipython().run_line_magic('matplotlib', 'qt')
 get_ipython().run_line_magic('gui', 'qt') """
+=======
+# In[89]:
+
+
+get_ipython().run_line_magic('matplotlib', 'qt')
+get_ipython().run_line_magic('gui', 'qt')
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 
 def filters_subj(isc,band,length):
@@ -361,7 +467,11 @@ plt.show()
 # In[52]:
 
 
+<<<<<<< HEAD
 """ np.savez_compressed('data.npz',mean_t1=mean_t1, mean_t2=mean_t2,mean_std=mean_std )
+=======
+np.savez_compressed('data.npz',mean_t1=mean_t1, mean_t2=mean_t2,mean_std=mean_std )
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a
 
 
 high_isc = [(np.array(averaging_by_parcellation(src_high1))),(np.array(averaging_by_parcellation(src_high2))), 
@@ -378,6 +488,7 @@ low_isc = [(np.array(averaging_by_parcellation(src_low1))),(np.array(averaging_b
 
 
 diff = np.array(high_isc) - np.array(low_isc)
+<<<<<<< HEAD
  """
 
 
@@ -579,3 +690,19 @@ plotting.plot_glass_brain(U0_brain,title=f'Vector {6}',colorbar=True,plot_abs=Fa
 
 U0_brain.to_filename('6th eigen vector.nii.gz')
 # %%
+=======
+
+
+
+# In[5]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+>>>>>>> 916c225612704adbf1cadf8142cfcc22f5cfc63a

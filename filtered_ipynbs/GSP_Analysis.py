@@ -11,6 +11,7 @@ from pygsp import graphs, filters
 from pygsp import plotting as gsp_plt
 from nilearn import image, plotting, datasets
 
+
 # In[2]:
 
 
@@ -125,6 +126,8 @@ def heatmap(diff,title,start1,end1,div,start2,end2,operation,ylabel):
     plt.title(title)
     plt.tight_layout()
     plt.figure()
+    plt.show(block=False)
+    print('1')
 heatmap(differenced_low_freq,'Spectrogram for 1-50 freqs (averaged thru subjs)',1,50,2,1,50,'AVG','gFreqs')# (differenced high with low & averaged through subjects )
 heatmap(differenced_medium_freq,'Spectrogram for 50-200 freqs (averaged thru subjs)',1,150,5,50,200,'AVG','gFreqs')# (differenced high with low & averaged through subjects )
 heatmap(differenced_high_freq,'Spectrogram for 200-360 freqs (averaged thru subjs)',1,160,5,200,360,'AVG','gFreqs')# (differenced high with low & averaged through subjects )
@@ -244,7 +247,7 @@ for i in range(2):
         
         #plt.ylabel('log (gPSD)')
         c = c + 1
-plt.suptitle('Dichotomized the eigen values(at 1.02) such that the power distribution is same & sliced the PSD using the same [Low freq = blue] Note: used np.abs while using indicator')
+plt.suptitle('Dichotomized the eigen values such that the power distribution is same & sliced the PSD using the same [Low freq = blue] Note: used np.abs while using indicator')
 plt.show()
 
 # ideas:
@@ -295,7 +298,7 @@ for i in range(2):
         plt.axvline(x=250, linestyle = '--', color='g')
     
         c = c + 1
-plt.suptitle('Dichotomized the eigen values(at 1.02) such that the power distribution is same & sliced the PSD using the same [blue = High ISC]')
+plt.suptitle('Dichotomized the eigen values such that the power distribution is same & sliced the PSD using the same [blue = High ISC]')
 plt.show()
 
 
@@ -323,8 +326,8 @@ def filters_subj(isc,band,length):
     return cll
 
 #def lowISC_high_ISC(*typ):
-a = 2  # number of rows
-b = 5  # number of columns
+a = 1  # number of rows
+b = 2  # number of columns
 c = 1  # initialize plot counter
 plt.figure(figsize=(10,10))
 typ = {'High ISC':high,'Low ISC':low}
@@ -483,9 +486,11 @@ std_err2 = scipy.stats.sem(np.mean(low_gft,axis=2))
 # %%
 
 
-global_mean = np.mean((np.mean(high_gft,axis=2)),axis=0)
+global_mean = mean_std(high_gft,ax=3)[0]
 
-global_mean2 = np.mean((np.mean(low_gft,axis=2)),axis=0)
+
+global_mean2 = mean_std(low_gft,ax=3)[0]
+
 
 print(np.shape(global_mean))
 print([np.sum(std_err[:100]),np.sum(std_err2[:100])])
@@ -527,8 +532,6 @@ ax.set_xticks(x)
 ax.set_xticklabels(labels)
 ax.legend()
 
-ax.bar_label(rects1, padding=3)
-ax.bar_label(rects2, padding=3)
 
 fig.tight_layout()
 
@@ -577,4 +580,82 @@ plotting.plot_glass_brain(U0_brain,title=f'Vector {6}',colorbar=True,plot_abs=Fa
 # %%
 
 U0_brain.to_filename('6th eigen vector.nii.gz')
+# %%
+# %%
+
+high_gft[0]
+
+# %%
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+sns.set_theme()
+
+labels = ['Low', 'Med', 'High']
+men_means = [np.sum(std_err[:50]), np.sum(std_err[50:200]),np.sum(std_err[200:])]
+women_means = [np.sum(std_err2[:50]), np.sum(std_err2[50:200]),np.sum(std_err2[200:])]
+
+
+x = np.arange(len(labels))  # the label locations
+width = 0.35  # the width of the bars
+
+fig, ax = plt.subplots()
+rects1 = ax.bar(x - width/2, men_means, width, label='High ISC', align='center', alpha=0.5, ecolor='black', capsize=10)
+rects2 = ax.bar(x + width/2, women_means, width, label='Low ISC', align='center', alpha=0.5, ecolor='black', capsize=10)
+
+# Add some text for labels, title and custom x-axis tick labels, etc.
+ax.set_ylabel('SEM')
+ax.set_title('SEM of the gPSD freq-wise (after trichotomizing)')
+ax.set_xticks(x)
+ax.set_xticklabels(labels)
+ax.legend()
+
+
+fig.tight_layout()
+
+plt.show()
+# %%
+
+
+
+#ttest
+
+print('for low freq       :',scipy.stats.mstats.ttest_rel(global_mean2[:50],global_mean[:50]))
+print('for medium         :',scipy.stats.mstats.ttest_rel(global_mean2[50:200],global_mean[50:200]))
+
+print('for high           :',scipy.stats.mstats.ttest_rel(global_mean2[200:],global_mean[200:]))
+
+# %%
+low_group = np.hstack([global_mean2[:50],global_mean[:50]])
+med_group = np.hstack([global_mean2[50:200],global_mean[50:200]])
+high_group = np.hstack([global_mean2[200:],global_mean[200:]])
+
+
+
+scipy.stats.f_oneway(low_group,med_group,high_group)
+
+# %%
+from pylab import figure, show, legend, ylabel
+ 
+# create the general figure
+fig1 = figure()
+ 
+# and the first axes using subplot populated with data 
+ax1 = fig1.add_subplot(111)
+line1 = ax1.plot([1,3,4,5,2], 'o-')
+ylabel("Left Y-Axis Data")
+ 
+# now, the second axes that shares the x-axis with the ax1
+ax2 = fig1.add_subplot(111, sharex=ax1, frameon=False)
+line2 = ax2.plot([10,40,20,30,50], 'xr-')
+ax2.yaxis.tick_right()
+ax2.yaxis.set_label_position("right")
+ylabel("Right Y-Axis Data")
+ 
+# for the legend, remember that we used two different axes so, we need 
+# to build the legend manually
+legend((line1, line2), ("1", "2"))
+show()
+
 # %%

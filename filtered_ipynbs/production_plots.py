@@ -124,8 +124,6 @@ import matplotlib.ticker as ticker
 
 import matplotlib
 
-import matplotlib
-
 fig=plt.figure(figsize = (15, 15))
 grid = fig.add_gridspec(2,2, wspace =0.2, hspace = 0.3)
 #grid = gridspec.GridSpec(2,2, wspace =0.3, hspace = 0.8)

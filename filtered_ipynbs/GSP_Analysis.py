@@ -133,9 +133,9 @@ heatmap(differenced_medium_freq,'Spectrogram for 50-200 freqs (averaged thru sub
 heatmap(differenced_high_freq,'Spectrogram for 200-360 freqs (averaged thru subjs)',1,160,5,200,360,'AVG','gFreqs')# (differenced high with low & averaged through subjects )
 
 
-heatmap(differenced_low_freq,'Spectrogram for 1-50 freqs (std thru subjs)',1,50,2,1,50,'std','gFreqs')# (differenced high with low & averaged through subjects )
-heatmap(differenced_medium_freq,'Spectrogram for 50-200 freqs (std thru subjs)',1,150,5,50,200,'std','gFreqs')# (differenced high with low & averaged through subjects )
-heatmap(differenced_high_freq,'Spectrogram for 200-360 freqs (std thru subjs)',1,160,5,200,360,'AVG','gFreqs')# (differenced high with low & averaged through subjects )
+#heatmap(differenced_low_freq,'Spectrogram for 1-50 freqs (std thru subjs)',1,50,2,1,50,'std','gFreqs')# (differenced high with low & averaged through subjects )
+#heatmap(differenced_medium_freq,'Spectrogram for 50-200 freqs (std thru subjs)',1,150,5,50,200,'std','gFreqs')# (differenced high with low & averaged through subjects )
+#heatmap(differenced_high_freq,'Spectrogram for 200-360 freqs (std thru subjs)',1,160,5,200,360,'AVG','gFreqs')# (differenced high with low & averaged through subjects )
 
 
 # ### Subject-wise Spectra, while Time being variability
@@ -396,7 +396,6 @@ print(G.e[0])
 # In[ ]:
 
 
-
 # In[71]:
 
 
@@ -414,14 +413,14 @@ for i in range(2):
         mean_t2,std_t2, top2, bottom2= mean_std(low_gft,3)
         
         plt.legend()
-        plt.plot(range(177),mean_t1[:177],color='r')
-        plt.fill_between(range(177),bottom1[:177],top1[:177], color='r', alpha=.1,label='High ISC')
-        plt.plot(range(177),mean_t2[:177],color='b')
-        plt.fill_between(range(177),bottom2[:177], top2[:177], color='b', alpha=.1,label='Low ISC')
+        plt.plot(range(359),mean_t1[:],color='r')
+        plt.fill_between(range(359),bottom1[:],top1[:], color='r', alpha=.1,label='High ISC')
+        plt.plot(range(359),mean_t2[:],color='b')
+        plt.fill_between(range(359),bottom2[:], top2[:], color='b', alpha=.1,label='Low ISC')
         plt.ylabel('gPSDs')
         plt.xlabel('Eigen values')
         plt.title('Graph PSD for both the conditions while subject being the variability for the low freq')
-        plt.xticks(ticks=[0,25,50,75,100,125,150,175],labels=[ 0.04,3.58, 4.85, 6.29, 7.57, 8.96, 9.9,11.17],rotation='horizontal')
+        plt.xticks(ticks=np.arange(1,360,44),labels=np.round(G.e[np.arange(1,360,44)],decimals=2),rotation='horizontal')
         #plt.axvline(x=250, linestyle = '--', color='g')
         
         #plt.ylabel('log (gPSD)')
@@ -505,6 +504,8 @@ np.sum(std_err2[250:])
 
 np.sum(std_err[250:])
 # %%
+
+
 # %%
 
 import matplotlib.pyplot as plt
@@ -516,7 +517,8 @@ labels = ['Low', 'Med', 'High']
 men_means = [np.sum(global_mean[:50]), np.sum(global_mean[50:200]),np.sum(global_mean[200:])]
 women_means = [np.sum(global_mean2[:50]), np.sum(global_mean2[50:200]),np.sum(global_mean2[200:])]
 error = [sum(std_err[:50]),sum(std_err[50:200]),sum(std_err[200:])]
-
+import pandas as pd
+data= pd.DataFrame({'labels':labels,'gPSD_low':men_means,'gPSD_high':women_means},index=None)
 
 x = np.arange(len(labels))  # the label locations
 width = 0.35  # the width of the bars
@@ -525,11 +527,22 @@ fig, ax = plt.subplots()
 rects1 = ax.bar(x - width/2, men_means, width, label='High ISC',yerr=error, align='center', alpha=0.5, ecolor='black', capsize=10)
 rects2 = ax.bar(x + width/2, women_means, width, label='Low ISC',yerr=error, align='center', alpha=0.5, ecolor='black', capsize=10)
 
+ylab = "gPSD"
 # Add some text for labels, title and custom x-axis tick labels, etc.
-ax.set_ylabel('gPSD')
+ax.set_ylabel(ylab)
 ax.set_title('Global Average of the gPSD freq-wise (after trichotomizing) while SEM being error bars')
 ax.set_xticks(x)
 ax.set_xticklabels(labels)
+order = ['low ISC','high ISC'] 
+from statannot import add_stat_annotation
+add_stat_annotation(ax,data=data_fin, y='gPSD', x ='labels', hue='cond',
+                    box_pairs=[(("Low", "Low_ISC"), ("Low", "High_ISC")),
+                                (("Med", "Low_ISC"), ("Med", "High_ISC")),
+                                (("High", "Low_ISC"), ("High", "High_ISC")),
+                                (("Low","Med","High"))], 
+                                perform_stat_test=False, pvalues=[0.053,1.143759538530142e-09,1.0396018685855328e-08, 0.005],
+                    text_format='full', loc='inside', verbose=2)
+
 ax.legend()
 
 
@@ -540,10 +553,8 @@ plt.show()
 
 # %%
 
-std_err[:50]
-# %%
-
-
+box_pairs=[(("Low", "Low_ISC"), ("High", "High_ISC"))],
+len(box_pairs)
 #font-size = 14
 #line_width = 2
 #subplot-grid
@@ -618,9 +629,6 @@ plt.show()
 # %%
 
 
-
-#ttest
-
 print('for low freq       :',scipy.stats.mstats.ttest_rel(global_mean2[:50],global_mean[:50]))
 print('for medium         :',scipy.stats.mstats.ttest_rel(global_mean2[50:200],global_mean[50:200]))
 
@@ -657,5 +665,212 @@ ylabel("Right Y-Axis Data")
 # to build the legend manually
 legend((line1, line2), ("1", "2"))
 show()
+
+# %%
+
+df = sns.load_dataset("tips")
+
+# %%
+df
+# %%
+#hue = low, high
+#y=gpsd
+#x = low med high
+
+# %%
+import pandas as pd
+data = pd.DataFrame({'labels':labels,'gPSD':women_means})
+
+data2 = pd.DataFrame({'labels':labels,'gPSD':men_means})
+# %%
+data_fin = data.append(data2,ignore_index=True)
+data_fin['cond'] = ['Low_ISC','Low_ISC','Low_ISC','High_ISC','High_ISC','High_ISC']
+# %%
+
+data_fin
+
+# %%
+np.shape(low_gft)
+# %%
+
+
+
+# %%
+
+
+import pandas as pd
+fig=plt.figure(figsize = (17, 17))
+import seaborn
+seaborn.despine(left=True, bottom=True, right=True)
+
+plt.rc('font', family='serif')
+grid = fig.add_gridspec(6,5, wspace =1.3, hspace = 1.2)
+
+#grid = gridspec.GridSpec(2,2, wspace =0.3, hspace = 0.8)
+g1 = fig.add_subplot(grid[0:2, :2])
+g2 = fig.add_subplot(grid[0:4, 2:])
+g3 = fig.add_subplot(grid[2:4, :2])
+
+g4 = fig.add_subplot(grid[4:, :2])
+g5 = fig.add_subplot(grid[4:, 2:])
+import matplotlib
+def heatmap(diff,title,start1,end1,div,start2,end2,operation,ylabel):
+    
+
+    #fig, ax = plt.subplots()
+
+    cmap_reversed = matplotlib.cm.get_cmap('Spectral').reversed()
+    if operation == 'std':
+        svm = sns.heatmap(np.std(diff,axis=0),cmap=cmap_reversed,ax=g1) 
+    else:
+        svm = sns.heatmap(np.average(diff,axis=0),cmap=cmap_reversed,ax=g1) 
+    g1.set_ylabel('Graph Frequencies')
+    g1.set_xlabel('Time (s)')
+    xticks= [0,125,250,375,500]
+    g1.set_xticks([])
+    g1.set_xticks(xticks)
+    g1.set_xticklabels(labels=[-0.5,-0.25,0,0.25,0.5],rotation='horizontal')
+    yticks= np.arange(0,50,3)
+    g1.set_yticks([])
+    g1.set_yticks(yticks)
+    g1.set_yticklabels(labels=np.arange(1,50,3),rotation='horizontal')
+    
+    
+    g1.yaxis.set_tick_params(rotation=360)
+    g1.axvline(x=250, linestyle = '--', color='b')
+    g1.set_title(title,pad=10)
+    #ax.tight_layout()
+    #plt.show()
+
+
+    g1.text(0.5,-0.22, "(a)", size=12, ha="center", 
+         transform=g1.transAxes)
+heatmap(differenced_low_freq,'Spectrogram for 1-50 frequencies',1,50,2,1,50,'AVG','gFreqs')# (differenced high with low & averaged through subjects )
+#heatmap(differenced_medium_freq,'Spectrogram for 50-200 freqs (averaged thru subjs)',1,150,5,50,200,'AVG','gFreqs')# (differenced high with low & averaged through subjects )
+#heatmap(differenced_high_freq,'Spectrogram for 200-360 freqs (averaged thru subjs)',1,160,5,200,360,'AVG','gFreqs')# (differenced high with low & averaged through subjects )
+
+
+
+
+#def lowISC_high_ISC(*typ):
+a = 1  # number of rows
+b = 2  # number of columns
+c = 1  # initialize plot counter
+plt.figure(figsize=(15,15))
+typ = {'High ISC':high_gft,'Low ISC':low_gft}
+for i in range(2):
+        
+        mean_t1,std_t1, top1, bottom1= mean_std(high_gft,3)
+        mean_t2,std_t2, top2, bottom2= mean_std(low_gft,3)
+        
+        #plt.legend()
+        g2.plot(range(359),mean_t1[:],color='r')
+        g2.fill_between(range(359),bottom1[:],top1[:], color='r', alpha=.1,label='High ISC')
+        g2.plot(range(359),mean_t2[:],color='b')
+        g2.fill_between(range(359),bottom2[:], top2[:], color='b', alpha=.1,label='Low ISC')
+        g2.set_ylabel('gPSDs')
+        g2.set_xlabel('Eigen values')
+        g2.set_title('Graph PSD for both conditions')
+        xticks= np.arange(0,360,71)
+
+        g2.set_xticks([])
+        g2.set_xticks(xticks)
+#        g2.set_xticklabels(labels=[-0.5,-0.25,0,0.25,0.5],rotation='horizontal')
+        g2.set_xticklabels(labels=np.round(G.e[np.arange(1,360,71)],decimals=2),rotation='horizontal')
+        #plt.axvline(x=250, linestyle = '--', color='g')
+        g2.text(0.5,-0.10, "(c)", size=12, ha="center", 
+        transform=g2.transAxes)
+        #plt.ylabel('log (gPSD)')
+#plt.suptitle('Dichotomized the eigen values(at 1.02) such that the power distribution is same & sliced the PSD using the same [Low freq = blue] Note: used np.abs while using indicator')
+g2.legend(['High ISC','Low ISC'])
+
+
+
+#def lowISC_high_ISC(*typ):
+a = 1  # number of rows
+b = 2  # number of columns
+c = 1  # initialize plot counter
+typ = {'High ISC':high_gft,'Low ISC':low_gft}
+
+
+#plt.subplot(a, b, c)
+cll1 = filters(typ[list(typ.keys())[0]],l,len(l))
+cll2 = filters(typ[list(typ.keys())[0]],h,len(h))
+mean_t1,std_t1, top1, bottom1= mean_std(cll1,2)
+mean_t2,std_t2, top2, bottom2= mean_std(cll2,2)
+
+
+g3.legend()
+g3.plot(range(500),mean_t1,color='b')
+g3.fill_between(range(500),bottom1,top1, color='b', alpha=.1,label='Low frequency')
+g3.plot(range(500),mean_t2,color='r')
+g3.fill_between(range(500),bottom2, top2, color='r', alpha=.1,label='High frequency')
+
+g3.set_ylabel('gPSDs sliced using Eigen values')
+g3.set_xlabel('Time (s)',fontsize=10)
+xticks= [0,125,250,375,500]
+
+g3.set_xticks(xticks)
+g3.set_xticklabels(labels=[-0.5,-0.25,0,0.25,0.5],rotation='horizontal')
+g3.axvline(x=250, linestyle = '--', color='g')
+g3.set_title('Graph PSD time-series', pad=10)
+g3.legend()
+
+g3.text(0.5,-0.20, "(b)", size=12, ha="center", 
+         transform=g3.transAxes)
+
+
+
+
+labels = ['Low', 'Med', 'High']
+men_means = [np.sum(global_mean[:50]), np.sum(global_mean[50:200]),np.sum(global_mean[200:])]
+women_means = [np.sum(global_mean2[:50]), np.sum(global_mean2[50:200]),np.sum(global_mean2[200:])]
+error = [sum(std_err[:50]),sum(std_err[50:200]),sum(std_err[200:])]
+data= pd.DataFrame({'labels':labels,'gPSD_low':men_means,'gPSD_high':women_means},index=None)
+
+x = np.arange(len(labels))  # the label locations
+width = 0.35  # the width of the bars
+
+rects1 = g4.bar(x - width/2, men_means, width, label='High ISC',yerr=error, align='center', alpha=0.5, ecolor='black', capsize=10)
+rects2 = g4.bar(x + width/2, women_means, width, label='Low ISC',yerr=error, align='center', alpha=0.5, ecolor='black', capsize=10)
+
+ylab = "gPSD"
+# Add some text for labels, title and custom x-axis tick labels, etc.
+g4.set_ylabel(ylab)
+g4.set_title('Population average of the gPSD',pad=10)#(after trichotomizing) while SEM being error bars
+g4.set_xticks(x)
+g4.set_xticklabels(labels)
+order = ['low ISC','high ISC'] 
+from statannot import add_stat_annotation
+add_stat_annotation(g4,data=data_fin, y='gPSD', x ='labels', hue='cond',
+                    box_pairs=[(("Low", "Low_ISC"), ("Low", "High_ISC")),
+                                (("Med", "Low_ISC"), ("Med", "High_ISC")),
+                                (("High", "Low_ISC"), ("High", "High_ISC"))],
+                                 perform_stat_test=False, pvalues=[0.053,1.143759538530142e-09,1.0396018685855328e-08],
+                    line_offset_to_box=0.15, line_offset=0.1, line_height=0.05, text_format='star', loc='inside', verbose=2)
+
+g4.legend(bbox_to_anchor=(0.35, 0.8), bbox_transform=g4.transAxes)
+g4.text(0.5,-0.20, "(d)", size=12, ha="center", 
+         transform=g4.transAxes)
+
+
+
+
+signal=[]
+U0_brain=[]
+signal=np.expand_dims(np.array(G.U[:, 5]), axis=0) # add dimension 1 to signal array
+U0_brain = signals_to_img_labels(signal,path_Glasser,mnitemp['mask'])
+plotting.plot_glass_brain(U0_brain,title=f'Eigen Vector {6}',colorbar=True,plot_abs=False,cmap='spring',display_mode='lzr',axes=g5)
+g5.text(0.5,-0.20, "(e)", size=12, ha="center", 
+         transform=g5.transAxes)
+
+fig.suptitle('Graph', size=20)
+#fig.savefig('/homes/v20subra/S4B2/Pub-quality Figures/Graph_grid.png',dpi=500)
+
+
+# %%
+fig.savefig('/homes/v20subra/S4B2/Pub-quality Figures/Graph_grid.png',dpi=500)
+# %%
+
 
 # %%

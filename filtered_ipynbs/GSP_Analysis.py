@@ -869,7 +869,7 @@ fig.suptitle('Graph', size=20)
 
 
 # %%
-fig.savefig('/homes/v20subra/S4B2/Pub-quality Figures/Graph_grid.png',dpi=500)
+fig.savefig('/homes/v20subra/S4B2/Pub-quality Figures/Graph_grid.png',dpi=100)
 # %%
 
 

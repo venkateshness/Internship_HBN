@@ -584,7 +584,7 @@ glasser_atlas=image.load_img(path_Glasser)
 signal=[]
 U0_brain=[]
 signal=np.expand_dims(np.array(G.U[:, 5]), axis=0) # add dimension 1 to signal array
-U0_brain = signals_to_img_labels(signal,path_Glasser,mnitemp['mask'])
+U0_brain = signals_to_img_labels(signl,path_Glasser,mnitemp['mask'])
 plotting.plot_glass_brain(U0_brain,title=f'Vector {6}',colorbar=True,plot_abs=False,cmap='spring',display_mode='lzr')
 
 
@@ -730,10 +730,10 @@ def heatmap(diff,title,start1,end1,div,start2,end2,operation,ylabel):
     g1.set_xticks([])
     g1.set_xticks(xticks)
     g1.set_xticklabels(labels=[-0.5,-0.25,0,0.25,0.5],rotation='horizontal')
-    yticks= np.arange(0,50,3)
+    yticks= np.arange(1,50,3)
     g1.set_yticks([])
     g1.set_yticks(yticks)
-    g1.set_yticklabels(labels=np.arange(1,50,3),rotation='horizontal')
+    g1.set_yticklabels(labels=np.arange(2,51,3),rotation='horizontal')
     
     
     g1.yaxis.set_tick_params(rotation=360)
@@ -837,7 +837,7 @@ rects2 = g4.bar(x + width/2, women_means, width, label='Low ISC',yerr=error, ali
 ylab = "gPSD"
 # Add some text for labels, title and custom x-axis tick labels, etc.
 g4.set_ylabel(ylab)
-g4.set_title('Population average of the gPSD',pad=10)#(after trichotomizing) while SEM being error bars
+g4.set_title('Frequency group-wise gPSD following smoothing',pad=10)#(after trichotomizing) while SEM being error bars
 g4.set_xticks(x)
 g4.set_xticklabels(labels)
 order = ['low ISC','high ISC'] 
@@ -847,7 +847,7 @@ add_stat_annotation(g4,data=data_fin, y='gPSD', x ='labels', hue='cond',
                                 (("Med", "Low_ISC"), ("Med", "High_ISC")),
                                 (("High", "Low_ISC"), ("High", "High_ISC"))],
                                  perform_stat_test=False, pvalues=[0.053,1.143759538530142e-09,1.0396018685855328e-08],
-                    line_offset_to_box=0.15, line_offset=0.1, line_height=0.05, text_format='star', loc='inside', verbose=2)
+                    line_offset_to_box=0.20, line_offset=0.1, line_height=0.05, text_format='simple', loc='inside', verbose=2)
 
 g4.legend(bbox_to_anchor=(0.35, 0.8), bbox_transform=g4.transAxes)
 g4.text(0.5,-0.20, "(d)", size=12, ha="center", 
@@ -858,9 +858,9 @@ g4.text(0.5,-0.20, "(d)", size=12, ha="center",
 
 signal=[]
 U0_brain=[]
-signal=np.expand_dims(np.array(G.U[:, 5]), axis=0) # add dimension 1 to signal array
+signal=np.expand_dims(np.array(G.U[:, 6]), axis=0) # add dimension 1 to signal array
 U0_brain = signals_to_img_labels(signal,path_Glasser,mnitemp['mask'])
-plotting.plot_glass_brain(U0_brain,title=f'Eigen Vector {6}',colorbar=True,plot_abs=False,cmap='spring',display_mode='lzr',axes=g5)
+plotting.plot_glass_brain(U0_brain,title=f'Eigen Vector {7}',colorbar=True,plot_abs=False,cmap='spring',display_mode='lzr',axes=g5)
 g5.text(0.5,-0.20, "(e)", size=12, ha="center", 
          transform=g5.transAxes)
 
@@ -871,6 +871,13 @@ fig.suptitle('Graph', size=20)
 # %%
 fig.savefig('/homes/v20subra/S4B2/Pub-quality Figures/Graph_grid.png',dpi=100)
 # %%
-
+np.average(differenced,axis=0)[6]
+# %%
+signl = np.ones(shape=(1,360))
+signl[:,(np.where(G.U[:,6]<=0)[0])] = 0
+# %%
+signl
+# %%
+np.where(G.U[:,6]<=0)[0]
 
 # %%

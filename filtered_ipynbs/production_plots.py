@@ -198,10 +198,10 @@ for m in range(360):
     
     iscs = list()
     for i in range(9):
-         iscs.append(hm[i][i+1:])
-         plot_high[m] = np.hstack(iscs)
-     #    iscs.append(np.sum(hm[i][i+1:])/len((hm[i][i+1:])))
-    #plot_high[m] = iscs
+         #iscs.append(hm[i][i+1:])
+         #plot_high[m] = np.hstack(iscs)
+         iscs.append(np.sum(hm[i][i+1:])/len((hm[i][i+1:])))
+    plot_high[m] = iscs
     #plot_high.append(sum(iscs)/ sum(np.arange(10)))
 
 low_isc = np.load('/users/local/Venkatesh/Generated_Data/low_isc_averaged_with_cov.npz')['low_isc_averaged']
@@ -211,18 +211,18 @@ for m in range(360):
 
     iscs = list() #to store row-wise results
     for i in range(9): # Loop through each of the 9 rows
-        iscs.append(hm[i][i+1:]) #
-        plot_low[m] = np.hstack(iscs) # store ROI-wise
-        #iscs.append(np.sum(hm[i][i+1:])/len((hm[i][i+1:]))) #
-    #plot_low[m] = iscs # store ROI-wise
+        #iscs.append(hm[i][i+1:]) #
+        #plot_low[m] = np.hstack(iscs) # store ROI-wise
+        iscs.append(np.sum(hm[i][i+1:])/len((hm[i][i+1:]))) #
+    plot_low[m] = iscs # store ROI-wise
     
 from scipy import stats
 ttest = list()
 tvalues = list()
 
 for i in range(360):
-    ttest.append(stats.ttest_rel(plot_low[i],plot_high[i])[1])
-    tvalues.append(stats.ttest_rel(plot_low[i],plot_high[i])[0])
+    ttest.append(stats.ttest_rel(plot_high[i],plot_low[i])[1])
+    tvalues.append(stats.ttest_rel(plot_high[i],plot_low[i])[0])
 
 zeroed_for_rois = np.zeros(shape=(1,360))
 zeroed_for_rois [:,np.where(np.array(ttest) <= 0.05)] = np.array(tvalues)[np.where(np.array(ttest) <= 0.05)]
@@ -251,7 +251,7 @@ fig.suptitle('CCA', size=20)
 
 # avg across subj & std across subj (low, medium, high)
 # %%
-fig.savefig('cca_grid_new.jpg',dpi=500)
+fig.savefig('cca_grid.jpg',dpi=300)
 
 
 # %%

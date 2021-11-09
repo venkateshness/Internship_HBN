@@ -19,7 +19,8 @@
   * Inter-subject Study
   
 # Details related to the project as full-time (internship)
- * CCA on the Scalp signals
+ * Pre-processing for artefacts, channel removal
+ * CCA applied on the Scalp signals
  * Analysis of the CCA components on Source Space
  * Analysis of High-ISC & Low-ISC period data on Source Space
  * Usage of Structural Connectivity graph, after employing Glasser Parcellation for the Graph-related analysis of source space signals

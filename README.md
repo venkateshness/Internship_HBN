@@ -17,12 +17,10 @@
   
 
 # Specifics to the project as part-time:
-### Goal: EEG-data
   * Source Signal Reconstruction (Activation region's)
-  * Inter-subjects Study = End goal
+  * Inter-subjects Study
   
 # Details related to the project as full-time (internship)
-### Goal:
  * CCA on the Scalp signals
  * Analysis of the CCA components on Source Space
  * Analysis of High-ISC & Low-ISC period data on Source Space

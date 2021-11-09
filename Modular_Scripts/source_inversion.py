@@ -23,6 +23,6 @@ def inversion(raw, fwd_model, cov):
 
     #cov = mne.compute_covariance(epochs,tmax=tmax,method=method,tmin=tmin)
 
-    inverse_operator = make_inverse_operator(raw.info, fwd_model, cov)
+    inverse_operator = make_inverse_operator(raw.info, fwd_model, cov,depth=3)
 
     return cov, inverse_operator

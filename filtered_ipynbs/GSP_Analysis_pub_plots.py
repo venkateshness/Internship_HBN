@@ -56,8 +56,8 @@ with np.load(f"/homes/v20subra/S4B2/GSP/hcp/atlas.npz") as dobj:
 # In[5]:
 
 
-high = np.load('/users/local/Venkatesh/Generated_Data/high_isc_averaged_with_cov.npz')['high_isc_averaged']
-low = np.load('/users/local/Venkatesh/Generated_Data/low_isc_averaged_with_cov.npz')['low_isc_averaged']
+high = np.load('/users/local/Venkatesh/Generated_Data/indiv_cov/high_isc_averaged_with_cov.npz')['high_isc_averaged']
+low = np.load('/users/local/Venkatesh/Generated_Data/indiv_cov/low_isc_averaged_with_cov.npz')['low_isc_averaged']
 np.shape(low)
 
 
@@ -172,13 +172,13 @@ np.sum(values)/2
 # In[64]:
 
 
-np.sum(values[:177])
+np.sum(values[:94])
 
 
 # In[65]:
 
 
-G.e[178]
+G.e[95]
 
 
 # ### Dichotomy 
@@ -187,8 +187,8 @@ G.e[178]
 
 
 #1
-l = np.where(G.e<=11.32)[0][1:]
-h = np.where(G.e>11.32)[0]
+l = np.where(G.e<=7.371)[0][1:]
+h = np.where(G.e>7.371)[0]
 
 
 # In[65]:

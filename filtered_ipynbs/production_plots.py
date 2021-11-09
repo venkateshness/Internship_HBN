@@ -39,8 +39,8 @@ ax.legend()
 ax.fill_between(range(170),np.max(np.array(noise)[:,0,:],axis=0).T,np.min(np.array(noise)[:,0,:],axis=0).T,color ='grey',alpha=0.8)
 plt.xlabel('Time (s)')
 plt.ylabel('ISC Coefficient')
-plt.title('First component ISC after employing 5-s bootstrapping window')
-#fig.savefig('bootstrapping.png',dpi=500)
+plt.title('First ISC component with noise floor from 5-s bootstrapping window')
+fig.savefig('bootstrapping.png',dpi=500)
 plt.show()
 plt.tight_layout()
 # %%
@@ -50,9 +50,9 @@ plt.tight_layout()
 np.shape(np.array(noise)[:,0,:])
 
 # %%
-low_ISC = np.load('/users/local/Venkatesh/Generated_Data/low_isc_averaged_with_cov.npz')['low_isc_averaged']
+low_ISC = np.load('/users/local/Venkatesh/Generated_Data/indiv_cov/apply_projs/low_isc_averaged_with_cov.npz')['low_isc_averaged']
 #np.shape(low_ISC)
-high_ISC = np.load('/users/local/Venkatesh/Generated_Data/high_isc_averaged_with_cov.npz')['high_isc_averaged']
+high_ISC = np.load('/users/local/Venkatesh/Generated_Data/indiv_cov/apply_projs/high_isc_averaged_with_cov.npz')['high_isc_averaged']
 differenced = high_ISC - low_ISC
 # %%
 
@@ -60,9 +60,10 @@ from scipy import stats
 test = list()
 tvals = list()
 for i in range(360):
-    test.append(stats.ttest_1samp(np.hstack(differenced[:,i,:]),popmean=False)[0])
-    tvals.append(stats.ttest_1samp(np.hstack(differenced[:,i,:]),popmean=False)[1])
-    #test.append(stats.ttest_rel(np.hstack(low_ISC[:,i,:]),np.hstack(high_ISC[:,i,:]))[0])
+    test.append(stats.ttest_1samp(np.hstack(differenced[:,i,:]),popmean=False)[1])
+    tvals.append(stats.ttest_1samp(np.hstack(differenced[:,i,:]),popmean=False)[0])
+    #test.append(stats.ttest_rel(np.hstack(low_ISC[:,i,:]),np.hstack(high_ISC[:,i,:]))[1])
+    #tvals.append(stats.ttest_rel(np.hstack(low_ISC[:,i,:]),np.hstack(high_ISC[:,i,:]))[0])
     #print(np.shape(np.hstack(differenced[:,i,:])))
     
 # %%
@@ -74,7 +75,7 @@ rois = np.load('/homes/v20subra/S4B2/GSP/hcp/regions.npy')
 rois[np.where(np.array(test)<0.0001)]
 
 # %%
-np.array(tvals)[np.where(np.array(test)<0.0001)]
+sum(np.array(tvals)[np.where(np.array(test)<0.0001)]>0)
 # %%
 to_plot = np.zeros(shape=(360,))
 to_plot[np.where(np.array(test)<0.0001)] = np.array(tvals)[np.where(np.array(test)<0.0001)]
@@ -116,8 +117,8 @@ brain_plot(np.reshape(to_plot,(1,360)),'ff',expand=False)
 # %%
 cd /homes/v20subra/S4B2
 # %%
-high = np.load('/users/local/Venkatesh/Generated_Data/high_isc_averaged_with_cov.npz')['high_isc_averaged']
-low = np.load('/users/local/Venkatesh/Generated_Data/low_isc_averaged_with_cov.npz')['low_isc_averaged']
+high = np.load('/users/local/Venkatesh/Generated_Data/indiv_cov/apply_projs/high_isc_averaged_with_cov.npz')['high_isc_averaged']
+low = np.load('/users/local/Venkatesh/Generated_Data/indiv_cov/apply_projs/low_isc_averaged_with_cov.npz')['low_isc_averaged']
 
 import seaborn as sns
 import matplotlib.ticker as ticker
@@ -191,7 +192,7 @@ import numpy as np
 
 #low_isc = np.load('S4B2/Generated_Data/low_isc_averaged_with_cov.npz')['low_isc_averaged']
 #high_isc['high_isc_averaged'] low_isc
-high_isc = np.load('/users/local/Venkatesh/Generated_Data/high_isc_averaged_with_cov.npz')['high_isc_averaged']
+high_isc = np.load('/users/local/Venkatesh/Generated_Data/indiv_cov/high_isc_averaged_with_cov.npz')['high_isc_averaged']
 plot_high = dict() 
 for m in range(360):
     hm = np.triu(np.corrcoef(np.array(high_isc)[:,m,:])) #high_isc['high_isc_averaged']
@@ -204,7 +205,7 @@ for m in range(360):
     plot_high[m] = iscs
     #plot_high.append(sum(iscs)/ sum(np.arange(10)))
 
-low_isc = np.load('/users/local/Venkatesh/Generated_Data/low_isc_averaged_with_cov.npz')['low_isc_averaged']
+low_isc = np.load('/users/local/Venkatesh/Generated_Data/indiv_cov/low_isc_averaged_with_cov.npz')['low_isc_averaged']
 plot_low = dict()
 for m in range(360):
     hm = np.triu(np.corrcoef(np.array(low_isc)[:,m,:])) #corrcoef and take only the upper half of the matrix
@@ -225,11 +226,11 @@ for i in range(360):
     tvalues.append(stats.ttest_rel(plot_high[i],plot_low[i])[0])
 
 zeroed_for_rois = np.zeros(shape=(1,360))
-zeroed_for_rois [:,np.where(np.array(ttest) <= 0.05)] = np.array(tvalues)[np.where(np.array(ttest) <= 0.05)]
+zeroed_for_rois [:,np.where(np.array(ttest) < 0.05)] = np.array(tvalues)[np.where(np.array(ttest) < 0.05)]
 
 
 zeroed_for_rois_pvalue = np.zeros(shape=(1,360))
-zeroed_for_rois_pvalue [:,np.where(np.array(ttest) <= 0.05)] = np.array(ttest)[np.where(np.array(ttest) <= 0.05)]
+zeroed_for_rois_pvalue [:,np.where(np.array(ttest) < 0.05)] = np.array(ttest)[np.where(np.array(ttest) < 0.05)]
 
 
 
@@ -256,5 +257,13 @@ fig.savefig('cca_grid.jpg',dpi=300)
 
 # %%
 sum(isc_result[0]<=0.10)/170
+# %%
+# %%
+np.array(tvalues)[np.where(np.array(ttest)<=0.05)]
+# %%
+# %%
+
+# %%
+stats.ttest_rel(plot_high[i],plot_low[i])
 # %%
 # %%

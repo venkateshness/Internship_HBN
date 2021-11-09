@@ -58,8 +58,8 @@ with np.load(f"/homes/v20subra/S4B2/GSP/hcp/atlas.npz") as dobj:
 # In[5]:
 
 
-high = np.load('/users/local/Venkatesh/Generated_Data/high_isc_averaged_with_cov.npz')['high_isc_averaged']
-low = np.load('/users/local/Venkatesh/Generated_Data/low_isc_averaged_with_cov.npz')['low_isc_averaged']
+high = np.load('/users/local/Venkatesh/Generated_Data/indiv_cov/apply_projs/high_isc_averaged_with_cov.npz')['high_isc_averaged']
+low = np.load('/users/local/Venkatesh/Generated_Data/indiv_cov/apply_projs/low_isc_averaged_with_cov.npz')['low_isc_averaged']
 np.shape(low)
 
 
@@ -176,13 +176,13 @@ np.sum(values)/2
 # In[64]:
 
 
-np.sum(values[:177])
+np.sum(values[:94])
 
 
 # In[65]:
 
 
-G.e[178]
+G.e[95]
 
 
 # ### Dichotomy 
@@ -191,8 +191,8 @@ G.e[178]
 
 
 #1
-l = np.where(G.e<=11.3275)[0][1:]
-h = np.where(G.e>11.3275)[0]
+l = np.where(G.e<=7.365)[0][1:]
+h = np.where(G.e>7.365)[0]
 
 
 # In[65]:
@@ -533,15 +533,7 @@ ax.set_ylabel(ylab)
 ax.set_title('Global Average of the gPSD freq-wise (after trichotomizing) while SEM being error bars')
 ax.set_xticks(x)
 ax.set_xticklabels(labels)
-order = ['low ISC','high ISC'] 
-from statannot import add_stat_annotation
-add_stat_annotation(ax,data=data_fin, y='gPSD', x ='labels', hue='cond',
-                    box_pairs=[(("Low", "Low_ISC"), ("Low", "High_ISC")),
-                                (("Med", "Low_ISC"), ("Med", "High_ISC")),
-                                (("High", "Low_ISC"), ("High", "High_ISC")),
-                                (("Low","Med","High"))], 
-                                perform_stat_test=False, pvalues=[0.053,1.143759538530142e-09,1.0396018685855328e-08, 0.005],
-                    text_format='full', loc='inside', verbose=2)
+
 
 ax.legend()
 
@@ -581,11 +573,11 @@ glasser_atlas=image.load_img(path_Glasser)
 
 #print(NiftiMasker.__doc__)
 
-signal=[]
-U0_brain=[]
-signal=np.expand_dims(np.array(G.U[:, 5]), axis=0) # add dimension 1 to signal array
-U0_brain = signals_to_img_labels(signl,path_Glasser,mnitemp['mask'])
-plotting.plot_glass_brain(U0_brain,title=f'Vector {6}',colorbar=True,plot_abs=False,cmap='spring',display_mode='lzr')
+#signal=[]
+#U0_brain=[]
+#signal=np.expand_dims(np.array(G.U[:, 5]), axis=0) # add dimension 1 to signal array
+#U0_brain = signals_to_img_labels(signl,path_Glasser,mnitemp['mask'])
+#plotting.plot_glass_brain(U0_brain,title=f'Vector {6}',colorbar=True,plot_abs=False,cmap='spring',display_mode='lzr')
 
 
 # %%
@@ -629,10 +621,10 @@ plt.show()
 # %%
 
 
-print('for low freq       :',scipy.stats.mstats.ttest_rel(global_mean2[:50],global_mean[:50]))
-print('for medium         :',scipy.stats.mstats.ttest_rel(global_mean2[50:200],global_mean[50:200]))
+print('for low freq       :',scipy.stats.mstats.ttest_rel(global_mean[1:51],global_mean2[1:51]))
+print('for medium         :',scipy.stats.mstats.ttest_rel(global_mean[51:200],global_mean2[51:200]))
 
-print('for high           :',scipy.stats.mstats.ttest_rel(global_mean2[200:],global_mean[200:]))
+print('for high           :',scipy.stats.mstats.ttest_rel(global_mean[200:],global_mean2[200:]))
 
 # %%
 low_group = np.hstack([global_mean2[:50],global_mean[:50]])
@@ -644,34 +636,11 @@ high_group = np.hstack([global_mean2[200:],global_mean[200:]])
 scipy.stats.f_oneway(low_group,med_group,high_group)
 
 # %%
-from pylab import figure, show, legend, ylabel
- 
-# create the general figure
-fig1 = figure()
- 
-# and the first axes using subplot populated with data 
-ax1 = fig1.add_subplot(111)
-line1 = ax1.plot([1,3,4,5,2], 'o-')
-ylabel("Left Y-Axis Data")
- 
-# now, the second axes that shares the x-axis with the ax1
-ax2 = fig1.add_subplot(111, sharex=ax1, frameon=False)
-line2 = ax2.plot([10,40,20,30,50], 'xr-')
-ax2.yaxis.tick_right()
-ax2.yaxis.set_label_position("right")
-ylabel("Right Y-Axis Data")
- 
-# for the legend, remember that we used two different axes so, we need 
-# to build the legend manually
-legend((line1, line2), ("1", "2"))
-show()
 
 # %%
 
-df = sns.load_dataset("tips")
 
 # %%
-df
 # %%
 #hue = low, high
 #y=gpsd
@@ -679,6 +648,8 @@ df
 
 # %%
 import pandas as pd
+labels = ['Low', 'Med', 'High']
+
 data = pd.DataFrame({'labels':labels,'gPSD':women_means})
 
 data2 = pd.DataFrame({'labels':labels,'gPSD':men_means})
@@ -697,7 +668,7 @@ np.shape(low_gft)
 
 # %%
 
-
+import seaborn as sns 
 import pandas as pd
 fig=plt.figure(figsize = (17, 17))
 import seaborn
@@ -823,10 +794,10 @@ g3.text(0.5,-0.20, "(b)", size=12, ha="center",
 
 
 labels = ['Low', 'Med', 'High']
-men_means = [np.sum(global_mean[:50]), np.sum(global_mean[50:200]),np.sum(global_mean[200:])]
-women_means = [np.sum(global_mean2[:50]), np.sum(global_mean2[50:200]),np.sum(global_mean2[200:])]
+gPSD_high = [np.sum(global_mean[:50]), np.sum(global_mean[50:200]),np.sum(global_mean[200:])]
+gPSD_low = [np.sum(global_mean2[:50]), np.sum(global_mean2[50:200]),np.sum(global_mean2[200:])]
 error = [sum(std_err[:50]),sum(std_err[50:200]),sum(std_err[200:])]
-data= pd.DataFrame({'labels':labels,'gPSD_low':men_means,'gPSD_high':women_means},index=None)
+data= pd.DataFrame({'labels':labels,'gPSD_high':gPSD_high,'gPSD_low':gPSD_low},index=None)
 
 x = np.arange(len(labels))  # the label locations
 width = 0.35  # the width of the bars
@@ -846,11 +817,12 @@ add_stat_annotation(g4,data=data_fin, y='gPSD', x ='labels', hue='cond',
                     box_pairs=[(("Low", "Low_ISC"), ("Low", "High_ISC")),
                                 (("Med", "Low_ISC"), ("Med", "High_ISC")),
                                 (("High", "Low_ISC"), ("High", "High_ISC"))],
-                                 perform_stat_test=False, pvalues=[0.053,1.143759538530142e-09,1.0396018685855328e-08],
+                                 perform_stat_test=False, pvalues=[2.46e-05,5.817e-19,8.47886e-22],
                     line_offset_to_box=0.20, line_offset=0.1, line_height=0.05, text_format='simple', loc='inside', verbose=2)
+g4.set_xlabel('Graph Frequency bands')
 
-g4.legend(bbox_to_anchor=(0.35, 0.8), bbox_transform=g4.transAxes)
-g4.text(0.5,-0.20, "(d)", size=12, ha="center", 
+g4.legend(bbox_to_anchor=(0.65, 0.8), bbox_transform=g4.transAxes)
+g4.text(0.5,-0.25, "(d)", size=12, ha="center", 
          transform=g4.transAxes)
 
 
@@ -861,7 +833,7 @@ U0_brain=[]
 signal=np.expand_dims(np.array(G.U[:, 6]), axis=0) # add dimension 1 to signal array
 U0_brain = signals_to_img_labels(signal,path_Glasser,mnitemp['mask'])
 plotting.plot_glass_brain(U0_brain,title=f'Eigen Vector {7}',colorbar=True,plot_abs=False,cmap='spring',display_mode='lzr',axes=g5)
-g5.text(0.5,-0.20, "(e)", size=12, ha="center", 
+g5.text(0.5,-0.25, "(e)", size=12, ha="center", 
          transform=g5.transAxes)
 
 fig.suptitle('Graph', size=20)

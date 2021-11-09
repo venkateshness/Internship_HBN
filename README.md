@@ -22,13 +22,10 @@
   * Inter-subjects Study = End goal
   
 # Details related to the project as full-time (internship)
-### Goal: (Subjected to change)
- * Integration of EEG-fMRI for the inter-subjects Study 
- * Exploiting Graph Signal Processing to understand the neuronal connectomes
-### Features: 
- * Dataset:(In addition to the information from commonalities)
-   * Events: 83, 103 (Video-watching starts and ends respectively)
-
-
+### Goal:
+ * CCA on the Scalp signals
+ * Analysis of the CCA components on Source Space
+ * Analysis of High-ISC & Low-ISC period data on Source Space
+ * Usage of Structural Connectivity graph, after employing Glasser Parcellation for the Graph-related analysis of source space signals
   
 

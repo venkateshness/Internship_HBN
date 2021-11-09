@@ -18,7 +18,7 @@
 
 # Specifics to the project as part-time:
   * Source Signal Reconstruction (Activation region's)
-  * Inter-subjects Study
+  * Inter-subject Study
   
 # Details related to the project as full-time (internship)
  * CCA on the Scalp signals

@@ -1,4 +1,4 @@
-# Slicing only the epochs wanted
+# Slicing only the epochs needed
 import mne
 import pathlib
 

@@ -6,9 +6,7 @@
     * Characteristics: 
         * Number of Electrodes (no. of channels) : 128
         * Sampling Frequency: 500hz
-        * Duration: ~352.77 seconds
-        * Total samples = Duration X Sampling Frequency -> 176386
-        * Dimension = (total samples, no. of channels)
+        * Duration: ~352.77 seconds for the resting state and 170 for the video-watching
         * Events (States during the EEG): 90, 20, 30 which represents start of the recording, eyes-open and eyes-closed respectively
         * Subjects: NDARBF805EHN, NDARBG574KF4 (from https://partage.imt.fr/index.php/s/97wDFxzLQ5NgkNJ *not* on HBN link)
   * Resource (Project-related): https://docs.google.com/document/d/1YkX0Mfeq030oCQQDL4xb87XxXjqXyLqncg1FA7nANp0
@@ -17,18 +15,14 @@
   
 
 # Specifics to the project as part-time:
-### Goal: EEG-data
   * Source Signal Reconstruction (Activation region's)
-  * Inter-subjects Study = End goal
+  * Inter-subject Study
   
 # Details related to the project as full-time (internship)
-### Goal: (Subjected to change)
- * Integration of EEG-fMRI for the inter-subjects Study 
- * Exploiting Graph Signal Processing to understand the neuronal connectomes
-### Features: 
- * Dataset:(In addition to the information from commonalities)
-   * Events: 83, 103 (Video-watching starts and ends respectively)
-
-
+ * Pre-processing for artefacts, channel removal
+ * CCA applied on the Scalp signals
+ * Analysis of the CCA components on Source Space
+ * Analysis of High-ISC & Low-ISC period data on Source Space
+ * Usage of Structural Connectivity graph, after employing Glasser Parcellation for the Graph-related analysis of source space signals
   
 

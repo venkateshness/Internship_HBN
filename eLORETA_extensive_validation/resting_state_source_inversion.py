@@ -28,7 +28,7 @@ def fire_2(raw,events,fwd_model):
     ##################
     
     epochs = mne.Epochs(raw, events, [20,30,90], tmin=0, tmax=20,preload=True,baseline=(0,None))
-    epochs_resampled = epochs.resample(250)[3:5] # Downsampling to 250Hz
+    epochs_resampled = epochs.resample(250)# Downsampling to 250Hz
     print(np.shape(epochs_resampled.load_data())) # Sanity Check
 
 
@@ -36,7 +36,7 @@ def fire_2(raw,events,fwd_model):
     ###Noise Covariance
     ##################
     covariance = mne.compute_covariance(
-    epochs_resampled['20'][0], method=['shrunk', 'empirical'])
+    epochs_resampled, tmax =0, method=['shrunk', 'empirical'])
 
     ##################
     ###Source Inversion - forward modeling
@@ -69,8 +69,8 @@ def fire_2(raw,events,fwd_model):
                                     method=method, fmin=0, fmax=40, label=bihemi,
                                     verbose=True)
     print(stcs)
-    stcs_averaged_eyes_open = stcs
-    stcs_averaged_eyes_closed = stcs2
+    stcs_averaged_eyes_open = stcs[0]
+    stcs_averaged_eyes_closed = stcs2[0]
     
     a = stats.ttest_rel(np.average(stcs_averaged_eyes_closed.data[:,160:262],axis=1),np.average(stcs_averaged_eyes_open.data[:,160:262],axis=1))
     return a, stcs_averaged_eyes_open, stcs_averaged_eyes_closed
@@ -107,8 +107,7 @@ def fire(subject):
         # set standard montage
         if montage:
             raw.set_montage(montage)
-            raw.set_eeg_reference(projection=True) 
-            raw.apply_proj()
+            raw.set_eeg_reference(projection=True)
         # events array shape must be (n_events,3)The first column specifies the sample number of each event,
         # the second column is ignored, and the third column provides the event value.
         # If events already exist in the Raw instance at the given sample numbers, the event values will be added together.
@@ -197,8 +196,8 @@ for i in range(9):
 print(vals)
 
 #%%
-np.save('eyes_closed_20',eyes_closed)
-np.save('eyes_open_20',eyes_open)
+np.save('eyes_closed_20_one_epoch_no_avg_projection_oldtech',eyes_closed)
+np.save('eyes_open_20_one_epoch_no_avg_projection_oldtech',eyes_open)
 
 
 # %%

@@ -35,8 +35,12 @@ def fire_2(raw,events,fwd_model):
     ##################
     ###Noise Covariance
     ##################
+    rand = np.random.randint(1,5000,size=500)
+
+    cov = mne.EpochsArray(epochs_resampled['20'][0].get_data()[:,:,rand],info=raw.info)
+
     covariance = mne.compute_covariance(
-    epochs_resampled, tmax =0, method=['shrunk', 'empirical'])
+    cov, method='auto')
 
     ##################
     ###Source Inversion - forward modeling
@@ -61,16 +65,17 @@ def fire_2(raw,events,fwd_model):
     label2 = mne.read_label(fname_label2)
     bihemi = mne.BiHemiLabel(label,label2)
 
-    stcs = compute_source_psd_epochs(epochs_resampled['20'], inverse_operator, lambda2=lambda2,
+    stcs = compute_source_psd_epochs(epochs_resampled['20'][1:], inverse_operator, lambda2=lambda2,
                                     method=method, fmin=0, fmax=40, label=bihemi,
                                     verbose=True)
 
-    stcs2 = compute_source_psd_epochs(epochs_resampled['30'], inverse_operator, lambda2=lambda2,
+    stcs2 = compute_source_psd_epochs(epochs_resampled['30'][1:], inverse_operator, lambda2=lambda2,
                                     method=method, fmin=0, fmax=40, label=bihemi,
                                     verbose=True)
-    print(stcs)
-    stcs_averaged_eyes_open = stcs[0]
-    stcs_averaged_eyes_closed = stcs2[0]
+    print(len(stcs))
+    print(len(stcs2))
+    stcs_averaged_eyes_open = np.sum(stcs)/len(stcs)
+    stcs_averaged_eyes_closed = np.sum(stcs2)/len(stcs2)
     
     a = stats.ttest_rel(np.average(stcs_averaged_eyes_closed.data[:,160:262],axis=1),np.average(stcs_averaged_eyes_open.data[:,160:262],axis=1))
     return a, stcs_averaged_eyes_open, stcs_averaged_eyes_closed
@@ -196,8 +201,8 @@ for i in range(9):
 print(vals)
 
 #%%
-np.save('eyes_closed_20_one_epoch_no_avg_projection_oldtech',eyes_closed)
-np.save('eyes_open_20_one_epoch_no_avg_projection_oldtech',eyes_open)
+np.save('eyes_closed_20o_twosecond_randomly_reg',eyes_closed)
+np.save('eyes_open_20o_twosecond_randomly_reg',eyes_open)
 
 
 # %%

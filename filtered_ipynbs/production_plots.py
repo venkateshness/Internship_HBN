@@ -44,8 +44,8 @@ fig.savefig('bootstrapping.png',dpi=500)
 plt.show()
 plt.tight_layout()
 # %%
-high = np.load('/users/local/Venkatesh/Generated_Data/high_isc_averaged_with_cov.npz')['high_isc_averaged']
-low = np.load('/users/local/Venkatesh/Generated_Data/low_isc_averaged_with_cov.npz')['low_isc_averaged']
+high = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/high_isc.npz')['high_isc_averaged']
+low = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/low_isc.npz')['low_isc_averaged']
 differenced =high-low
 
 activation = np.average(high,axis=(0,2))
@@ -61,9 +61,9 @@ to_plot_new
 np.shape(np.array(noise)[:,0,:])
 
 # %%
-low_ISC = np.load('/users/local/Venkatesh/Generated_Data/low_isc_averaged_with_cov.npz')['low_isc_averaged']
+low_ISC = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/low_isc.npz')['low_isc_averaged']
 #np.shape(low_ISC)
-high_ISC = np.load('/users/local/Venkatesh/Generated_Data/high_isc_averaged_with_cov.npz')['high_isc_averaged']
+high_ISC = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/high_isc.npz')['high_isc_averaged']
 differenced = high_ISC - low_ISC
 # %%
 
@@ -129,8 +129,8 @@ brain_plot(np.reshape(activation_un,(1,360)),'ff',expand=False)
 # %%
 cd /homes/v20subra/S4B2
 # %%
-high = np.load('/users/local/Venkatesh/Generated_Data/high_isc_averaged_with_cov.npz')['high_isc_averaged']
-low = np.load('/users/local/Venkatesh/Generated_Data/low_isc_averaged_with_cov.npz')['low_isc_averaged']
+high = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/high_isc.npz')['high_isc_averaged']
+low = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/low_isc.npz')['low_isc_averaged']
 
 import seaborn as sns
 import matplotlib.ticker as ticker
@@ -167,7 +167,7 @@ def activation_time_series(diff,title,start1,end1,div,start2,end2,operation):
     #g1.set_yticklabels(ticks=np.arange(start1,end1,div),labels=np.arange(start2,end2,div),rotation='horizontal')
     g1.axvline(x=250, linestyle = '--', color='b')
     #plt.axvline(x=132, linestyle = '--', color='b')
-    #g1.set_title(title)
+    g1.set_title('eLORETA activations for High ISC')
     #plt.tight_layout()
     #plt.show()
 
@@ -192,7 +192,7 @@ U0_brain=[]
 
 signal=np.reshape(to_plot_new,(1,360)) # add dimension 1 to signal array
 U0_brain = signals_to_img_labels(signal,path_Glasser,mnitemp['mask'])
-plotting.plot_glass_brain(U0_brain,colorbar=True,plot_abs=False,cmap='YlOrRd',display_mode='lzr',symmetric_cbar=False,figure=fig,axes=g2)
+plotting.plot_glass_brain(U0_brain,colorbar=True,plot_abs=False,cmap='YlOrRd',display_mode='lzr',symmetric_cbar=False,figure=fig,axes=g2,title='10%ile-thresholded High ISC eLORETA activations')
 g2.text(0.5,-0.2, "(b)", size=12, ha="center", 
          transform=g2.transAxes)
 #U0_brain.to_filename('d'.nii.gz')
@@ -204,7 +204,7 @@ import numpy as np
 
 #low_isc = np.load('S4B2/Generated_Data/low_isc_averaged_with_cov.npz')['low_isc_averaged']
 #high_isc['high_isc_averaged'] low_isc
-high_isc = np.load('/users/local/Venkatesh/Generated_Data/high_isc_averaged_with_cov.npz')['high_isc_averaged']
+high_isc = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/high_isc.npz')['high_isc_averaged']
 plot_high = dict() 
 for m in range(360):
     hm = np.triu(np.corrcoef(np.array(high_isc)[:,m,:])) #high_isc['high_isc_averaged']
@@ -217,7 +217,7 @@ for m in range(360):
     plot_high[m] = iscs
     #plot_high.append(sum(iscs)/ sum(np.arange(10)))
 
-low_isc = np.load('/users/local/Venkatesh/Generated_Data/low_isc_averaged_with_cov.npz')['low_isc_averaged']
+low_isc = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/low_isc.npz')['low_isc_averaged']
 plot_low = dict()
 for m in range(360):
     hm = np.triu(np.corrcoef(np.array(low_isc)[:,m,:])) #corrcoef and take only the upper half of the matrix
@@ -252,7 +252,7 @@ signal=[]
 U0_brain=[]
 signal=data # add dimension 1 to signal array
 U0_brain = signals_to_img_labels(signal,path_Glasser,mnitemp['mask'])
-plotting.plot_glass_brain(U0_brain,colorbar=True,plot_abs=False,cmap='seismic',display_mode='lzr',symmetric_cbar=True,figure=fig,axes=g3)
+plotting.plot_glass_brain(U0_brain,colorbar=True,plot_abs=False,cmap='seismic',display_mode='lzr',symmetric_cbar=True,figure=fig,axes=g3,title='t-values--after corrcoef on eloreta high vs low-- where pvalues <0.05')
 g3.text(0.5,0, "(c)", size=12, ha="center", 
          transform=g3.transAxes)
 
@@ -264,7 +264,7 @@ fig.suptitle('CCA', size=20)
 
 # avg across subj & std across subj (low, medium, high)
 # %%
-fig.savefig('/homes/v20subra/S4B2/noise_baseline/cca_grid.jpg',dpi=300)
+fig.savefig('/homes/v20subra/S4B2/eLORETA_extensive_validation/cca_grid.jpg',dpi=300)
 
 
 # %%

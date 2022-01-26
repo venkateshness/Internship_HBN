@@ -36,7 +36,7 @@ def fire_2(raw,events,fwd_model):
     ###Noise Covariance
     ##################
     rand = np.random.randint(1,5000,size=500)
-
+    np.random.seed(55)
     cov = mne.EpochsArray(epochs_resampled['20'][0].get_data()[:,:,rand],info=raw.info)
 
     covariance = mne.compute_covariance(

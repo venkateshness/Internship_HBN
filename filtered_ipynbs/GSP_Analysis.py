@@ -41,8 +41,16 @@ D=np.array(G.dw)
 D.shape
 
 # In[3]:
+from scipy.sparse import csr_matrix
+G=graphs.Graph(connectivity,gtype='HCP subject',lap_type='combinatorial',coords=coordinates) #
+print('{} nodes, {} edges'.format(G.N, G.Ne))
+weights = csr_matrix(G.W).toarray()
+weights[weights<np.percentile(weights,97)] =0
 
-
+G = graphs.Graph(weights)
+print('{} nodes, {} edges'.format(G.N, G.Ne))
+print("Connected?: ",G.is_connected())
+#%%
 G.compute_fourier_basis()
 
 
@@ -57,8 +65,8 @@ with np.load(f"/homes/v20subra/S4B2/GSP/hcp/atlas.npz") as dobj:
 # In[5]:
 
 
-high = np.load('/users/local/Venkatesh/Generated_Data/high_isc_averaged_with_cov.npz')['high_isc_averaged']
-low = np.load('/users/local/Venkatesh/Generated_Data/low_isc_averaged_with_cov.npz')['low_isc_averaged']
+high = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/high_isc.npz')['high_isc_averaged']
+low = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/low_isc.npz')['low_isc_averaged']
 np.shape(low)
 
 
@@ -175,23 +183,24 @@ np.sum(values)/2
 # In[64]:
 
 
-np.sum(values[:177])
+np.sum(values[:88])
 
 
 # In[65]:
 
 
-G.e[178]
+G.e[89]
 
 
 # ### Dichotomy 
+
 
 # In[49]:
 
 
 #1
-l = np.where(G.e<=11.32)[0][1:]
-h = np.where(G.e>11.32)[0]
+l = np.where(G.e<=4.86)[0][1:]
+h = np.where(G.e>4.86)[0]
 
 
 # In[65]:
@@ -1006,5 +1015,11 @@ g11.legend(bbox_to_anchor=(0.35, 0.8), bbox_transform=g11.transAxes)
 g11.text(0.5,-0.15, "(d)", size=10, ha="center", 
          transform=g11.transAxes)
 fig2.savefig("graph_pres3.png")
+
+# %%
+fig=plt.figure(figsize = (17, 17))
+import seaborn
+seaborn.despine(left=True, bottom=True, right=True)
+
 
 # %%

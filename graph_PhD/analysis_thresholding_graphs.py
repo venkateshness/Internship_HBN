@@ -1,5 +1,6 @@
 #%%
 from logging import error
+from turtle import color
 import numpy as np
 import matplotlib.pyplot as plt
 from pygsp import graphs, filters
@@ -126,22 +127,36 @@ def filters(isc,band,length):
 #%%
 std_err_high = scipy.stats.sem(np.mean(high_gft,axis=2))
 std_err_low = scipy.stats.sem(np.mean(low_gft,axis=2))
-print(np.shape(std_err_high))
 #%%
 
-global_mean_high = mean_std(high_gft,ax=3)[0]
-global_mean_low = mean_std(low_gft,ax=3)[0]
+global_mean_high = np.mean(high_gft,axis=2)
+global_mean_low =  np.mean(low_gft,axis=2)
+
+high_GFT_power_chunked = [np.sum(global_mean_high[:,:50],axis=1), np.sum(global_mean_high[:,50:200],axis=1),np.sum(global_mean_high[:,200:],axis=1)]
+low_GFT_power_chunked = [np.sum(global_mean_low[:,:50],axis=1), np.sum(global_mean_low[:,50:200],axis=1),np.sum(global_mean_low[:,200:],axis=1)]
 
 
-high_GFT_power_chunked = [np.sum(global_mean_high[:50]), np.sum(global_mean_high[50:200]),np.sum(global_mean_high[200:])]
-low_GFT_power_chunked = [np.sum(global_mean_low[:50]), np.sum(global_mean_low[50:200]),np.sum(global_mean_low[200:])]
 
-error_high = [sum(std_err_high[:50]),sum(std_err_high[50:200]),sum(std_err_high[200:])]
-error_low = [sum(std_err_low[:50]),sum(std_err_low[50:200]),sum(std_err_low[200:])]
+#######################################
+#%%
 
-print(error_high)
+array_high_gft = np.array(high_gft)
+array_low_gft = np.array(low_gft)
 
-print(error_low)
+std_err_high = [scipy.stats.sem(np.mean(array_high_gft[:,:50,:],axis=(1,2))),
+                scipy.stats.sem(np.mean(array_high_gft[:,50:200,:],axis=(1,2))),
+                scipy.stats.sem(np.mean(array_high_gft[:,200:,:],axis=(1,2)))
+                ]
+std_err_low = [scipy.stats.sem(np.mean(array_low_gft[:,:50,:],axis=(1,2))),
+                scipy.stats.sem(np.mean(array_low_gft[:,50:200,:],axis=(1,2))),
+                scipy.stats.sem(np.mean(array_low_gft[:,200:,:],axis=(1,2)))
+                ]
+
+print(std_err_low)
+
+print(std_err_high)
+
+
 #%%
 
 labels = ['Low', 'Med', 'High']
@@ -171,15 +186,15 @@ plotting.plot_glass_brain(U0_brain,title=f'Eigenvector {358}',colorbar=True,plot
 
 
 print('ttest')
-print('for low freq       :',scipy.stats.mstats.ttest_rel(global_mean_high[1:51],global_mean_low[1:51]))
-print('for medium         :',scipy.stats.mstats.ttest_rel(global_mean_high[51:200],global_mean_low[51:200]))
-print('for high           :',scipy.stats.mstats.ttest_rel(global_mean_high[200:],global_mean_low[200:]))
+print('for low freq       :',scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[0],low_GFT_power_chunked[0]))
+print('for medium         :',scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[1],low_GFT_power_chunked[1]))
+print('for high           :',scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[2],low_GFT_power_chunked[2]))
 
 # %%
 
-data = pd.DataFrame({'labels':labels,'gPSD':error_low})
+data = pd.DataFrame({'labels':labels,'gPSD':std_err_low})
 
-data2 = pd.DataFrame({'labels':labels,'gPSD':error_high})
+data2 = pd.DataFrame({'labels':labels,'gPSD':std_err_high})
 # %%
 data_fin = data.append(data2,ignore_index=True)
 data_fin['cond'] = ['Low_ISC','Low_ISC','Low_ISC','High_ISC','High_ISC','High_ISC']
@@ -311,18 +326,19 @@ g4.text(0.5,-0.20, "(b)", size=12, ha="center",
 
 
 labels = ['Low', 'Med', 'High']
+global_mean_low = mean_std(low_gft,ax=3)[0]
+global_mean_high = mean_std(high_gft,ax=3)[0]
+
 gPSD_high = [np.sum(global_mean_high[:50]), np.sum(global_mean_high[50:200]),np.sum(global_mean_high[200:])]
 gPSD_low = [np.sum(global_mean_low[:50]), np.sum(global_mean_low[50:200]),np.sum(global_mean_low[200:])]
-error = [sum(std_err_high[:50]),sum(std_err_high[50:200]),sum(std_err_high[200:])]
-error2 = [sum(std_err_low[:50]),sum(std_err_low[50:200]),sum(std_err_low[200:])]
 
 data= pd.DataFrame({'labels':labels,'gPSD_high':gPSD_high,'gPSD_low':gPSD_low},index=None)
 
 x = np.arange(len(labels))  # the label locations
 width = 0.35  # the width of the bars
 
-rects1 = g6.bar(x - width/2, gPSD_high, width, label='High ISC',yerr=error, align='center', alpha=0.5, ecolor='black', capsize=10)
-rects2 = g6.bar(x + width/2, gPSD_low, width, label='Low ISC',yerr=error2, align='center', alpha=0.5, ecolor='black', capsize=10)
+rects1 = g6.bar(x - width/2, gPSD_high, width, label='High ISC',yerr=std_err_high, align='center', alpha=0.5, ecolor='black', capsize=10,color='red')
+rects2 = g6.bar(x + width/2, gPSD_low, width, label='Low ISC',yerr=std_err_low, align='center', alpha=0.5, ecolor='black', capsize=10,color='blue')
 
 ylab = "gPSD"
 # Add some text for labels, title and custom x-axis tick labels, etc.
@@ -337,9 +353,9 @@ add_stat_annotation(g6,data=data_fin, y='gPSD', x ='labels', hue='cond',
                                 (("Med", "Low_ISC"), ("Med", "High_ISC")),
                                 (("High", "Low_ISC"), ("High", "High_ISC"))],
                         
-                                 perform_stat_test=False, pvalues=[scipy.stats.mstats.ttest_rel(global_mean_high[1:51],global_mean_low[1:51])[1],
-                                 scipy.stats.mstats.ttest_rel(global_mean_high[51:200],global_mean_low[51:200])[1]
-                                , scipy.stats.mstats.ttest_rel(global_mean_high[200:],global_mean_low[200:])[1]], #2.71e-05,1.70e-09,3.33e-14, #0.28,0.47,0.013, #3.00e-05,3.08e-18,2.53e-23 #0.047,9.3e-10,1.03e-08
+                                 perform_stat_test=False, pvalues=[scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[0],low_GFT_power_chunked[0])[1],
+                                 scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[1],low_GFT_power_chunked[1])[1]
+                                , scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[2],low_GFT_power_chunked[2])[1]], #2.71e-05,1.70e-09,3.33e-14, #0.28,0.47,0.013, #3.00e-05,3.08e-18,2.53e-23 #0.047,9.3e-10,1.03e-08
                     line_offset_to_box=0.75, line_offset=0.5, line_height=0.05, text_format='simple', loc='inside', verbose=2)
 g6.set_xlabel('Graph Frequency bands')
 
@@ -355,7 +371,6 @@ g6.text(0.5,-0.25, "(d)", size=12, ha="center",
 #g5.text(0.5,-0.25, "(e)", size=12, ha="center", 
 #         transform=g5.transAxes)
 fig.suptitle('Noise-baseline-corrected eLORETA signal with no graph thresholding', size=20)
-fig.savefig('/homes/v20subra/S4B2/graph_PhD/Results_thresholding/no_percentile_thresholding.png',dpi=500)
-
+#fig.savefig('/homes/v20subra/S4B2/graph_PhD/Results_thresholding/no_percentile_thresholding.png',dpi=500)
 
 # %%

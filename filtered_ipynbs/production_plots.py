@@ -44,7 +44,7 @@ fig.savefig('bootstrapping.png',dpi=500)
 plt.show()
 plt.tight_layout()
 # %%
-high = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/high_isc.npz')['high_isc_averaged']
+high = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/SI_full.npz')['high_isc_averaged']
 low = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/low_isc.npz')['low_isc_averaged']
 differenced =high-low
 
@@ -129,8 +129,6 @@ brain_plot(np.reshape(activation_un,(1,360)),'ff',expand=False)
 # %%
 cd /homes/v20subra/S4B2
 # %%
-high = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/high_isc.npz')['high_isc_averaged']
-low = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/low_isc.npz')['low_isc_averaged']
 
 import seaborn as sns
 import matplotlib.ticker as ticker
@@ -159,11 +157,7 @@ def activation_time_series(diff,title,start1,end1,div,start2,end2,operation):
         svm = sns.heatmap(np.average(diff,axis=0),cmap=cmap_reversed,ax=g1) 
     g1.set_ylabel('ROI Parcels')
     g1.set_xlabel('Time (s)')
-    xticks= [0,125,250,375,500]
-    g1.set_xticks([])
-    g1.set_xticks(xticks)
-    g1.set_xticklabels(labels=[-0.5,-0.25,0,0.25,0.5],rotation='horizontal')
-
+  
     #g1.set_yticklabels(ticks=np.arange(start1,end1,div),labels=np.arange(start2,end2,div),rotation='horizontal')
     g1.axvline(x=250, linestyle = '--', color='b')
     #plt.axvline(x=132, linestyle = '--', color='b')
@@ -181,11 +175,11 @@ def activation_time_series(diff,title,start1,end1,div,start2,end2,operation):
 #spectrogram(differenced_low,'Spectrogram for 1-50 freqs (averaged thru subjs)',1,50,2,1,50)# (differenced high with low & averaged through subjects )
 #spectrogram(differenced_medium,'Spectrogram for 50-200 freqs (averaged thru subjs)',1,150,5,50,200)# (differenced high with low & averaged through subjects )
 #spectrogram(differenced_high,'Spectrogram for 200-360 freqs (averaged thru subjs)',1,160,5,200,360)# (differenced high with low & averaged through subjects )
-activation_time_series(high,None,1,360,10,1,360,'AVG')# (differenced high with low & averaged through subjects )
+activation_time_series(high[:,],None,1,360,10,1,360,'AVG')# (differenced high with low & averaged through subjects )
 
 #spectrogram(high_isc,'Time-Series Activations for all subjects (averaged) for High ISC',1,360,10,1,360)# (differenced high with low & averaged through subjects )
 
-
+#%%
 
 signal=[]
 U0_brain=[]
@@ -252,7 +246,7 @@ signal=[]
 U0_brain=[]
 signal=data # add dimension 1 to signal array
 U0_brain = signals_to_img_labels(signal,path_Glasser,mnitemp['mask'])
-plotting.plot_glass_brain(U0_brain,colorbar=True,plot_abs=False,cmap='seismic',display_mode='lzr',symmetric_cbar=True,figure=fig,axes=g3,title='t-values--after corrcoef on eloreta high vs low-- where pvalues <0.05')
+plotting.plot_glass_brain(U0_brain,colorbar=True,plot_abs=False,cmap='seismic',display_mode='lzr',symmetric_cbar=True,figure=fig,axes=g3,title='t-values b/w high vs low--after corrcoef on eloreta-- where pvalues <0.05')
 g3.text(0.5,0, "(c)", size=12, ha="center", 
          transform=g3.transAxes)
 
@@ -298,5 +292,16 @@ rois[np.array(ttest)<0.05]
 
 sum(activation>0)
 # %%
+
+# %%
+
+np.where(np.average(high,axis=0) == np.max(np.average(high,axis=0)))
+# %%
+1124/125
+# %%
+# %%
+160*125
+# %%
+2351/125
 
 # %%

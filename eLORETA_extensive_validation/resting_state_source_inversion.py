@@ -2,6 +2,7 @@
 #Packages Importing
 from asyncio import events
 from curses.ascii import ETB
+from unicodedata import name
 import mne
 import pathlib
 from mne.externals.pymatreader import read_mat
@@ -206,6 +207,38 @@ np.save('eyes_open_20o_twosecond_randomly_reg',eyes_open)
 
 
 # %%
+import mne
+subjects_dir = mne.datasets.sample.data_path() + '/subjects'
+mne.datasets.fetch_hcp_mmp_parcellation(subjects_dir=subjects_dir,
+                                        verbose=True)
 
+labels = mne.read_labels_from_annot(
+    'fsaverage', 'HCPMMP1', 'both', subjects_dir=subjects_dir)
 
+# %%
+    
+data_path = sample.data_path()
+
+label_name ='Vis-rh.label' # Have to use 2 labels at the same, but will deal with this later
+fname_label = data_path + '/MEG/sample/labels/%s' % label_name
+label_name2 = 'Vis-lh.label'
+fname_label2 = data_path + '/MEG/sample/labels/%s' % label_name2
+label = mne.read_label(fname_label)
+label2 = mne.read_label(fname_label2)
+bihemi = mne.BiHemiLabel(label,label2)
+label
+# %%
+label = mne.read_labels_from_annot(
+    'fsaverage', 'HCPMMP1', hemi='both')
+
+label2 = mne.read_labels_from_annot(
+    'fsaverage', 'HCPMMP1', 'rh',name='u')
+bihemi = mne.BiHemiLabel(label,label2)
+
+# %%
+mne.read_label('/homes/v20subra/S4B2/eLORETA_extensive_validation/lh.HCPMMP1.annot')
+# %%
+labels
+# %%
+mne.label.select_sources('fsaverage',label)
 # %%

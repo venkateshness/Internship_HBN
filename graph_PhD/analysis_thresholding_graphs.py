@@ -3,6 +3,7 @@ from logging import error
 from turtle import color
 import numpy as np
 import matplotlib.pyplot as plt
+from numpy.core.fromnumeric import size
 from pygsp import graphs, filters
 from pygsp import plotting as gsp_plt
 from nilearn import image, plotting, datasets
@@ -125,31 +126,31 @@ def filters(isc,band,length):
 
 ####################################
 #%%
-std_err_high = scipy.stats.sem(np.mean(high_gft,axis=2))
-std_err_low = scipy.stats.sem(np.mean(low_gft,axis=2))
-#%%
 
 global_mean_high = np.mean(high_gft,axis=2)
 global_mean_low =  np.mean(low_gft,axis=2)
 
+print(np.shape(global_mean_high))
 high_GFT_power_chunked = [np.sum(global_mean_high[:,:50],axis=1), np.sum(global_mean_high[:,50:200],axis=1),np.sum(global_mean_high[:,200:],axis=1)]
+
 low_GFT_power_chunked = [np.sum(global_mean_low[:,:50],axis=1), np.sum(global_mean_low[:,50:200],axis=1),np.sum(global_mean_low[:,200:],axis=1)]
+
+print(np.shape(low_GFT_power_chunked))
 
 
 
 #######################################
 #%%
 
-array_high_gft = np.array(high_gft)
-array_low_gft = np.array(low_gft)
 
-std_err_high = [scipy.stats.sem(np.mean(array_high_gft[:,:50,:],axis=(1,2))),
-                scipy.stats.sem(np.mean(array_high_gft[:,50:200,:],axis=(1,2))),
-                scipy.stats.sem(np.mean(array_high_gft[:,200:,:],axis=(1,2)))
+
+std_err_high = [scipy.stats.sem(high_GFT_power_chunked[0]),
+                scipy.stats.sem(high_GFT_power_chunked[1]),
+                scipy.stats.sem(high_GFT_power_chunked[2])
                 ]
-std_err_low = [scipy.stats.sem(np.mean(array_low_gft[:,:50,:],axis=(1,2))),
-                scipy.stats.sem(np.mean(array_low_gft[:,50:200,:],axis=(1,2))),
-                scipy.stats.sem(np.mean(array_low_gft[:,200:,:],axis=(1,2)))
+std_err_low = [scipy.stats.sem(low_GFT_power_chunked[0]),
+                scipy.stats.sem(low_GFT_power_chunked[1]),
+                scipy.stats.sem(low_GFT_power_chunked[2])
                 ]
 
 print(std_err_low)
@@ -177,12 +178,6 @@ mnitemp = fetch_icbm152_2009()
 mask_mni=image.load_img(mnitemp['mask'])
 glasser_atlas=image.load_img(path_Glasser)
 
-
-signal=[]
-U0_brain=[]
-signal=np.expand_dims(np.array(G.U[:, 357]), axis=0) # add dimension 1 to signal array
-U0_brain = signals_to_img_labels(signal,path_Glasser,mnitemp['mask'])
-plotting.plot_glass_brain(U0_brain,title=f'Eigenvector {358}',colorbar=True,plot_abs=False,cmap='spring',display_mode='lzr')
 
 
 print('ttest')
@@ -356,10 +351,10 @@ add_stat_annotation(g6,data=data_fin, y='gPSD', x ='labels', hue='cond',
                                  perform_stat_test=False, pvalues=[scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[0],low_GFT_power_chunked[0])[1],
                                  scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[1],low_GFT_power_chunked[1])[1]
                                 , scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[2],low_GFT_power_chunked[2])[1]], #2.71e-05,1.70e-09,3.33e-14, #0.28,0.47,0.013, #3.00e-05,3.08e-18,2.53e-23 #0.047,9.3e-10,1.03e-08
-                    line_offset_to_box=0.75, line_offset=0.5, line_height=0.05, text_format='simple', loc='inside', verbose=2)
+                    line_offset_to_box=0.95, line_offset=0.5, line_height=0.05, text_format='simple', loc='inside', verbose=2)
 g6.set_xlabel('Graph Frequency bands')
 
-g6.legend(bbox_to_anchor=(0.65, 0.85), bbox_transform=g6.transAxes)
+g6.legend(bbox_to_anchor=(0.65, 0.55), bbox_transform=g6.transAxes)
 g6.text(0.5,-0.25, "(d)", size=12, ha="center", 
          transform=g6.transAxes)
 
@@ -373,4 +368,9 @@ g6.text(0.5,-0.25, "(d)", size=12, ha="center",
 fig.suptitle('Noise-baseline-corrected eLORETA signal with no graph thresholding', size=20)
 #fig.savefig('/homes/v20subra/S4B2/graph_PhD/Results_thresholding/no_percentile_thresholding.png',dpi=500)
 
+# %%
+
+# %# %%
+
+np.shape(high_GFT_power_chunked[0])
 # %%

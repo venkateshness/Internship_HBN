@@ -51,6 +51,8 @@ G = graph_setup(False,93)
 ###############################
 G.compute_fourier_basis()
 
+#%%
+
 ###############################
 ####Get the Glasser atlas
 ###############################
@@ -62,30 +64,39 @@ with np.load(f"/homes/v20subra/S4B2/GSP/hcp/atlas.npz") as dobj:
 ###############################
 ####Loading the eloreta activation files
 ###############################
-high = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/high_isc.npz')['high_isc_averaged']
-low = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/low_isc.npz')['low_isc_averaged']
+time_series = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/SI_full.npz')['high_isc_averaged']
+#low = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/low_isc.npz')['low_isc_averaged']
 
 ######GFTing them
-low_gft = [G.gft(np.array(low[0])),G.gft(np.array(low[1])), 
-       G.gft(np.array(low[2])), G.gft(np.array(low[3])), 
-       G.gft(np.array(low[4])), G.gft(np.array(low[5])),
-       G.gft(np.array(low[6])), G.gft(np.array(low[7])), 
-       G.gft(np.array(low[8])), G.gft(np.array(low[9]))]
+time_series_gft = [G.gft(np.array(time_series[0])),G.gft(np.array(time_series[1])), 
+       G.gft(np.array(time_series[2])), G.gft(np.array(time_series[3])), 
+       G.gft(np.array(time_series[4])), G.gft(np.array(time_series[5])),
+       G.gft(np.array(time_series[6])), G.gft(np.array(time_series[7])), 
+       G.gft(np.array(time_series[8])), G.gft(np.array(time_series[9]))]
 
-high_gft = [G.gft(np.array(high[0])),G.gft(np.array(high[1])), 
-       G.gft(np.array(high[2])), G.gft(np.array(high[3])), 
-       G.gft(np.array(high[4])), G.gft(np.array(high[5])),
-       G.gft(np.array(high[6])), G.gft(np.array(high[7])), 
-       G.gft(np.array(high[8])), G.gft(np.array(high[9]))]
 
-differenced = np.array(high_gft) - np.array(low_gft)
+differenced = np.array(time_series_gft) 
 
 #Trichotomizing sequentially the freqs
 differenced_low_freq = differenced[:,1:51,:]
 differenced_medium_freq = differenced[:,51:200,:]
 differenced_high_freq = differenced[:,200:,:]
 
+#%%
+####################
+#resting state data
+####################
+rstate = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/rstate_source_space_parcellated.npz')['rstate_source_space_parcellated']
 
+
+rstate_gft = [G.gft(np.array(rstate[0])),G.gft(np.array(rstate[1])), 
+       G.gft(np.array(rstate[2])), G.gft(np.array(rstate[3])), 
+       G.gft(np.array(rstate[4])), G.gft(np.array(rstate[5])),
+       G.gft(np.array(rstate[6])), G.gft(np.array(rstate[7])), 
+       G.gft(np.array(rstate[8]))]
+
+
+#%%
 #####################
 ### Mean std calculation
 ####################
@@ -102,7 +113,7 @@ def mean_std(freq,ax):
     
     return mean_t,std_t,top,bottom
 #%%
-values,_,_,_ = mean_std(np.array(low_gft),3)
+values,_,_,_ = mean_std(np.array(time_series_gft),3)
 print('divided power: ', np.sum(values)/2)
 print('sum of power is: ',np.sum(values[:93])) #3%=88;7=92;10=92;0=93
 print('the eigenvalue is:',G.e[94])#3%=89
@@ -120,22 +131,20 @@ def filters(isc,band,length):
     cll.append(np.matmul(indicator,np.abs(np.array(isc)[0,band,:]))) # 1 x length & length x time
     for i in range(1,10):
         cll.append(np.matmul(indicator,np.abs(np.array(isc)[i,band,:])))
-    cll = np.reshape(cll,[10,500])
+    cll = np.reshape(cll,[10,21250])
     return cll
 
 
 ####################################
 #%%
 
-global_mean_high = np.mean(high_gft,axis=2)
-global_mean_low =  np.mean(low_gft,axis=2)
+global_mean_ts = np.mean(time_series_gft,axis=2)
 
-print(np.shape(global_mean_high))
-high_GFT_power_chunked = [np.sum(global_mean_high[:,:50],axis=1), np.sum(global_mean_high[:,50:200],axis=1),np.sum(global_mean_high[:,200:],axis=1)]
+time_series_gft_chunked = [np.sum(global_mean_ts[:,:50],axis=1), np.sum(global_mean_ts[:,50:200],axis=1),np.sum(global_mean_ts[:,200:],axis=1)]
 
-low_GFT_power_chunked = [np.sum(global_mean_low[:,:50],axis=1), np.sum(global_mean_low[:,50:200],axis=1),np.sum(global_mean_low[:,200:],axis=1)]
+#low_GFT_power_chunked = [np.sum(global_mean_low[:,:50],axis=1), np.sum(global_mean_low[:,50:200],axis=1),np.sum(global_mean_low[:,200:],axis=1)]
 
-print(np.shape(low_GFT_power_chunked))
+print(np.shape(time_series_gft_chunked))
 
 
 
@@ -144,25 +153,23 @@ print(np.shape(low_GFT_power_chunked))
 
 
 
-std_err_high = [scipy.stats.sem(high_GFT_power_chunked[0]),
-                scipy.stats.sem(high_GFT_power_chunked[1]),
-                scipy.stats.sem(high_GFT_power_chunked[2])
+time_series_gft_chunked_sem = [scipy.stats.sem(time_series_gft_chunked[0]),
+                scipy.stats.sem(time_series_gft_chunked[1]),
+                scipy.stats.sem(time_series_gft_chunked[2])
                 ]
-std_err_low = [scipy.stats.sem(low_GFT_power_chunked[0]),
-                scipy.stats.sem(low_GFT_power_chunked[1]),
-                scipy.stats.sem(low_GFT_power_chunked[2])
-                ]
+# std_err_low = [scipy.stats.sem(low_GFT_power_chunked[0]),
+#                 scipy.stats.sem(low_GFT_power_chunked[1]),
+#                 scipy.stats.sem(low_GFT_power_chunked[2])
+#                 ]
 
-print(std_err_low)
 
-print(std_err_high)
 
 
 #%%
 
-labels = ['Low', 'Med', 'High']
-import pandas as pd
-data= pd.DataFrame({'labels':labels,'gPSD_low':low_GFT_power_chunked,'gPSD_high':high_GFT_power_chunked},index=None)
+# labels = ['Low', 'Med', 'High']
+# import pandas as pd
+# data= pd.DataFrame({'labels':labels,'gPSD_low':low_GFT_power_chunked,'gPSD_high':high_GFT_power_chunked},index=None)
 
 
 from nilearn.regions import signals_to_img_labels  
@@ -181,9 +188,9 @@ glasser_atlas=image.load_img(path_Glasser)
 
 
 print('ttest')
-print('for low freq       :',scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[0],low_GFT_power_chunked[0]))
-print('for medium         :',scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[1],low_GFT_power_chunked[1]))
-print('for high           :',scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[2],low_GFT_power_chunked[2]))
+print('for low freq       :',scipy.stats.mstats.ttest_rel(time_series_gft_chunked[0],time_series_gft_chunked[1]))
+# print('for medium         :',scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[1],low_GFT_power_chunked[1]))
+# print('for high           :',scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[2],low_GFT_power_chunked[2]))
 
 # %%
 
@@ -373,4 +380,40 @@ fig.suptitle('Noise-baseline-corrected eLORETA signal with no graph thresholding
 # %# %%
 
 np.shape(high_GFT_power_chunked[0])
+# %%
+
+
+#def lowISC_high_ISC(*typ):
+a = 1  # number of rows
+b = 2  # number of columns
+c = 1  # initialize plot counter
+typ = {'High ISC':time_series_gft}
+
+
+#plt.subplot(a, b, c)
+cll1 = filters(typ[list(typ.keys())[0]],l,len(l))
+cll2 = filters(typ[list(typ.keys())[0]],h,len(h))
+mean_t1,std_t1, top1, bottom1= mean_std(cll1,2)
+mean_t2,std_t2, top2, bottom2= mean_std(cll2,2)
+
+
+plt.legend()
+plt.plot(range(1250),mean_t1[155*125:165*125],color='g')
+plt.fill_between(range(1250),bottom1[155*125:165*125],top1[155*125:165*125], color='g', alpha=.1,label='Low frequency')
+plt.plot(range(1250),mean_t2[155*125:165*125],color='r')
+plt.fill_between(range(1250),bottom2[155*125:165*125], top2[155*125:165*125], color='r', alpha=.1,label='High frequency')
+
+plt.ylabel('gPSDs sliced using Eigen values')
+plt.xlabel('Time (s)',fontsize=10)
+xticks= np.arange(1,1250,125)
+plt.axvline(x=625, linestyle = '--', color='b')
+
+plt.xticks(xticks,labels=np.arange(1,10,1))
+plt.title('gPSD time-series for High ISC', pad=10)
+plt.legend()
+
+
+# %%
+
+165*125 - [155*125:165*125]
 # %%

@@ -12,7 +12,7 @@ noise = np.load('/users/local/Venkatesh/Generated_Data/noise_floor.npz')['a']
 isc_result = np.load('/users/local/Venkatesh/Generated_Data/CCA_ISC.npz')['CCA_ISC']
 
 significance = np.where(np.max(np.array(noise)[:,0,:],axis=0)<isc_result)
-
+significance
 # %%
 import os
 os.chdir('/homes/v20subra/S4B2/')

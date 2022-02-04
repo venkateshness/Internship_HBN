@@ -233,3 +233,5 @@ rstate_parcellated = [np.array(averaging_by_parcellation(vals[0])),np.array(aver
 # %%
 np.savez_compressed('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/rstate_source_space_parcellated',rstate_source_space_parcellated=rstate_parcellated)
 # %%
+
+

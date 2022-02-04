@@ -1,4 +1,5 @@
 #%%
+from cProfile import label
 from logging import error
 from turtle import color
 import numpy as np
@@ -45,7 +46,7 @@ def graph_setup(thresholding, percentage):
     return G
 
 
-G = graph_setup(False,93)
+G = graph_setup(False,90)
 ###############################
 ####Decomposing into eigenmodes
 ###############################
@@ -82,6 +83,7 @@ differenced_low_freq = differenced[:,1:51,:]
 differenced_medium_freq = differenced[:,51:200,:]
 differenced_high_freq = differenced[:,200:,:]
 
+np.shape(differenced_low_freq)
 #%%
 ####################
 #resting state data
@@ -113,7 +115,7 @@ def mean_std(freq,ax):
     
     return mean_t,std_t,top,bottom
 #%%
-values,_,_,_ = mean_std(np.array(time_series_gft),3)
+values,_,_,_ = mean_std(np.array(rstate_gft),3)
 print('divided power: ', np.sum(values)/2)
 print('sum of power is: ',np.sum(values[:93])) #3%=88;7=92;10=92;0=93
 print('the eigenvalue is:',G.e[94])#3%=89
@@ -194,12 +196,12 @@ print('for low freq       :',scipy.stats.mstats.ttest_rel(time_series_gft_chunke
 
 # %%
 
-data = pd.DataFrame({'labels':labels,'gPSD':std_err_low})
+# data = pd.DataFrame({'labels':labels,'gPSD':std_err_low})
 
-data2 = pd.DataFrame({'labels':labels,'gPSD':std_err_high})
+# data2 = pd.DataFrame({'labels':labels,'gPSD':std_err_high})
 # %%
-data_fin = data.append(data2,ignore_index=True)
-data_fin['cond'] = ['Low_ISC','Low_ISC','Low_ISC','High_ISC','High_ISC','High_ISC']
+# data_fin = data.append(data2,ignore_index=True)
+# data_fin['cond'] = ['Low_ISC','Low_ISC','Low_ISC','High_ISC','High_ISC','High_ISC']
 # %%
 
 import seaborn as sns 
@@ -233,10 +235,11 @@ def heatmap(diff,title,start1,end1,div,start2,end2,operation,ylabel,axes):
         svm = sns.heatmap(np.average(diff,axis=0),cmap=cmap_reversed,ax=axes) 
     axes.set_ylabel('Graph Frequencies')
     axes.set_xlabel('Time (s)')
-    xticks= [0,125,250,375,500]
+    
+    xticks= np.arange(1,21250,2125)
     axes.set_xticks([])
     axes.set_xticks(xticks)
-    axes.set_xticklabels(labels=[-0.5,-0.25,0,0.25,0.5],rotation='horizontal')
+    axes.set_xticklabels(labels=np.arange(1,170,17),rotation='vertical')
     yticks= np.arange(start1,end1,div)
     axes.set_yticks([])
     axes.set_yticks(yticks)
@@ -244,7 +247,7 @@ def heatmap(diff,title,start1,end1,div,start2,end2,operation,ylabel,axes):
     
     
     axes.yaxis.set_tick_params(rotation=360)
-    axes.axvline(x=250, linestyle = '--', color='b')
+    axes.axvline(x=160*125, linestyle = '--', color='b')
     axes.set_title(title,pad=10)
     
 
@@ -262,17 +265,17 @@ a = 1  # number of rows
 b = 2  # number of columns
 c = 1  # initialize plot counter
 plt.figure(figsize=(15,15))
-typ = {'High ISC':high_gft,'Low ISC':low_gft}
+typ = {'High ISC':time_series_gft}
 for i in range(2):
         
-        mean_t1,std_t1, top1, bottom1= mean_std(high_gft,3)
-        mean_t2,std_t2, top2, bottom2= mean_std(low_gft,3)
+        mean_t1,std_t1, top1, bottom1= mean_std(time_series_gft,3)
+        #mean_t2,std_t2, top2, bottom2= mean_std(low_gft,3)
         
         #plt.legend()
         g5.plot(range(359),mean_t1[:],color='r')
         g5.fill_between(range(359),bottom1[:],top1[:], color='r', alpha=.1,label='High ISC')
-        g5.plot(range(359),mean_t2[:],color='b')
-        g5.fill_between(range(359),bottom2[:], top2[:], color='b', alpha=.1,label='Low ISC')
+        # g5.plot(range(359),mean_t2[:],color='b')
+        # g5.fill_between(range(359),bottom2[:], top2[:], color='b', alpha=.1,label='Low ISC')
         g5.set_ylabel('gPSDs')
         g5.set_xlabel('Eigen values')
         g5.set_title('Graph PSD for both conditions (after temporal avg) (c)')
@@ -295,7 +298,7 @@ g5.legend(['High ISC','Low ISC'])
 a = 1  # number of rows
 b = 2  # number of columns
 c = 1  # initialize plot counter
-typ = {'High ISC':high_gft}
+typ = {'High ISC':time_series_gft}
 
 
 #plt.subplot(a, b, c)
@@ -306,17 +309,17 @@ mean_t2,std_t2, top2, bottom2= mean_std(cll2,2)
 
 
 g4.legend()
-g4.plot(range(500),mean_t1,color='b')
-g4.fill_between(range(500),bottom1,top1, color='b', alpha=.1,label='Low frequency')
-g4.plot(range(500),mean_t2,color='r')
-g4.fill_between(range(500),bottom2, top2, color='r', alpha=.1,label='High frequency')
+g4.plot(range(21250),mean_t1,color='b')
+g4.fill_between(range(21250),bottom1,top1, color='b', alpha=.1,label='Low frequency')
+g4.plot(range(21250),mean_t2,color='r')
+g4.fill_between(range(21250),bottom2, top2, color='r', alpha=.1,label='High frequency')
 
 g4.set_ylabel('gPSDs sliced using Eigen values')
 g4.set_xlabel('Time (s)',fontsize=10)
-xticks= [0,125,250,375,500]
+# xticks= [0,125,250,375,500]
 
-g4.set_xticks(xticks)
-g4.set_xticklabels(labels=[-0.5,-0.25,0,0.25,0.5],rotation='horizontal')
+# g4.set_xticks(xticks)
+# g4.set_xticklabels(labels=[-0.5,-0.25,0,0.25,0.5],rotation='horizontal')
 g4.axvline(x=250, linestyle = '--', color='g')
 g4.set_title('gPSD time-series for High ISC', pad=10)
 g4.legend()
@@ -328,19 +331,19 @@ g4.text(0.5,-0.20, "(b)", size=12, ha="center",
 
 
 labels = ['Low', 'Med', 'High']
-global_mean_low = mean_std(low_gft,ax=3)[0]
-global_mean_high = mean_std(high_gft,ax=3)[0]
+global_mean_low = mean_std(time_series_gft,ax=3)[0]
+# global_mean_high = mean_std(high_gft,ax=3)[0]
 
-gPSD_high = [np.sum(global_mean_high[:50]), np.sum(global_mean_high[50:200]),np.sum(global_mean_high[200:])]
+# gPSD_high = [np.sum(global_mean_high[:50]), np.sum(global_mean_high[50:200]),np.sum(global_mean_high[200:])]
 gPSD_low = [np.sum(global_mean_low[:50]), np.sum(global_mean_low[50:200]),np.sum(global_mean_low[200:])]
 
-data= pd.DataFrame({'labels':labels,'gPSD_high':gPSD_high,'gPSD_low':gPSD_low},index=None)
+data= pd.DataFrame({'labels':labels,'gPSD_low':gPSD_low},index=None)
 
 x = np.arange(len(labels))  # the label locations
 width = 0.35  # the width of the bars
 
-rects1 = g6.bar(x - width/2, gPSD_high, width, label='High ISC',yerr=std_err_high, align='center', alpha=0.5, ecolor='black', capsize=10,color='red')
-rects2 = g6.bar(x + width/2, gPSD_low, width, label='Low ISC',yerr=std_err_low, align='center', alpha=0.5, ecolor='black', capsize=10,color='blue')
+# rects1 = g6.bar(x - width/2, gPSD_high, width, label='High ISC',yerr=std_err_high, align='center', alpha=0.5, ecolor='black', capsize=10,color='red')
+rects2 = g6.bar(x + width/2, gPSD_low, width, yerr=time_series_gft_chunked_sem, align='center', alpha=0.5, ecolor='black', capsize=10,color='blue')
 
 ylab = "gPSD"
 # Add some text for labels, title and custom x-axis tick labels, etc.
@@ -348,17 +351,15 @@ g6.set_ylabel(ylab)
 g6.set_title('Freq-wise power grouping (errorbar = SEM)',pad=10)#(after trichotomizing) while SEM being error bars
 g6.set_xticks(x)
 g6.set_xticklabels(labels)
-order = ['low ISC','high ISC'] 
+#order = ['low ISC','high ISC'] 
 from statannot import add_stat_annotation
-add_stat_annotation(g6,data=data_fin, y='gPSD', x ='labels', hue='cond',
-                    box_pairs=[(("Low", "Low_ISC"), ("Low", "High_ISC")),
-                                (("Med", "Low_ISC"), ("Med", "High_ISC")),
-                                (("High", "Low_ISC"), ("High", "High_ISC"))],
+# add_stat_annotation(g6,data=data_fin, y='gPSD', x ='labels', hue='cond',
+#                     box_pairs=[(("Low", "Low_ISC"), ("Low", "High_ISC")),
+#                                 (("Med", "Low_ISC"), ("Med", "High_ISC")),
+#                                 (("High", "Low_ISC"), ("High", "High_ISC"))],
                         
-                                 perform_stat_test=False, pvalues=[scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[0],low_GFT_power_chunked[0])[1],
-                                 scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[1],low_GFT_power_chunked[1])[1]
-                                , scipy.stats.mstats.ttest_rel(high_GFT_power_chunked[2],low_GFT_power_chunked[2])[1]], #2.71e-05,1.70e-09,3.33e-14, #0.28,0.47,0.013, #3.00e-05,3.08e-18,2.53e-23 #0.047,9.3e-10,1.03e-08
-                    line_offset_to_box=0.95, line_offset=0.5, line_height=0.05, text_format='simple', loc='inside', verbose=2)
+#                                  perform_stat_test=False,  #2.71e-05,1.70e-09,3.33e-14, #0.28,0.47,0.013, #3.00e-05,3.08e-18,2.53e-23 #0.047,9.3e-10,1.03e-08
+#                     line_offset_to_box=0.95, line_offset=0.5, line_height=0.05, text_format='simple', loc='inside', verbose=2)
 g6.set_xlabel('Graph Frequency bands')
 
 g6.legend(bbox_to_anchor=(0.65, 0.55), bbox_transform=g6.transAxes)
@@ -377,43 +378,78 @@ fig.suptitle('Noise-baseline-corrected eLORETA signal with no graph thresholding
 
 # %%
 
-# %# %%
 
-np.shape(high_GFT_power_chunked[0])
+isc_result = np.load('/users/local/Venkatesh/Generated_Data/sourceCCA_ISC.npz')['sourceCCA']
+v = np.load('/users/local/Venkatesh/Generated_Data/noise_floor_1000_on_SI_full.npz')['a']
+
+significance = np.array(np.where(np.max(np.array(v)[0,:],axis=0)<isc_result[0]))
+
+
+
+
+fig = plt.figure(figsize = (10,10))
+ax1 = plt.subplot(411, frameon=False)
+ax2 = plt.subplot(412, frameon=False)
+ax3 = plt.subplot(413, frameon=False)
+ax4 = plt.subplot(414, frameon=False)
+
+ax1.plot(np.average(np.average(np.abs(differenced_low_freq),axis=0),axis=0),color='g',label='Low')[0]
+ax1.legend(loc="upper left")
+
+ax2.plot(np.average(np.average(np.abs(differenced_medium_freq),axis=0),axis=0),color='b',label='Med')[0]
+ax2.legend(loc="upper left")
+
+ax3.plot(np.average(np.average(np.abs(differenced_high_freq),axis=0),axis=0),color='r',label='high')[0]
+ax3.legend(loc="upper left")
+
+# xticks= np.arange(1,21250,125)
+#ax1.legend((a1), ('Low', 'Med','High'), loc='lower left', shadow=True)
+
+xticks= np.arange(1,21250,2125)
+
+
+ax4.plot(range(1,171),isc_result[0], label='Source-level estimation')
+ax4.fill_between(range(1,171),np.max(np.array(v)[:,0,:],axis=0).T,np.min(np.array(v)[:,0,:],axis=0).T,color ='grey',alpha=0.8)
+ax4.plot(significance,isc_result[0][significance],
+              marker='o', ls="",color='red',markersize=4)
+ax4.legend(loc="upper left")
+def set_ticks(ax):
+    ax.set_xticks([])
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(labels=np.arange(1,170,17),rotation='vertical')
+set_ticks(ax1)
+set_ticks(ax2)
+set_ticks(ax3)
+ax4.set_xticks([])
+ax4.set_xticks(np.arange(1,170,17))
+ax4.set_xticklabels(labels=np.arange(1,170,17),rotation='vertical')
+
+
+ax1.get_shared_x_axes().join(ax1, ax2,ax3,ax4)
+ax1.set_xticklabels([])
+ax2.set_xticklabels([])
+ax3.set_xticklabels([])
+
+
+fig.text(0.5, 0.04, 'time (s)', ha='center')
+fig.text(0.04, 0.25, 'ISC coefficients', rotation='vertical')
+fig.text(0.04, 0.65, 'graph PSD',  rotation='vertical')
+plt.suptitle('Band-wise averaged power spectrum for video-watching after applying abs')
+plt.show()
+fig.savefig('/homes/v20subra/S4B2/graph_PhD/video-watching-graph_avged_abs.jpeg')
 # %%
 
-
-#def lowISC_high_ISC(*typ):
-a = 1  # number of rows
-b = 2  # number of columns
-c = 1  # initialize plot counter
-typ = {'High ISC':time_series_gft}
-
-
-#plt.subplot(a, b, c)
-cll1 = filters(typ[list(typ.keys())[0]],l,len(l))
-cll2 = filters(typ[list(typ.keys())[0]],h,len(h))
-mean_t1,std_t1, top1, bottom1= mean_std(cll1,2)
-mean_t2,std_t2, top2, bottom2= mean_std(cll2,2)
-
-
-plt.legend()
-plt.plot(range(1250),mean_t1[155*125:165*125],color='g')
-plt.fill_between(range(1250),bottom1[155*125:165*125],top1[155*125:165*125], color='g', alpha=.1,label='Low frequency')
-plt.plot(range(1250),mean_t2[155*125:165*125],color='r')
-plt.fill_between(range(1250),bottom2[155*125:165*125], top2[155*125:165*125], color='r', alpha=.1,label='High frequency')
-
-plt.ylabel('gPSDs sliced using Eigen values')
-plt.xlabel('Time (s)',fontsize=10)
-xticks= np.arange(1,1250,125)
-plt.axvline(x=625, linestyle = '--', color='b')
-
-plt.xticks(xticks,labels=np.arange(1,10,1))
-plt.title('gPSD time-series for High ISC', pad=10)
-plt.legend()
-
+# %%
+np.shape(np.average(np.array(rstate_gft),axis=2))
+# %%
+np.array(time_series_gft)[0,0,0]
 
 # %%
 
-165*125 - [155*125:165*125]
+# %%
+np.average(np.abs(differenced_low_freq),axis=0).T
+# %%
+np.shape(np.sum(np.average(differenced_low_freq,axis=0),axis=0))
+# %%
+np.average(np.average(differenced_medium_freq,axis=0),axis=0)
 # %%

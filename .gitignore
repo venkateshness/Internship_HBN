@@ -48,5 +48,10 @@ filtered_ipynbs/.ipynb_checkpoints
 !eLORETA_extensive_validation/resting_state_source_inversion.py
 !eLORETA_extensive_validation/video-watching_psd.py
 
+/graph_analysis_during_PhD/*
+!/graph_analysis_during_PhD/hilbert_graph_analysis_code_results
+!/graph_analysis_during_PhD/analysis_thresholding_graphs.py
+
+
 /Weekly_Reports
 Despicable Me-HQ.wav

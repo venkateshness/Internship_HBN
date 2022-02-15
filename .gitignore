@@ -46,5 +46,7 @@ filtered_ipynbs/.ipynb_checkpoints
 /noise_baseline
 /eLORETA_extensive_validation/*
 !eLORETA_extensive_validation/resting_state_source_inversion.py
+!eLORETA_extensive_validation/video-watching_psd.py
+
 /Weekly_Reports
 Despicable Me-HQ.wav

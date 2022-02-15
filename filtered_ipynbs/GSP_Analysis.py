@@ -19,6 +19,7 @@ from pathlib import Path
 from scipy import io as sio
 from pygsp import graphs
 from seaborn.utils import axis_ticklabels_overlap
+from sklearn.metrics import zero_one_loss
 
 path_Glasser='/homes/v20subra/S4B2/GSP/Glasser_masker.nii.gz'
 res_path=''
@@ -582,13 +583,15 @@ glasser_atlas=image.load_img(path_Glasser)
 
 
 #print(NiftiMasker.__doc__)
-
+zeroes = np.zeros((360,1))
+index = [27,207,23,203,124,304,174,354]
+zeroes[index,:] = 1
 signal=[]
 U0_brain=[]
-signal=np.expand_dims(np.array(G.U[:, 357]), axis=0) # add dimension 1 to signal array
+signal=np.expand_dims(zeroes, axis=0) # add dimension 1 to signal array
 U0_brain = signals_to_img_labels(signal,path_Glasser,mnitemp['mask'])
 plotting.plot_glass_brain(U0_brain,title=f'Eigenvector {358}',colorbar=True,plot_abs=False,cmap='spring',display_mode='lzr')
-plt.savefig("eigvector358.png")
+#plt.savefig("eigvector358.png")
 
 # %%
 
@@ -1022,4 +1025,8 @@ import seaborn
 seaborn.despine(left=True, bottom=True, right=True)
 
 
+# %%
+
+
+# %%
 # %%

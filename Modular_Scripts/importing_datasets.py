@@ -1,6 +1,7 @@
 import mne
 import numpy as np
 import pandas as pd
+import os
 
 def csv_to_raw_mne(path_to_file, path_to_montage_ses, fs, path_to_events, filename, state, montage='GSN-HydroCel-129'):
     
@@ -27,7 +28,9 @@ def csv_to_raw_mne(path_to_file, path_to_montage_ses, fs, path_to_events, filena
 
     # set standard montage
     if montage:
-        raw.set_montage(montage)
+            raw.set_montage(montage)
+            raw.set_eeg_reference('average', projection=True)
+            raw.apply_proj()
 
     if path_to_events:
         # parse events file
@@ -102,23 +105,31 @@ def preparation_resting_state(filename, state):
 
 
 '''Resting state'''
+subject_list = ['NDARCD401HGZ','NDARDX770PJK', 'NDAREZ098ZPE', 'NDARGY054ENV', 'NDARMR242UKQ', 
+                'NDARRD720XZK', 'NDARTR840XP1', 'NDARXJ696AMX', 'NDARYY218AGA', 'NDARZP564MHU']
 
-#resting_state_sub1_raw,resting_state_sub1_events = preparation_resting_state('task1/NDARBF805EHN','Rest')
-resting_state_sub2_raw, resting_state_sub2_events = preparation_resting_state(
-    'NDARDX770PJK', 'Rest')
-#resting_state_sub4_raw,resting_state_sub4_events = preparation_resting_state('NDARGY054ENV','Rest')
-resting_state_sub2_raw.save(
-    'Generated_Data/importing/resting_state_sub2_raw.fif', overwrite=True)
-np.savez('Generated_Data/importing/resting_state_sub2_events.npz',
-         sub2=resting_state_sub2_events)
+
+for i in [ v for v in np.arange(1,11) if v != 3]:
+    if not os.path.exists(f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{subject_list[i-1]}'):
+        os.makedirs(f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{subject_list[i-1]}')
+
+    resting_state_raw, resting_state_events = preparation_resting_state(
+        subject_list[i-1], 'Rest')
+    resting_state_raw.save(
+        f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{subject_list[i-1]}/raw.fif', overwrite=True)
+    np.savez_compressed(f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{subject_list[i-1]}/events.npz',
+            resting_state_events=resting_state_events)
+
 
 
 '''Video-watching'''
-subject_list = ['NDARCD401HGZ', 'NDARDX770PJK', 'NDAREZ098ZPE', 'NDARGY054ENV', 'NDARMR242UKQ',
-                'NDARRD720XZK', 'NDARTR840XP1', 'NDARXJ696AMX', 'NDARYY218AGA', 'NDARZP564MHU']
+
 for i in range(1, 11):
+    if not os.path.exists(f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{subject_list[i-1]}'):
+        os.makedirs(f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{subject_list[i-1]}')
+
     sub_raw, sub_events = preparation(subject_list[i-1], 'others')
     sub_raw.save(
-        f'Generated_Data/importing/video_sub{i}_raw.fif', overwrite=True)
-    np.savez(
-        f'Generated_Data/importing/video_sub{i}_events.npz', sub2=sub_events)
+        f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{subject_list[i-1]}/raw.fif', overwrite=True)
+    np.savez_compressed(
+        f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{subject_list[i-1]}/events.npz', video_watching_events=sub_events)

@@ -4,7 +4,6 @@ from asyncio import events
 from curses.ascii import ETB
 from unicodedata import name
 from graphql import Source
-from matplotlib.lines import _LineStyle
 import mne
 import pathlib
 from mne.externals.pymatreader import read_mat
@@ -29,7 +28,6 @@ from scipy import signal
 from scipy.signal import butter, lfilter
 import scipy
 
-reload(Source_PSD)
 
 
 from mne.datasets import fetch_fsaverage
@@ -92,23 +90,60 @@ from scipy import stats
 subjects = ['NDARCD401HGZ','NDARDX770PJK', 'NDAREZ098ZPE', 'NDARGY054ENV', 'NDARMR242UKQ', 
 'NDARRD720XZK', 'NDARTR840XP1', 'NDARXJ696AMX', 'NDARYY218AGA', 'NDARZP564MHU']
 
-vals = list()
-eyes_open = dict()
-eyes_closed = dict()
+
+'''Resting state''' 
+subject_list = ['NDARAD481FXF', 'NDARAV945MCQ', 'NDARBK669XJQ', 'NDARCD401HGZ', 'NDARDX770PJK', 'NDAREC182WW2',
+ 'NDAREZ098ZPE', 'NDARFB107PVH', 'NDARGY054ENV', 'NDARHF023VG3', 'NDARHP176DPE', 'NDARJP133YL3', 'NDARKH741PL8', 'NDARKW999WZD',
+ 'NDARLB017MBJ', 'NDARMA875ARE', 'NDARMR242UKQ', 'NDARNE511XHU', 'NDARNT042GRA', 'NDARPE596LZL', 'NDARPR768KT4', 'NDARRA733VWX',
+ 'NDARRD720XZK', 'NDARRN619WHY', 'NDARTR840XP1', 'NDARUJ646APQ', 'NDARVN646NZP', 'NDARWJ087HKJ', 'NDARWV470ATB', 'NDARXB704HFD',
+ 'NDARXJ468UGL', 'NDARXJ696AMX', 'NDARXU679ZE8', 'NDARXY337ZH9', 'NDARYM257RR6', 'NDARYX530MZU', 'NDARYY218AGA', 'NDARYZ408VWW',
+ 'NDARZB377WZJ', 'NDARZF288FB7', 'NDARZJ414CAA', 'NDARZT772PU4']
+
+
+data_present = list()
+subjects = list()
+##################################
+# dataset files check#############@
+
+
+# for i in range(1, len(subject_list)+1):
+#     path_to_file = '/users/local/Venkatesh/HBN/%s/RestingState_data.csv' % subject_list[i-1]
+#     path_to_file_video = '/users/local/Venkatesh/HBN/%s/Video3_event.csv' % subject_list[i-1]
+
+#     if os.path.isfile(path_to_file):
+        
+#         rs_data_present.append(subject_list[i-1])
+#     if os.path.isfile(path_to_file_video):
+#         subjects.append(subject_list[i-1])
+#     print(len(rs_data_present))
+#     print(len(subjects))
+
+data_present = list()
+for i in range(1, len(subject_list)+1):
+    path_to_file = '/users/local/Venkatesh/HBN/%s/RestingState_data.csv' % subject_list[i-1]
+    path_to_file_video = '/users/local/Venkatesh/HBN/%s/Video3_event.csv' % subject_list[i-1]
+
+    if (os.path.isfile(path_to_file) and os.path.isfile(path_to_file_video)):
+        data_present.append (subject_list[i-1])
 
 #%%
 import mne
 import os
 os.chdir('/homes/v20subra/S4B2/')
 
+vals = list()
+eyes_open = dict()
+eyes_closed = dict()
+
+
 from Modular_Scripts import epochs_slicing,Source_PSD
 indexes = np.hstack([np.arange(0*500,170*500)])
 vals = list()
 eyes_open = dict()
 eyes_closed = dict()
-for i in range(10):
+for i in range(len(data_present)):
 
-    raw_video,events_video = mne.io.read_raw_fif(f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{subjects[i]}/raw.fif'),np.load(f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{subjects[i]}/events.npz')['video_watching_events']
+    raw_video,events_video = mne.io.read_raw_fif(f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{data_present[i]}/raw.fif'),np.load(f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{data_present[i]}/events.npz')['video_watching_events']
     epochs = epochs_slicing.epochs(raw_video,events_video,[83,103,9999], tmin=0, tmax=170, fs = 500, epochs_to_slice='83')
     info_d = mne.create_info(raw_video.info['ch_names'],sfreq=125,ch_types = 'eeg')
     indexed_epochs = epochs.get_data()[:,:,:]
@@ -122,13 +157,11 @@ for i in range(10):
     if i==0:
         fwd_model = mne.make_forward_solution(raw_video.info, trans=trans, src=source_space, bem=bem, eeg=True, mindist=5.0)
     
-    if i!=2:
-        function_call = fire_2(raw,fwd_model,subjects[i],ep)
+    function_call = fire_2(raw,fwd_model,data_present[i],ep)
 
-    if i==2:
-            function_call = fire_2(raw,fwd_model,subjects[1],ep)
 
     vals.append(function_call)
+
 
 #%%
 
@@ -143,18 +176,15 @@ def averaging_by_parcellation(sub):
 
     for i in list(set(atlas['labels_R']))[:-1]:
         l.append(np.mean(sub.data[:10242][np.where(i== atlas['labels_R'])],axis=0))
+    print(np.shape(l))
     return l
-
-rstate_parcellated = [np.array(averaging_by_parcellation(vals[0][0])),np.array(averaging_by_parcellation(vals[1][0])), 
-       np.array(averaging_by_parcellation(vals[2][0])), np.array(averaging_by_parcellation(vals[3][0])), 
-       np.array(averaging_by_parcellation(vals[4][0])), np.array(averaging_by_parcellation(vals[5][0])),
-       np.array(averaging_by_parcellation(vals[6][0])), np.array(averaging_by_parcellation(vals[7][0])), 
-       np.array(averaging_by_parcellation(vals[8][0])), np.array(averaging_by_parcellation(vals[9][0]))]
-
-
+video_watching_bundle_STC = list()
+for i in range(len(data_present)):
+    video_watching_bundle_STC.append(np.array(averaging_by_parcellation(vals[i][0])))
 
 # %%
-np.savez_compressed('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/rstate_source_space_parcellated',rstate_source_space_parcellated=rstate_parcellated)
+np.savez_compressed('/users/local/Venkatesh/Generated_Data/25_subjects/video_watching_bundle_STC_parcellated',video_watching_bundle_STC_parcellated =video_watching_bundle_STC)
+# video_watching_bundle_STC = np.load('/users/local/Venkatesh/Generated_Data/25_subjects/video_watching_bundle_STC_parcellated_rstate_corrected.npz')['video_watching_bundle_STC_parcellated']
 # %%
 
 # %%
@@ -170,6 +200,7 @@ samples, sample_rate = librosa.load('/homes/v20subra/S4B2/Despicable Me-HQ.wav',
 samples_normed = (samples - np.average(samples))/np.std(samples)
 rms = librosa.feature.rms(y=samples_normed,hop_length=386,frame_length=1000)
 
+# %%
 
 import seaborn as sns
 sns.set_theme()
@@ -243,7 +274,7 @@ def stat_fun(x):
 index_roi = [27,206,23,202,124,303,174,353] 
 
 fig = plt.figure(constrained_layout=True,figsize=(25,25))
-subfigs = fig.subfigures(5, 2)
+subfigs = fig.subfigures(12, 2)
 
 for outerind, subfig in enumerate(subfigs.flat):
     
@@ -259,7 +290,7 @@ for outerind, subfig in enumerate(subfigs.flat):
             ax.set_xticklabels(np.arange(-200,1001,200))
             ax.set_ylabel("RMS")
         else:
-            bandpassed = butter_bandpass_filter(rstate_parcellated[outerind], lowcut = 8, highcut = 13,fs=125)
+            bandpassed = butter_bandpass_filter(video_watching_bundle_STC[outerind], lowcut = 8, highcut = 13,fs=125)
             hilberted = scipy.signal.hilbert(bandpassed, N=None, axis=- 1)
 
             ax.plot( (np.average(np.abs(hilberted[:,19825-25:19825+125])[index_roi,:],axis=0).T))
@@ -331,7 +362,7 @@ plt.show()
 bands = dict()
 
 def filter_and_store(low,high,band):
-    bandpassed = butter_bandpass_filter(rstate_parcellated[:], lowcut = low, highcut = high,fs=125)
+    bandpassed = butter_bandpass_filter(video_watching_bundle_STC, lowcut = low, highcut = high,fs=125)
     hilberted = scipy.signal.hilbert(bandpassed, N=None, axis=- 1)
     bands[band] = np.abs(hilberted)
 
@@ -340,10 +371,15 @@ filter_and_store(13,30,'beta')
 filter_and_store(4,8,'theta')
 
 # %%
-np.savez_compressed('/users/local/Venkatesh/Generated_Data/eLORETA_extensive_validation/envelope_signal_bandpassed',**bands)
+np.savez_compressed('/users/local/Venkatesh/Generated_Data/25_subjects/envelope_signal_bandpassed',**bands)
 
 # %%
 ####################################
 #####Sanity check###################
 ####################################
 np.load('/users/local/Venkatesh/Generated_Data/eLORETA_extensive_validation/envelope_signal_bandpassed.npz', mmap_mode='r')
+
+
+# %%
+np.shape(bands['theta'])
+# %%

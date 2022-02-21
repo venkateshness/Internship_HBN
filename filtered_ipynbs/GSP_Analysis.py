@@ -670,7 +670,6 @@ data_fin = data.append(data2,ignore_index=True)
 data_fin['cond'] = ['Low_ISC','Low_ISC','Low_ISC','High_ISC','High_ISC','High_ISC']
 # %%
 
-data_fin
 
 # %%
 np.shape(low_gft)

@@ -57,7 +57,7 @@ G.compute_fourier_basis()
 
 #%%
 
-envelope_signal_bandpassed = np.load('/users/local/Venkatesh/Generated_Data/eLORETA_extensive_validation/envelope_signal_bandpassed.npz', mmap_mode='r')
+envelope_signal_bandpassed = np.load('/users/local/Venkatesh/Generated_Data/25_subjects/envelope_signal_bandpassed.npz', mmap_mode='r')
 
 alpha = envelope_signal_bandpassed['alpha']
 beta = envelope_signal_bandpassed['beta']
@@ -109,17 +109,27 @@ noise_floor_source = np.load('/users/local/Venkatesh/Generated_Data/noise_floor_
 significance = np.array(np.where(np.max(np.array(noise_floor_source)[:,0,:],axis=0)<isc_result[0]))
 
 def axvspan(axes,fs,c,alpha):
-    axes.axvspan(154*fs, 162*fs, alpha=alpha, color=c)
-    axes.axvspan(84*fs, 87*fs, alpha=alpha, color=c)
-    axes.axvspan(102*fs, 107*fs, alpha=alpha, color=c)
-    axes.axvspan(113*fs, 115*fs, alpha=alpha, color=c)
-    axes.axvspan(119*fs, 123*fs, alpha=alpha, color=c)
-    axes.axvspan(48*fs, 49*fs, alpha=alpha, color=c)
+    # axes.axvspan(154*fs, 162*fs, alpha=alpha, color=c)
+    # axes.axvspan(84*fs, 87*fs, alpha=alpha, color=c)
+    # axes.axvspan(102*fs, 107*fs, alpha=alpha, color=c)
+    # axes.axvspan(113*fs, 115*fs, alpha=alpha, color=c)
+    # axes.axvspan(119*fs, 123*fs, alpha=alpha, color=c)
+    # axes.axvspan(48*fs, 49*fs, alpha=alpha, color=c)
 
-    axes.axvspan(53*fs, 58*fs, alpha=alpha, color=c)
-    axes.axvspan(131*fs, 135*fs, alpha=alpha, color=c)
-    axes.axvspan(16*fs, 17*fs, alpha=alpha, color=c)
-    axes.axvspan(74*fs, 75*fs, alpha=alpha, color=c)
+    # axes.axvspan(53*fs, 58*fs, alpha=alpha, color=c)
+    # axes.axvspan(131*fs, 135*fs, alpha=alpha, color=c)
+    # axes.axvspan(16*fs, 17*fs, alpha=alpha, color=c)
+    # axes.axvspan(74*fs, 75*fs, alpha=alpha, color=c)
+    axes.axvspan(5*fs, 13*fs, alpha=alpha, color='r')
+    axes.axvspan(40*fs, 46*fs, alpha=alpha, color='r')
+    axes.axvspan(164*fs, 170*fs, alpha=alpha, color='r')
+    axes.axvspan(53*fs, 59*fs, alpha=alpha, color='b')
+    axes.axvspan(84*fs, 87*fs, alpha=alpha, color='b')
+    axes.axvspan(102*fs, 105*fs, alpha=alpha, color='b')
+    axes.axvspan(154*fs, 162*fs, alpha=alpha, color='b')
+
+    # items_weak = np.hstack([np.arange(5*125,13*125),np.arange(40*125,46*125),np.arange(164*125,170*125)])
+    # items_strong = np.hstack([np.arange(53*125,59*125),np.arange(84*125,87*125),np.arange(102*125,105*125),np.arange(154*125,162*125)])
 
 
 
@@ -189,21 +199,22 @@ def slicing(what_to_slice,where_to_slice):
 
 
 # %%
+print(significance)
 items_weak = np.hstack([np.arange(5*125,13*125),np.arange(40*125,46*125),np.arange(164*125,170*125)])
 items_strong = np.hstack([np.arange(53*125,59*125),np.arange(84*125,87*125),np.arange(102*125,105*125),np.arange(154*125,162*125)])
 
-# %%
-low,med,high = split(np.abs(envelope_signal_bandpassed_gft_total['theta']))
+low,med,high = split(np.abs(envelope_signal_bandpassed_gft_total['alpha']))
 
 def slice_and_sum(freqs,items_strong,items_weak):
 
-    summed_strong_time = np.sum(slicing(freqs,items_strong),axis=2)
-    summed_weak_time =  np.sum(slicing(freqs,items_weak),axis=2)
-    # scipy.stats.ttest_rel(summed_high,summed_low,axis=1)
+    summed_strong_time = np.average(slicing(freqs,items_strong),axis=2)
+    summed_weak_time =  np.average(slicing(freqs,items_weak),axis=2)
 
     summed_strong_subjs =  np.sum(summed_strong_time,axis=1)
     summed_weak_subjs =  np.sum(summed_weak_time,axis=1)
-    return summed_strong_subjs, summed_weak_subjs
+
+    return summed_strong_subjs, summed_weak_subjs,scipy.stats.ttest_rel(summed_strong_time,summed_weak_time,axis=1)
+
 
 summed_low_freqs = np.sum(low,axis=1)
 summed_med_freqs = np.sum(med,axis=1)
@@ -211,15 +222,16 @@ summed_high_freqs = np.sum(high,axis=1)
 
 
 labels = ['Low', 'Med', 'High']
-to_plot_strong_ISC_low_freqs, to_plot_weak_ISC_low_freqs = slice_and_sum(summed_low_freqs,items_strong,items_weak)
-to_plot_strong_ISC_med_freqs, to_plot_weak_ISC_med_freqs = slice_and_sum(summed_med_freqs,items_strong,items_weak)
-to_plot_strong_ISC_high_freqs, to_plot_weak_ISC_high_freqs = slice_and_sum(summed_high_freqs,items_strong,items_weak)
+to_plot_strong_ISC_low_freqs, to_plot_weak_ISC_low_freqs, ttest_low_freqs = slice_and_sum(summed_low_freqs,items_strong,items_weak)
+to_plot_strong_ISC_med_freqs, to_plot_weak_ISC_med_freqs, ttest_med_freqs = slice_and_sum(summed_med_freqs,items_strong,items_weak)
+to_plot_strong_ISC_high_freqs, to_plot_weak_ISC_high_freqs, ttest_high_freqs = slice_and_sum(summed_high_freqs,items_strong,items_weak)
 
 to_plot_strong_ISC = [to_plot_strong_ISC_low_freqs, to_plot_strong_ISC_med_freqs, to_plot_strong_ISC_high_freqs]
 to_plot_weak_ISC = [to_plot_weak_ISC_low_freqs, to_plot_weak_ISC_med_freqs, to_plot_weak_ISC_high_freqs]
 
-
-std_err = scipy.stats.sem(to_plot_strong_ISC_low_freqs)
+print(ttest_low_freqs)
+print(ttest_med_freqs)
+print(ttest_high_freqs)
 
 
 x = np.arange(len(labels))  # the label locations
@@ -227,7 +239,7 @@ width = 0.35  # the width of the bars
 
 
 def stats_SEM(freqs,items):
-    return  scipy.stats.sem(np.sum(np.array(slicing(freqs,items)),axis=2).T)
+    return  scipy.stats.sem(np.average(np.array(slicing(freqs,items)),axis=2).T)
 
 std_err_weak = np.hstack([stats_SEM(summed_low_freqs,items_weak),
                 stats_SEM(summed_med_freqs,items_weak),
@@ -243,3 +255,7 @@ rects2 = plt.bar(x + width/2, to_plot_weak_ISC[0], width, label='Weak ISC', yerr
 
 plt.ylabel("gPSD")
 plt.xticks(x,labels)
+
+
+# %%
+

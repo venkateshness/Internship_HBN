@@ -74,10 +74,10 @@ def exclude_channels_from_raw(raw, ch_to_exclude):
 
 
 def preparation(filename, state):
-    path_to_file = '/users/local/Venkatesh/HBN/%s/EEG/preprocessed/csv_format/Video3_data.csv' % filename
-    path_to_events = '/users/local/Venkatesh/HBN/%s/EEG/preprocessed/csv_format/Video3_event.csv' % filename
+    path_to_file = '/users/local/Venkatesh/HBN/%s/Video3_data.csv' % filename
+    path_to_events = '/users/local/Venkatesh/HBN/%s/Video3_event.csv' % filename
     path_to_montage_glob = '/users/local/Venkatesh/HBN/GSN_HydroCel_129_hbn.sfp'
-    path_to_montage_ses = '/users/local/Venkatesh/HBN/%s/EEG/preprocessed/csv_format/Video3_chanlocs.csv' % filename
+    path_to_montage_ses = '/users/local/Venkatesh/HBN/%s/Video3_chanlocs.csv' % filename
     fs = 500
     chans_glob = mne.channels.read_custom_montage(
         fname='/users/local/Venkatesh/HBN/GSN_HydroCel_129_hbn.sfp')  # read_montage is deprecated
@@ -90,10 +90,10 @@ def preparation(filename, state):
 
 
 def preparation_resting_state(filename, state):
-    path_to_file = '/users/local/Venkatesh/HBN/%s/EEG/preprocessed/csv_format/RestingState_data.csv' % filename
-    path_to_events = '/users/local/Venkatesh/HBN/%s/EEG/preprocessed/csv_format/RestingState_event.csv' % filename
+    path_to_file = '/users/local/Venkatesh/HBN/%s/RestingState_data.csv' % filename
+    path_to_events = '/users/local/Venkatesh/HBN/%s/RestingState_event.csv' % filename
     path_to_montage_glob = '/users/local/Venkatesh/HBN/GSN_HydroCel_129_hbn.sfp'
-    path_to_montage_ses = '/users/local/Venkatesh/HBN/%s/EEG/preprocessed/csv_format/RestingState_chanlocs.csv' % filename
+    path_to_montage_ses = '/users/local/Venkatesh/HBN/%s/RestingState_chanlocs.csv' % filename
     fs = 500
     chans_glob = mne.channels.read_custom_montage(
         fname='/users/local/Venkatesh/HBN/GSN_HydroCel_129_hbn.sfp')  # read_montage is deprecated
@@ -104,32 +104,62 @@ def preparation_resting_state(filename, state):
     return raw, events
 
 
-'''Resting state'''
-subject_list = ['NDARCD401HGZ','NDARDX770PJK', 'NDAREZ098ZPE', 'NDARGY054ENV', 'NDARMR242UKQ', 
-                'NDARRD720XZK', 'NDARTR840XP1', 'NDARXJ696AMX', 'NDARYY218AGA', 'NDARZP564MHU']
+'''Resting state''' 
+subject_list = ['NDARAD481FXF', 'NDARAV945MCQ', 'NDARBK669XJQ', 'NDARCD401HGZ', 'NDARDX770PJK', 'NDAREC182WW2',
+ 'NDAREZ098ZPE', 'NDARFB107PVH', 'NDARGY054ENV', 'NDARHF023VG3', 'NDARHP176DPE', 'NDARJP133YL3', 'NDARKH741PL8', 'NDARKW999WZD',
+ 'NDARLB017MBJ', 'NDARMA875ARE', 'NDARMR242UKQ', 'NDARNE511XHU', 'NDARNT042GRA', 'NDARPE596LZL', 'NDARPR768KT4', 'NDARRA733VWX',
+ 'NDARRD720XZK', 'NDARRN619WHY', 'NDARTR840XP1', 'NDARUJ646APQ', 'NDARVN646NZP', 'NDARWJ087HKJ', 'NDARWV470ATB', 'NDARXB704HFD',
+ 'NDARXJ468UGL', 'NDARXJ696AMX', 'NDARXU679ZE8', 'NDARXY337ZH9', 'NDARYM257RR6', 'NDARYX530MZU', 'NDARYY218AGA', 'NDARYZ408VWW',
+ 'NDARZB377WZJ', 'NDARZF288FB7', 'NDARZJ414CAA', 'NDARZT772PU4']
 
 
-for i in [ v for v in np.arange(1,11) if v != 3]:
-    if not os.path.exists(f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{subject_list[i-1]}'):
-        os.makedirs(f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{subject_list[i-1]}')
+rs_data_present = list()
+video_data_present = list()
+##################################
+# dataset files check#############@
+
+
+for i in range(1, len(subject_list)+1):
+    path_to_file = '/users/local/Venkatesh/HBN/%s/RestingState_data.csv' % subject_list[i-1]
+    path_to_file_video = '/users/local/Venkatesh/HBN/%s/Video3_event.csv' % subject_list[i-1]
+
+    if os.path.isfile(path_to_file):
+        
+        rs_data_present.append(subject_list[i-1])
+    if os.path.isfile(path_to_file_video):
+        video_data_present.append(subject_list[i-1])
+    print(len(rs_data_present))
+    print(len(video_data_present))
+
+print( len( np.logical_and (set(rs_data_present), set(video_data_present))))
+
+
+for i in range(1,len(rs_data_present)+1):
+    if not os.path.exists(f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{rs_data_present[i-1]}'):
+        os.makedirs(f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{rs_data_present[i-1]}')
 
     resting_state_raw, resting_state_events = preparation_resting_state(
-        subject_list[i-1], 'Rest')
+        rs_data_present[i-1], 'Rest')
     resting_state_raw.save(
-        f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{subject_list[i-1]}/raw.fif', overwrite=True)
-    np.savez_compressed(f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{subject_list[i-1]}/events.npz',
+        f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{rs_data_present[i-1]}/raw.fif', overwrite=True)
+    np.savez_compressed(f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{rs_data_present[i-1]}/events.npz',
             resting_state_events=resting_state_events)
 
 
 
 '''Video-watching'''
 
-for i in range(1, 11):
-    if not os.path.exists(f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{subject_list[i-1]}'):
-        os.makedirs(f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{subject_list[i-1]}')
+for i in range(1, len(video_data_present)+1):
+    if not os.path.exists(f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{video_data_present[i-1]}'):
+        os.makedirs(f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{video_data_present[i-1]}')
 
-    sub_raw, sub_events = preparation(subject_list[i-1], 'others')
+    sub_raw, sub_events = preparation(video_data_present[i-1], 'others')
     sub_raw.save(
-        f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{subject_list[i-1]}/raw.fif', overwrite=True)
+        f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{video_data_present[i-1]}/raw.fif', overwrite=True)
     np.savez_compressed(
-        f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{subject_list[i-1]}/events.npz', video_watching_events=sub_events)
+        f'/users/local/Venkatesh/Generated_Data/importing/video-watching/{video_data_present[i-1]}/events.npz', video_watching_events=sub_events)
+
+
+
+
+

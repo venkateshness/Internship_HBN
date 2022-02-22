@@ -45,4 +45,4 @@ def CCAfy(epochs,how_many_channels_for_CCA,need_noise_floor,how_many_subjects,ho
 
         isc_noise_floored= Parallel(n_jobs=NB_CPU-1,max_nbytes=None)(delayed(process)(i) for i in tqdm(range(how_many_trials_for_noise_floor)))
         return isc_results, isc_noise_floored
-    return isc_results
+    return isc_results, W

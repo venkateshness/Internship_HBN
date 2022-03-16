@@ -260,7 +260,7 @@ print(len(items_weak)/125)
 
 
 #Step 1
-low,high = split(np.abs(envelope_signal_bandpassed_gft_total['beta']))
+full_band = split(np.abs(envelope_signal_bandpassed_gft_total['beta']))
 
 population_data = dict()
 
@@ -280,23 +280,25 @@ def slice_and_sum(freqs,items_strong,items_weak,which_freq):
 
 
 #Step 2
-summed_low_freqs = np.linalg.norm(low,axis=1)
+summed_full_band_freqs = np.linalg.norm(full_band,axis=1)
 #summed_med_freqs = np.linalg.norm(med,axis=1)
-summed_high_freqs = np.linalg.norm(high,axis=1)
+# summed_high_freqs = np.linalg.norm(high,axis=1)
 
-print("indicator",np.shape(summed_high_freqs))
+print("indicator",np.shape(summed_full_band_freqs))
 
-labels = ['Low' ,'High']
-to_plot_strong_ISC_low_freqs, to_plot_weak_ISC_low_freqs, ttest_low_freqs = slice_and_sum(summed_low_freqs,items_strong,items_weak,'low_freq')
+labels = ['Wide-band']
+to_plot_strong_ISC_full_band, to_plot_weak_ISC_full_band, ttest_full_band = slice_and_sum(summed_full_band_freqs,items_strong,items_weak,'full_band')
 #to_plot_strong_ISC_med_freqs, to_plot_weak_ISC_med_freqs, ttest_med_freqs = slice_and_sum(summed_med_freqs,items_strong,items_weak)
-to_plot_strong_ISC_high_freqs, to_plot_weak_ISC_high_freqs, ttest_high_freqs = slice_and_sum(summed_high_freqs,items_strong,items_weak,'high_freq')
+# to_plot_strong_ISC_high_freqs, to_plot_weak_ISC_high_freqs, ttest_high_freqs = slice_and_sum(summed_high_freqs,items_strong,items_weak,'high_freq')
 
-to_plot_strong_ISC = [to_plot_strong_ISC_low_freqs, to_plot_strong_ISC_high_freqs]
-to_plot_weak_ISC = [to_plot_weak_ISC_low_freqs, to_plot_weak_ISC_high_freqs]
+to_plot_strong_ISC = [to_plot_strong_ISC_full_band[0]]
+to_plot_weak_ISC = [to_plot_weak_ISC_full_band[0]]
 
-print(ttest_low_freqs)
-print(ttest_high_freqs)
+print(ttest_full_band)
 
+
+to_plot_strong_ISC
+#%%
 
 
 x = np.arange(len(labels))  # the label locations
@@ -307,11 +309,9 @@ def stats_SEM(freqs,items):
 
     return scipy.stats.sem(np.average(np.array(slicing(freqs,items)),axis=2).T)#/np.sqrt(25)
 
-std_err_weak = np.hstack([stats_SEM(summed_low_freqs,items_weak),
-                stats_SEM(summed_high_freqs,items_weak)])
+std_err_weak = np.hstack([stats_SEM(summed_full_band_freqs,items_weak)])
 
-std_err_strong = np.hstack([stats_SEM(summed_low_freqs,items_strong),
-                stats_SEM(summed_high_freqs,items_strong)])
+std_err_strong = np.hstack([stats_SEM(summed_full_band_freqs,items_strong)])
 
 print(std_err_strong)
 print(std_err_weak)

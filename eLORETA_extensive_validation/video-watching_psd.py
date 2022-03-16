@@ -36,7 +36,7 @@ from mne.minimum_norm import make_inverse_operator, apply_inverse, apply_inverse
 import os.path as op
 # Data-loading
 def noise_covariance(subject):
-    raw_resting_state,events_resting_state = mne.io.read_raw_fif(f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{subject}/raw.fif'),np.load(f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{subject}/events.npz')['resting_state_events']
+    raw_resting_state,events_resting_state = mne.io.read_raw_fif(f'/users2/local/Venkatesh/Generated_Data/importing/resting_state/{subject}/raw.fif'),np.load(f'/users/local/Venkatesh/Generated_Data/importing/resting_state/{subject}/events.npz')['resting_state_events']
 
     epochs = mne.Epochs(raw_resting_state, events_resting_state, [20,30,90], tmin=0, tmax=20,preload=True,baseline=(0,None))
     epochs_resampled = epochs.resample(250)# Downsampling to 250Hz
@@ -120,8 +120,8 @@ subjects = list()
 
 data_present = list()
 for i in range(1, len(subject_list)+1):
-    path_to_file = '/users/local/Venkatesh/HBN/%s/RestingState_data.csv' % subject_list[i-1]
-    path_to_file_video = '/users/local/Venkatesh/HBN/%s/Video3_event.csv' % subject_list[i-1]
+    path_to_file = '/users2/local/Venkatesh/HBN/%s/RestingState_data.csv' % subject_list[i-1]
+    path_to_file_video = '/users2/local/Venkatesh/HBN/%s/Video3_event.csv' % subject_list[i-1]
 
     if (os.path.isfile(path_to_file) and os.path.isfile(path_to_file_video)):
         data_present.append (subject_list[i-1])
@@ -183,16 +183,18 @@ for i in range(len(data_present)):
     video_watching_bundle_STC.append(np.array(averaging_by_parcellation(vals[i][0])))
 
 # %%
-np.savez_compressed('/users/local/Venkatesh/Generated_Data/25_subjects/video_watching_bundle_STC_parcellated',video_watching_bundle_STC_parcellated =video_watching_bundle_STC)
-# video_watching_bundle_STC = np.load('/users/local/Venkatesh/Generated_Data/25_subjects/video_watching_bundle_STC_parcellated_rstate_corrected.npz')['video_watching_bundle_STC_parcellated']
+#np.savez_compressed('/users/local/Venkatesh/Generated_Data/25_subjects/video_watching_bundle_STC_parcellated',video_watching_bundle_STC_parcellated =video_watching_bundle_STC)
+video_watching_bundle_STC = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects/video_watching_bundle_STC_parcellated_rstate_corrected.npz')['video_watching_bundle_STC_parcellated']
 # %%
 
 # %%
 #index_roi = [37,38,39,217,218,219]
 
-############################################
-###DB METER#################################
-############################################
+##############################################
+###RMS VOLUME#################################
+##############################################
+
+
 import librosa
 import numpy as np
 import matplotlib.pyplot as plt
@@ -221,14 +223,6 @@ fig.text(0.04, 0.3, 'RMS', va='top', rotation='vertical')
 
 plt.show()
 
-
-##############################################
-###RMS VOLUME#################################
-##############################################
-
-samples, sample_rate = librosa.load('/homes/v20subra/S4B2/Despicable Me-HQ.wav',sr=None)
-samples_normed = (samples - np.average(samples))/np.std(samples)
-rms = librosa.feature.rms(y=samples_normed,hop_length=386,frame_length=1000)
 
 
 
@@ -274,10 +268,10 @@ def stat_fun(x):
 index_roi = [27,206,23,202,124,303,174,353] 
 
 fig = plt.figure(constrained_layout=True,figsize=(25,25))
-subfigs = fig.subfigures(12, 2)
+subfigs = fig.subfigures(13, 2)
+subfigs =np.delete(subfigs,[-1])
 
 for outerind, subfig in enumerate(subfigs.flat):
-    
     subfig.suptitle(f'Subject {outerind+1}')
     axs = subfig.subplots(2, 1)
     for innerind, ax in enumerate(axs.flat):
@@ -299,14 +293,15 @@ for outerind, subfig in enumerate(subfigs.flat):
             ax.set_xticks([])
             ax.set_xticks(ticks=np.arange(0,151,25))
             ax.set_xticklabels(np.arange(-200,1001,200))
-            ax.set_ylabel("Envelope power")
-            ax.set_xlabel('For the Peak around 158th second (in ms)')
-fig.suptitle("RMS, up top and the hilbert envelope at the bottom (np.abs(hilberted_signal))")
+plt.ylabel("Envelope power")
+plt.xlabel('time (in ms)')
+fig.suptitle("RMS, up top and the hilbert envelope at the bottom (np.abs(hilberted_signal)) for the Peak around 158th second")
 plt.show()
-# fig.savefig('/homes/v20subra/S4B2/eLORETA_extensive_validation/rms_hilberted_signal_158s.jpg')
+#fig.savefig('/homes/v20subra/S4B2/eLORETA_extensive_validation/25_subjects/rms_hilberted_signal_158s.jpg')
 
 # %%
-
+bandpassed = butter_bandpass_filter(video_watching_bundle_STC[:], lowcut = 8, highcut = 13,fs=125)
+hilberted = scipy.signal.hilbert(bandpassed, N=None, axis=- 1)
 fig = plt.figure(constrained_layout=True,figsize=(25,25))
 
 subfigs = fig.subfigures(1, 2)
@@ -316,43 +311,60 @@ auditory =[23,23+179]
 dmn = [32,32+179]
 
 rois = {'VISUAL - V1':visual,'MOTOR - Primary Motor':motor,'AUDITORY - A1':auditory,'DMN - v23ab':dmn}
-time = [list(range(12184-25,12184+125)),list(range(19825-25,19825+125))]
+time = [list(range(12184-250,12184+125)),list(range(19825-250,19825+125))]
 
 for outerind, subfig in enumerate(subfigs.flat):
     if outerind == 0:
         subfig.suptitle(f'Peak around 97th second')
     else:
-        subfig.suptitle(f'Peak around 158th second (Strong ISC)')
+        subfig.suptitle(f'Peak around 158th second')
 
     axs = subfig.subplots(5, 1)
     for innerind, ax in enumerate(axs.flat):
         if innerind == 0:
-            ax.plot(rms[:,time[outerind]].T)
+            ax.plot(rms[:,time[outerind][140:]].T)
             ax.set_yticks([])
-            ax.axvline(x=25,color='r',linestyle='--')
+            ax.axvline(x=110,color='r',linestyle='--')
             plt.setp(ax.get_xticklabels(), visible=False)
             ax.set_ylabel("RMS")
+            if outerind==0:
+                ax.axvspan(210-140, 227-140, alpha=0.2, color='green')
+            if outerind==1:
+                ax.axvspan(217-140, 222-140, alpha=0.2, color='green')
         if innerind>0:
             
             hilberted_avg = np.average(np.abs(hilberted)[:,list(rois.values())[innerind-1],:][:,:,time[outerind]],axis=1)
 
             hilberted_avg_normalised = list()
-            for i in range(10):
-                hilberted_avg_normalised.append( (hilberted_avg[i] - np.min(hilberted_avg[i]))/(np.max(hilberted_avg[i]) - np.min(hilberted_avg[i])))
+            for i in range(25):
+                if outerind==0:
+                    hilberted_avg_normalised.append( (hilberted_avg[i,140:] - np.average(hilberted_avg[:,:70]))/(np.average(hilberted_avg[:,:70])))
+                if outerind==1:
+                    hilberted_avg_normalised.append( (hilberted_avg[i,140:] - np.average(hilberted_avg[:,:77]))/(np.average(hilberted_avg[:,:77])))
+                
+            sem = scipy.stats.sem(np.array(hilberted_avg_normalised))
+            averaged = np.average(hilberted_avg_normalised,axis=0)
 
-            mean_t1,std_t1, top1, bottom1= mean_std(np.array(hilberted_avg_normalised),2)
-
-            ax.plot(np.average(np.array(hilberted_avg_normalised),axis=0).T)
-            ax.fill_between(range(150),bottom1,top1, color='b', alpha=.25)
+            ax.plot(averaged)
+            ax.fill_between(range(235),averaged-sem,averaged+sem, color='b', alpha=.25)
             ax.set_xticks([])
-            ax.axvline(x=25,color='r',linestyle='--')
+            ax.axvline(x=110,color='r',linestyle='--')
+            if outerind==0:
+                ax.axvspan(210-140, 227-140, alpha=0.2, color='green')
+                ax.axvspan(0, 210-140, alpha=0.2, color='red')
+
+            if outerind==1:
+                ax.axvspan(217-140, 222-140, alpha=0.2, color='green')
+                ax.axvspan(0, 217-140, alpha=0.2, color='red')
+
             ax.legend([list(rois.keys())[innerind-1]])
-    ax.set_xticks(ticks=np.arange(0,151,25))
-    ax.set_xticklabels(np.arange(-200,1001,200))
+    ax.set_xticks(ticks=np.arange(-10,235,20))
+    ax.set_xticklabels(np.arange(-900,1001,150))
     ax.set_xlabel('time(ms)')
-fig.suptitle("The envelope signal for various regions for two periods")
+fig.suptitle("The envelope alpha signal for various regions for two periods")
 plt.show()
-# fig.savefig('/homes/v20subra/S4B2/eLORETA_extensive_validation/rms_hilberted_signal_different_regions_two_periods.jpg')
+#%%
+fig.savefig('/homes/v20subra/S4B2/eLORETA_extensive_validation/25_subjects/rms_hilberted_signal_different_regions_two_periods.jpg')
 
 # %%
 
@@ -371,7 +383,7 @@ filter_and_store(13,30,'beta')
 filter_and_store(4,8,'theta')
 
 # %%
-np.savez_compressed('/users/local/Venkatesh/Generated_Data/25_subjects/envelope_signal_bandpassed',**bands)
+np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects/envelope_signal_bandpassed',**bands)
 
 # %%
 ####################################
@@ -382,4 +394,53 @@ np.load('/users/local/Venkatesh/Generated_Data/eLORETA_extensive_validation/enve
 
 # %%
 np.shape(bands['theta'])
+# %%
+
+
+np.shape(hilberted_avg_normalised)
+
+
+# %%
+import os
+os.chdir('/homes/v20subra/S4B2')
+from Modular_Scripts import epochs_slicing
+raw_video,events_video = mne.io.read_raw_fif(f'/users2/local/Venkatesh/Generated_Data/importing/video-watching/{data_present[0]}/raw.fif'),np.load(f'/users2/local/Venkatesh/Generated_Data/importing/video-watching/{data_present[0]}/events.npz')['video_watching_events']
+epochs = epochs_slicing.epochs(raw_video,events_video,[83,103,9999], tmin=0, tmax=170, fs = 500, epochs_to_slice='83')
+
+# %%
+
+len(raw_video.info.ch_names)
+# %%
+
+# %%
+plt.plot((rms[:,12184-10:12184+125]).T)
+# %%
+12184-250
+# %%
+12174-11934
+# %%
+# %%
+
+# %%
+plt.plot((rms[:,19825-33:19825-28]).T)
+plt.axvline(x=82)
+# %%
+plt.plot((rms[:,12184-40:12184+125]).T)
+
+# %%
+np.where ( (rms[:,time[outerind][140:]].T) == np.max(rms[:,time[outerind][140:]].T))
+# %%
+235-110-30
+# %%
+len(np.arange(-900,1001,150))
+# %%
+len(np.arange(-10,235,20))
+# %%
+19825-28
+
+# %%
+375-125-40
+# %%
+375-125-28
+
 # %%

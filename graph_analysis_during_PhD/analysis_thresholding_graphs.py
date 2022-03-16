@@ -65,7 +65,7 @@ with np.load(f"/homes/v20subra/S4B2/GSP/hcp/atlas.npz") as dobj:
 ###############################
 ####Loading the eloreta activation files
 ###############################
-time_series = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/SI_full.npz')['high_isc_averaged']
+time_series = np.load('/users2/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/SI_full.npz')['high_isc_averaged']
 #low = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/low_isc.npz')['low_isc_averaged']
 
 ######GFTing them
@@ -88,7 +88,7 @@ np.shape(differenced_low_freq)
 ####################
 #resting state data
 ####################
-rstate = np.load('/users/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/rstate_source_space_parcellated.npz')['rstate_source_space_parcellated']
+rstate = np.load('/users2/local/Venkatesh/Generated_Data/noise_baseline_properly-done_eloreta/rstate_source_space_parcellated.npz')['rstate_source_space_parcellated']
 
 
 rstate_gft = [G.gft(np.array(rstate[0])),G.gft(np.array(rstate[1])), 
@@ -302,7 +302,6 @@ typ = {'High ISC':time_series_gft}
 
 
 #plt.subplot(a, b, c)
-cll1 = filters(typ[list(typ.keys())[0]],l,len(l))
 cll2 = filters(typ[list(typ.keys())[0]],h,len(h))
 mean_t1,std_t1, top1, bottom1= mean_std(cll1,2)
 mean_t2,std_t2, top2, bottom2= mean_std(cll2,2)
@@ -379,8 +378,9 @@ fig.suptitle('Noise-baseline-corrected eLORETA signal with no graph thresholding
 # %%
 
 
-isc_result = np.load('/users/local/Venkatesh/Generated_Data/sourceCCA_ISC.npz')['sourceCCA']
-v = np.load('/users/local/Venkatesh/Generated_Data/noise_floor_1000_on_SI_full.npz')['a']
+
+isc_result = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects/sourceCCA_ISC.npz')['sourceISC']
+v = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects/noise_floor_source.npz')['sourceCCA']
 
 significance = np.array(np.where(np.max(np.array(v)[0,:],axis=0)<isc_result[0]))
 

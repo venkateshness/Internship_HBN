@@ -51,6 +51,7 @@ filtered_ipynbs/.ipynb_checkpoints
 /graph_analysis_during_PhD/*
 !/graph_analysis_during_PhD/hilbert_graph_analysis_code_results
 !/graph_analysis_during_PhD/analysis_thresholding_graphs.py
+!/graph_analysis_during_PhD/smoothing_roughness_check.py
 
 
 /Weekly_Reports

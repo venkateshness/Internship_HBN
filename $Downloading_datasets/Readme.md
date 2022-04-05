@@ -4,4 +4,4 @@
 
 # To download:
 * Run: `sh Downloading_from_AWS.sh subject_list`
-* Check out code_and_data_for_subjects_inclusion folder for the details regarding the subject inclusion beside the code and data to do so
+* Check out the code_and_data_for_subjects_inclusion folder for the details regarding the subject inclusion beside the code and data to do so

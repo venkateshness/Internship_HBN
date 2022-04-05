@@ -1,4 +1,4 @@
-# This project has been carried out as part of the final-year internship of the MSc program (to be updated, incoming)
+# This project has been carried out as part of the final-year internship of the MSc program (Readme, to be updated, incoming)
 
 # Commonalities:
   * Dataset: 

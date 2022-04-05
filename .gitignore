@@ -58,6 +58,8 @@ filtered_ipynbs/.ipynb_checkpoints
 Despicable Me-HQ.wav
 /eLORETA_extensive_validation
 /filtered_ipynbs
-/graph_analysis_during_PhD
+/graph_analysis_during_PhD/*
+/Graph-related_analysis/Functional_graph_setup/*
+!/Graph-related_analysis/Functional_graph_setup/Preprocessing.ipynb
 /bootstrapping.png
 /Pub-quality Figures

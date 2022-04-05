@@ -6,7 +6,7 @@ import ezodf
 import os
 import csv
 
-os.chdir("/homes/v20subra/S4B2/participants_and_stuffs_for_subjects_inclusion")
+os.chdir("/homes/v20subra/S4B2/$Downloading_datasets/code_and_data_for_subjects_inclusion")
 
 mat = scipy.io.loadmat('subject_list.mat')
 

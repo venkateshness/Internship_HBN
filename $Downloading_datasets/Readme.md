@@ -3,5 +3,9 @@
 * The link to the HBN Biobank where the AWS, subject-related and other informations are obtained if needed additionally --  http://fcon_1000.projects.nitrc.org/indi/cmi_healthy_brain_network/
 
 # To download:
-* Run: `sh Downloading_from_AWS.sh subjects_to_download_for`
-* Check out the code_and_data_for_subjects_inclusion folder for the details regarding the subject inclusion beside the code and data to do so
+<<<<<<< HEAD
+* Run: `sh Downloading_from_AWS.sh subject_list`
+=======
+* Run: `sh Downloading_from_AWS.sh subject_list`
+>>>>>>> d55d3d8ca8a1fc221b63ac2cc3f6bceeaef1a428
+* Check out code_and_data_for_subjects_inclusion folder for the details regarding the subject inclusion beside the code and data to do so

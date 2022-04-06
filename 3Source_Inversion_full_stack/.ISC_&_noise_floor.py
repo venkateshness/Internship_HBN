@@ -52,4 +52,4 @@ stop = default_timer()
 
 print(np.shape(isc_noise_floored))
 print(f'Whole Elapsed time: {round(stop - sta)} seconds.')
-np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/25_subjects_copy_FOR_TESTING/noise_floor', isc_noise_floored=isc_noise_floored)
+np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/noise_floor', isc_noise_floored=isc_noise_floored)

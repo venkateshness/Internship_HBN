@@ -31,27 +31,22 @@ import pickle
 import pandas as pd
 from scipy.stats import boxcox
 import scipy
-from scipy.stats import boxcox
+import torch
+
 sns.set_theme()
 ############################################################
 ##########Getting the Graph ready###########################
 ############################################################ 
-def graph_setup(thresholding, percentage):
+def graph_setup(thresholding, percentage,weights):
     path_Glasser='/homes/v20subra/S4B2/GSP/Glasser_masker.nii.gz'
     res_path=''
 
     # Load structural connectivity matrix
-    connectivity = sio.loadmat('/homes/v20subra/S4B2/GSP/SC_avg56.mat')['SC_avg56']
-    # pickle_file = '/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl'
-
-    # with open(pickle_file, 'rb') as f:
-    #     [connectivity]= pickle.load(f)
-    # connectivity.shape
-    # np.fill_diagonal(connectivity,0)
-    # print(connectivity)
+    # connectivity = sio.loadmat('/homes/v20subra/S4B2/GSP/SC_avg56.mat')['SC_avg56']
+ 
     coordinates = sio.loadmat('/homes/v20subra/S4B2/GSP/Glasser360_2mm_codebook.mat')['codeBook'] 
 
-    G=graphs.Graph(connectivity,gtype='HCP subject',lap_type='combinatorial',coords=coordinates) 
+    G=graphs.Graph(weights,gtype='HCP subject',lap_type='combinatorial',coords=coordinates) 
     G.set_coordinates('spring')
     print('{} nodes, {} edges'.format(G.N, G.Ne))
 
@@ -66,7 +61,32 @@ def graph_setup(thresholding, percentage):
 
     return G
 
-G = graph_setup(False,66)
+def NNgraph():
+    
+  
+    pickle_file = '/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl'
+
+    with open(pickle_file, 'rb') as f:
+                [connectivity]= pickle.load(f)
+    np.fill_diagonal(connectivity,0)
+
+    graph = torch.from_numpy(connectivity)
+    knn_graph = torch.zeros(graph.shape)
+    for i in range(knn_graph.shape[0]):
+        graph[i,i] = 0
+        best_k = torch.sort(graph[i,:])[1][-8:]
+        knn_graph[i, best_k] = 1
+        knn_graph[best_k, i] = 1
+        
+    degree = torch.diag(torch.pow(knn_graph.sum(dim = 0), -0.5))
+    # laplacian = torch.eye(graph.shape[0]) - torch.matmul(degree, torch.matmul(knn_graph, degree))
+    # values, eigs = torch.linalg.eigh(laplacian)
+
+    weight_matrix_after_NN = torch.matmul(degree, torch.matmul(knn_graph, degree))
+    return weight_matrix_after_NN
+
+
+G = graph_setup(False,66,NNgraph())
 
 ###############################
 ####Decomposing into eigenmodes
@@ -99,7 +119,11 @@ def slicing(what_to_slice,where_to_slice):
 
 
 # %%
+noise_floor_source = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects/noise_floor_source.npz')
+for i in noise_floor_source:
+    print(i)
 
+#%%
 
 isc_result = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects/sourceCCA_ISC.npz')['sourceISC']
 noise_floor_source = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects/noise_floor_source.npz')['sourceCCA']
@@ -175,6 +199,7 @@ def master(signal_to_calculate_smoothness,band):
 
 
     smoothness_roughness_time_series = np.matmul(stage1,signal_stage2)
+    np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/smoothness_time_series',smoothness_time_series=smoothness_roughness_time_series)
     print("np.shape(smoothness_roughness_time_series):",np.shape(smoothness_roughness_time_series))
 
     items_weak = np.hstack([np.arange(0*125,5*125),np.arange(33*125,37*125),np.arange(49*125,54*125),np.arange(62*125,66*125),
@@ -228,6 +253,8 @@ smoothness_roughness_time_series_dict['beta'] = master(signal_to_calculate_smoot
 # smoothness_roughness_time_series_dict_conditions['theta'] = master(signal_to_calculate_smoothness=theta,band='theta')
 # smoothness_roughness_time_series_dict_conditions['alpha'] = master(signal_to_calculate_smoothness=alpha,band='alpha')
 # smoothness_roughness_time_series_dict_conditions['beta'] = master(signal_to_calculate_smoothness=beta,band='beta')
+#%%
+np.shape(smoothness_roughness_time_series)
 
 # %%
 smoothness_roughness_time_series_averaged_temporally = list()
@@ -342,7 +369,8 @@ plt.legend()
 plt.xticks(x,labels)
 plt.ylabel('Smoothness')
 plt.xlabel('Frequency bands')
-fig.savefig('/homes/v20subra/S4B2/graph_analysis_during_PhD/Gretsi/smoothness.png', dpi=300, bbox_inches='tight')
+plt.title('FC unthresholded')
+fig.savefig('/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/smoothness.png', dpi=300, bbox_inches='tight')
 # %%
 
 plt.figure(figsize=(25,25))

@@ -34,8 +34,10 @@ NB_CPU = multiprocessing.cpu_count()
 print(NB_CPU)
 
 def process(i):
+    np.random.seed(i)
+
     for subjects in range(25):
-        np.random.seed(i)
+        np.random.seed(subjects)
         rng = np.random.default_rng()
 
         rng.shuffle(
@@ -47,7 +49,7 @@ def process(i):
 
     return CCA.apply_cca(dic['condition1'], W, 125)[1]
 
-isc_noise_floored= Parallel(n_jobs=NB_CPU-1,max_nbytes=None)(delayed(process)(i) for i in tqdm(range(1000)))
+isc_noise_floored= Parallel(n_jobs=NB_CPU-1,max_nbytes=None)(delayed(process)(i) for i in tqdm(range(100)))
 stop = default_timer()
 
 print(np.shape(isc_noise_floored))

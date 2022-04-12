@@ -32,7 +32,7 @@ dic['condition1'] = video_watching_bundle_STC
 import multiprocessing
 NB_CPU = multiprocessing.cpu_count()
 print(NB_CPU)
-
+W, _ = CCA.train_cca(dic)
 def process(i):
     np.random.seed(i)
 
@@ -45,11 +45,9 @@ def process(i):
                                 dic['condition1'][subjects,:,:].reshape(360,34,625)
                     , 0,1))
 
-    W, _ = CCA.train_cca(dic)
-
     return CCA.apply_cca(dic['condition1'], W, 125)[1]
 
-isc_noise_floored= Parallel(n_jobs=NB_CPU-1,max_nbytes=None)(delayed(process)(i) for i in tqdm(range(100)))
+isc_noise_floored= Parallel(n_jobs=NB_CPU-1,max_nbytes=None)(delayed(process)(i) for i in tqdm(range(1000)))
 stop = default_timer()
 
 print(np.shape(isc_noise_floored))

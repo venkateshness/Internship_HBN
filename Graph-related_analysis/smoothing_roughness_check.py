@@ -37,7 +37,7 @@ sns.set_theme()
 ############################################################
 ##########Getting the Graph ready###########################
 ############################################################ 
-def graph_setup(thresholding, percentage,weights):
+def graph_setup(unthresholding, percentage,weights):
     path_Glasser='/homes/v20subra/S4B2/GSP/Glasser_masker.nii.gz'
     res_path=''
 
@@ -50,12 +50,14 @@ def graph_setup(thresholding, percentage,weights):
     G.set_coordinates('spring')
     print('{} nodes, {} edges'.format(G.N, G.Ne))
 
-    if thresholding:
-        weights = csr_matrix(G.W).toarray()
+    if unthresholding:
+        pickle_file = '/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl'
 
-        weights[weights<np.percentile(weights,percentage)] =0
+        with open(pickle_file, 'rb') as f:
+                    [connectivity]= pickle.load(f)
+        np.fill_diagonal(connectivity,0)
 
-        G = graphs.Graph(weights)
+        G = graphs.Graph(connectivity)
         print(G.is_connected())
         print('{} nodes, {} edges'.format(G.N, G.Ne))
 
@@ -69,7 +71,7 @@ def NNgraph():
     with open(pickle_file, 'rb') as f:
                 [connectivity]= pickle.load(f)
     np.fill_diagonal(connectivity,0)
-
+    
     graph = torch.from_numpy(connectivity)
     knn_graph = torch.zeros(graph.shape)
     for i in range(knn_graph.shape[0]):
@@ -125,8 +127,10 @@ for i in noise_floor_source:
 
 #%%
 
-isc_result = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects/sourceCCA_ISC.npz')['sourceISC']
-noise_floor_source = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects/noise_floor_source.npz')['sourceCCA']
+# isc_result = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects/sourceCCA_ISC.npz')['sourceISC']
+# noise_floor_source = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects/noise_floor_source.npz')['sourceCCA']
+isc_result = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/sourceCCA_ISC.npz')['sourceISC']
+noise_floor_source = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/noise_floor.npz')['isc_noise_floored']
 # isc_sliced = isc_result[0,:][np.hstack([np.arange(0,5),np.arange(7,9),np.arange(13,17), np.arange(26,30),np.arange(33,38),np.arange(40,44),np.arange(58,59),np.arange(62,66),
 #                         np.arange(70,74),np.arange(85,86),np.arange(88,95),np.arange(99,100),np.arange(104,110),np.arange(118,124),np.arange(127,128),np.arange(129,133),np.arange(144,145),np.arange(148,153),np.arange(155,158)])]
 
@@ -202,12 +206,18 @@ def master(signal_to_calculate_smoothness,band):
     np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/smoothness_time_series',smoothness_time_series=smoothness_roughness_time_series)
     print("np.shape(smoothness_roughness_time_series):",np.shape(smoothness_roughness_time_series))
 
-    items_weak = np.hstack([np.arange(0*125,5*125),np.arange(33*125,37*125),np.arange(49*125,54*125),np.arange(62*125,66*125),
+# [[  1   7   8   9  10  12  13  32  39  40  41  42  43  46  56  60  87  88
+#    89  90 127 134 135 136 137 138 140 141 158 165 166]]
+# [[  8  19  52  53  54  55  56  57  58  59  60  61  78  80 103 104 105 106
+#   107 147 149 150 155 156 157]]
+
+
+    items_weak = np.hstack([np.arange(1*125,6*125),np.arange(33*125,37*125),np.arange(49*125,54*125),np.arange(62*125,66*125),
                         np.arange(88*125,95*125),np.arange(129*125,133*125),np.arange(148*125,153*125)])
 
 
-    items_strong = np.hstack([np.arange(7*125,9*125),np.arange(13*125,17*125), np.arange(27*125-62,30*125+63),np.arange(40*125,44*125),np.arange(58*125-62,58*125+63),
-    np.arange(85*125-62,85*125+63),np.arange(99*125-62,99*125+63),np.arange(104*125,110*125),np.arange(118*125,124*125),np.arange(155*125,158*125),np.arange(127*125-62,127*125+63),np.arange(144*125-62,144*125+63)])
+    items_strong = np.hstack([np.arange(7*125,14*125),np.arange(13*125,17*125), np.arange(39*125-62,43*125+63),np.arange(87*125,91*125),np.arange(134*125-62,142*125+63),np.arange(165*125,167*125),
+    np.arange(32*125-62,32*125+63),np.arange(39*125-62,39*125+63),np.arange(46*125,46*125),np.arange(56*125,56*125),np.arange(60*125,60*125),np.arange(127*125-62,127*125+63),np.arange(158*125-62,158*125+63)])
 
     print(len(items_strong)/125)
     print(len(items_weak)/125)
@@ -257,35 +267,40 @@ smoothness_roughness_time_series_dict['beta'] = master(signal_to_calculate_smoot
 np.shape(smoothness_roughness_time_series)
 
 # %%
-smoothness_roughness_time_series_averaged_temporally = list()
-for i in range(0,21250,125):
-     smoothness_roughness_time_series_averaged_temporally.append(np.average(np.squeeze(smoothness_roughness_time_series)[i:i+125,:],axis=0))
+# smoothness_roughness_time_series_averaged_temporally = list()
+# for i in range(0,21250,125):
+#      smoothness_roughness_time_series_averaged_temporally.append(np.average(np.squeeze(smoothness_roughness_time_series)[i:i+125,:],axis=0))
 
 import seaborn as sns
 sns.set_theme()
 def plot(comp,band):
     significance = np.array(np.where(np.max(np.array(noise_floor_source)[:,comp,:],axis=0)<isc_result[comp]))
-
+    print(significance)
     def drawingline(axes):
         
-   
-        axes.axvspan(0,4,alpha=0.1, color='C1')
+# [[  1   7   8   9  10  12  13  32  39  40  41  42  43  46  56  60  87  88
+#    89  90 127 134 135 136 137 138 140 141 158 165 166]]
+# [[  8  19  52  53  54  55  56  57  58  59  60  61  78  80 103 104 105 106
+#   107 147 149 150 155 156 157]]
+
+        axes.axvspan(2,6,alpha=0.1, color='C1')
         axes.axvspan(33,36,alpha=0.1, color='C1')
         axes.axvspan(49,53,alpha=0.1, color='C1')
-
         axes.axvspan(62,65,alpha=0.1, color='C1')
         axes.axvspan(88,94,alpha=0.1, color='C1')
         axes.axvspan(129,132,alpha=0.1, color='C1')
         axes.axvspan(148,152,alpha=0.1, color='C1')
 
-        axes.axvspan(7,8,alpha=0.1, color='C0')
-        axes.axvspan(13,16,alpha=0.1, color='C0')
-        axes.axvspan(27,29,alpha=0.1, color='C0')
+
+        axes.axvspan(7,13,alpha=0.1, color='C0')
+        axes.axvspan(13,14,alpha=0.1, color='C0')
+        # axes.axvspan(27,29,alpha=0.1, color='C0')
         axes.axvspan(40,43,alpha=0.1, color='C0')
-        axes.axvspan(118,123,alpha=0.1, color='C0')
-        axes.axvspan(104,109,alpha=0.1, color='C0')
-        axes.axvspan(155,157,alpha=0.1, color='C0')
-        
+        axes.axvspan(87,90,alpha=0.1, color='C0')
+        axes.axvspan(134,138,alpha=0.1, color='C0')
+        axes.axvspan(140,141,alpha=0.1, color='C0')
+        axes.axvspan(158,159,alpha=0.1, color='C0')
+    
   
 
     fig = plt.figure(figsize = (10,10))
@@ -299,12 +314,12 @@ def plot(comp,band):
 
     drawingline(ax1)
 
-    print(np.shape(smoothness_roughness_time_series_averaged_temporally))
+    # print(np.shape(smoothness_roughness_time_series_averaged_temporally))
 
-    mean_t = np.average(np.squeeze(smoothness_roughness_time_series_averaged_temporally),axis=1)
-    std_t = scipy.stats.sem(np.squeeze(smoothness_roughness_time_series_averaged_temporally),axis=1)
-    ax2.plot(mean_t)
-    ax2.fill_between(range(170),mean_t-std_t,mean_t+std_t, color='b', alpha=.3)
+    # mean_t = np.average(np.squeeze(smoothness_roughness_time_series_averaged_temporally),axis=1)
+    # std_t = scipy.stats.sem(np.squeeze(smoothness_roughness_time_series_averaged_temporally),axis=1)
+    # ax2.plot(mean_t)
+    # ax2.fill_between(range(170),mean_t-std_t,mean_t+std_t, color='b', alpha=.3)
 
     drawingline(ax2)
     ax1.set_xticklabels([])
@@ -369,8 +384,8 @@ plt.legend()
 plt.xticks(x,labels)
 plt.ylabel('Smoothness')
 plt.xlabel('Frequency bands')
-plt.title('FC unthresholded')
-fig.savefig('/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/smoothness.png', dpi=300, bbox_inches='tight')
+plt.title('HCP FC unthresholded')
+fig.savefig('/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/smoothness_unthresholded.png', dpi=300, bbox_inches='tight')
 # %%
 
 plt.figure(figsize=(25,25))
@@ -395,24 +410,3 @@ plt.tight_layout()
 
 
 #%%
-
-# %%
-
-e, U = np.linalg.eigh(G.L.toarray())
-
-# %%
-e[0]
-# %%
-assert -1e-12 < e[0] < 1e-12
-
-# %%
-G.check_weights()
-
-# %%
-G.W.toarray()
-
-# %%
-
-coordinates = sio.loadmat('/homes/v20subra/S4B2/GSP/Glasser360_2mm_codebook.mat')['codeBook'] 
-np.shape(coordinates[0][0])
-# %%

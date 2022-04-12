@@ -210,16 +210,24 @@ def master(signal_to_calculate_smoothness,band):
 #    89  90 127 134 135 136 137 138 140 141 158 165 166]]
 # [[  8  19  52  53  54  55  56  57  58  59  60  61  78  80 103 104 105 106
 #   107 147 149 150 155 156 157]]
+#   axes.axvspan(3,6,alpha=0.1, color='C1')
+#         axes.axvspan(16,19,alpha=0.1, color='C1')
+#         axes.axvspan(25,28,alpha=0.1, color='C1')
+#         axes.axvspan(50,53,alpha=0.1, color='C1')
+#         axes.axvspan(61,70,alpha=0.1, color='C1')
+
+#         axes.axvspan(79,83,alpha=0.1, color='C1')
+#         axes.axvspan(117,120,alpha=0.1, color='C1')
+#         axes.axvspan(129,132,alpha=0.1, color='C1')
+
+    items_weak = np.hstack([np.arange(0*125,1*125),np.arange(3*125,5*125),np.arange(16*125,19*125),np.arange(25*125,28*125),np.arange(50*125,53*125),
+                        np.arange(61*125,70*125),np.arange(79*125,83*125),np.arange(117*125,120*125),np.arange(129*125,132*125)])
 
 
-    items_weak = np.hstack([np.arange(1*125,6*125),np.arange(33*125,37*125),np.arange(49*125,54*125),np.arange(62*125,66*125),
-                        np.arange(88*125,95*125),np.arange(129*125,133*125),np.arange(148*125,153*125)])
+    items_strong = np.hstack([np.arange(7*125,14*125), np.arange(39*125,44*125),np.arange(87*125,91*125),np.arange(134*125,139*125),np.arange(140*125,142*125),np.arange(165*125,167*125),
+    np.arange(32*125-62,32*125+63),np.arange(46*125-62,46*125+63),np.arange(56*125-62,56*125+63),np.arange(60*125-62,60*125+63),np.arange(127*125-62,127*125+63),np.arange(158*125-62,158*125+63)])
 
-
-    items_strong = np.hstack([np.arange(7*125,14*125),np.arange(13*125,17*125), np.arange(39*125-62,43*125+63),np.arange(87*125,91*125),np.arange(134*125-62,142*125+63),np.arange(165*125,167*125),
-    np.arange(32*125-62,32*125+63),np.arange(39*125-62,39*125+63),np.arange(46*125,46*125),np.arange(56*125,56*125),np.arange(60*125,60*125),np.arange(127*125-62,127*125+63),np.arange(158*125-62,158*125+63)])
-
-    print(len(items_strong)/125)
+    print("strong:",len(items_strong)/125)
     print(len(items_weak)/125)
 
     smoothness_roughness_time_series_weak = slicing(np.squeeze(smoothness_roughness_time_series).T,items_weak)
@@ -270,12 +278,13 @@ np.shape(smoothness_roughness_time_series)
 # smoothness_roughness_time_series_averaged_temporally = list()
 # for i in range(0,21250,125):
 #      smoothness_roughness_time_series_averaged_temporally.append(np.average(np.squeeze(smoothness_roughness_time_series)[i:i+125,:],axis=0))
+print (np.array(np.where(np.array(noise_floor_source)[:,0,:]<=0.05)))
 
 import seaborn as sns
 sns.set_theme()
 def plot(comp,band):
     significance = np.array(np.where(np.max(np.array(noise_floor_source)[:,comp,:],axis=0)<isc_result[comp]))
-    print(significance)
+    print(len(significance[0]))
     def drawingline(axes):
         
 # [[  1   7   8   9  10  12  13  32  39  40  41  42  43  46  56  60  87  88
@@ -283,18 +292,27 @@ def plot(comp,band):
 # [[  8  19  52  53  54  55  56  57  58  59  60  61  78  80 103 104 105 106
 #   107 147 149 150 155 156 157]]
 
-        axes.axvspan(2,6,alpha=0.1, color='C1')
-        axes.axvspan(33,36,alpha=0.1, color='C1')
-        axes.axvspan(49,53,alpha=0.1, color='C1')
-        axes.axvspan(62,65,alpha=0.1, color='C1')
-        axes.axvspan(88,94,alpha=0.1, color='C1')
+
+#([  3,   4,   5,   6,  17,  18,  19,  25,  26,  27,  51,  52,  53,
+    #     61,  62,  63,  64,  65,  66,  70,  71,  72,  74,  75,  76,  79,
+    #     80,  81,  82,  83,  84, 100, 101, 102, 103, 104, 109, 110, 113,
+    #    116, 117, 118, 119, 120, 121, 122, 129, 130, 131, 132, 147, 148,
+    #    149, 150, 151, 152, 159, 160, 161, 162, 163])
+
+        axes.axvspan(3,6,alpha=0.1, color='C1')
+        axes.axvspan(16,19,alpha=0.1, color='C1')
+        axes.axvspan(25,28,alpha=0.1, color='C1')
+        axes.axvspan(50,53,alpha=0.1, color='C1')
+        axes.axvspan(61,70,alpha=0.1, color='C1')
+
+        axes.axvspan(79,83,alpha=0.1, color='C1')
+        axes.axvspan(117,120,alpha=0.1, color='C1')
         axes.axvspan(129,132,alpha=0.1, color='C1')
-        axes.axvspan(148,152,alpha=0.1, color='C1')
 
 
         axes.axvspan(7,13,alpha=0.1, color='C0')
         axes.axvspan(13,14,alpha=0.1, color='C0')
-        # axes.axvspan(27,29,alpha=0.1, color='C0')
+        axes.axvspan(27,29,alpha=0.1, color='C0')
         axes.axvspan(40,43,alpha=0.1, color='C0')
         axes.axvspan(87,90,alpha=0.1, color='C0')
         axes.axvspan(134,138,alpha=0.1, color='C0')
@@ -410,3 +428,8 @@ plt.tight_layout()
 
 
 #%%
+
+print(np.where(isc_result[0]<=0.02))
+# %%
+len( [1,   7,   8,   9,  10,  12,  13,  32,  39,  40,  41 , 42 , 43 , 46 , 56 , 60 , 87 , 88 ,   89,  90 ,127 ,134 ,135 ,136 ,137 ,138 ,140 ,141 ,158 ,165 ,166])
+# %%

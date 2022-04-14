@@ -377,11 +377,12 @@ def filter_and_store(low,high,band):
     bands[band] = np.abs(hilberted)
 
 filter_and_store(8,13,'alpha')
-filter_and_store(13,30,'beta')
+filter_and_store(13,20,'lower_beta')
+filter_and_store(20,30,'higher_beta')
 filter_and_store(4,8,'theta')
 
 # %%
-np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/envelope_signal_bandpassed',**bands)
+np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/envelope_signal_bandpassed_low_high_beta',**bands)
 
 # %%
 ####################################

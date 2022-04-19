@@ -31,7 +31,7 @@ dic['condition1'] = video_watching_bundle_STC
 
 import multiprocessing
 NB_CPU = multiprocessing.cpu_count()
-print(NB_CPU)
+#print(NB_CPU)
 W, _ = CCA.train_cca(dic)
 def process(i):
     np.random.seed(i)
@@ -52,4 +52,4 @@ stop = default_timer()
 
 print(np.shape(isc_noise_floored))
 print(f'Whole Elapsed time: {round(stop - sta)} seconds.')
-np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/noise_floor', isc_noise_floored=isc_noise_floored)
+np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/noise_floor_8s_window', isc_noise_floored=isc_noise_floored)

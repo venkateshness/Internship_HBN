@@ -129,8 +129,11 @@ for i in noise_floor_source:
 
 # isc_result = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects/sourceCCA_ISC.npz')['sourceISC']
 # noise_floor_source = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects/noise_floor_source.npz')['sourceCCA']
-isc_result = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/sourceCCA_ISC.npz')['sourceISC']
-noise_floor_source = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/noise_floor.npz')['isc_noise_floored']
+#isc_result = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/sourceCCA_ISC_8s_window.npz')['sourceISC']
+#noise_floor_source = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/noise_floor_8s_window.npz')['isc_noise_floored']
+isc_result = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/sourceCCA_ISC_8s_window.npz')['sourceISC']
+noise_floor_source = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/noise_floor_8s_window.npz')['isc_noise_floored']
+
 # isc_sliced = isc_result[0,:][np.hstack([np.arange(0,5),np.arange(7,9),np.arange(13,17), np.arange(26,30),np.arange(33,38),np.arange(40,44),np.arange(58,59),np.arange(62,66),
 #                         np.arange(70,74),np.arange(85,86),np.arange(88,95),np.arange(99,100),np.arange(104,110),np.arange(118,124),np.arange(127,128),np.arange(129,133),np.arange(144,145),np.arange(148,153),np.arange(155,158)])]
 
@@ -186,7 +189,7 @@ import pandas as pd
 
 smoothness_roughness_time_series = list()
 pvalues = list()
-def master(signal_to_calculate_smoothness,band,export):
+def master(signal_to_calculate_smoothness,band):
     G.compute_laplacian('combinatorial')
     laplacian = G.L.toarray()
 
@@ -204,8 +207,7 @@ def master(signal_to_calculate_smoothness,band,export):
 
 
     smoothness_roughness_time_series = np.matmul(stage1,signal_stage2)
-    if export:
-        np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/smoothness_time_series',smoothness_time_series=smoothness_roughness_time_series)
+    # np.savez_compressed(f'/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/smoothness_time_series{band}',smoothness_time_series=smoothness_roughness_time_series)
     print("np.shape(smoothness_roughness_time_series):",np.shape(smoothness_roughness_time_series))
 
 # [[  1   7   8   9  10  12  13  32  39  40  41  42  43  46  56  60  87  88
@@ -242,9 +244,26 @@ def master(signal_to_calculate_smoothness,band,export):
     # np.arange(130*125,133*125),np.arange(148*125,151*125),np.arange(162*125,164*125),np.arange(160*125-62,160*125+63)])
 #third component
 #[5, 6, 18, 25, 26, 27, 51, 52, 53, 62, 63, 64, 70, 74, 80, 81, 82, 83, 101, 103, 109, 110, 116, 119, 122, 130, 131, 132, 148, 149, 150, 160, 162, 163]
-    items_weak = np.hstack([np.arange(5*125,7*125),np.arange(18*125-62,18*125+63),np.arange(25*125,28*125),np.arange(51*125,54*125),np.arange(62*125,65*125),np.arange(70*125-62,70*125+63),
-    np.arange(74*125-62,74*125+63),np.arange(80*125,84*125),np.arange(101*125-62,101*125+63),np.arange(103*125-62,103*125+63),np.arange(109*125,111*125),np.arange(116*125-62,116*125+63),np.arange(119*125-62,119*125+63),
-    np.arange(122*125-62,122*125+63),np.arange(131*125,133*125),np.arange(148*125,151*125),np.arange(160*125,164*125)])
+    # items_weak = np.hstack([np.arange(5*125,7*125),np.arange(18*125-62,18*125+63),np.arange(25*125,28*125),np.arange(51*125,54*125),np.arange(62*125,65*125),np.arange(70*125-62,70*125+63),
+    # np.arange(74*125-62,74*125+63),np.arange(80*125,84*125),np.arange(101*125-62,101*125+63),np.arange(103*125-62,103*125+63),np.arange(109*125,111*125),np.arange(116*125-62,116*125+63),np.arange(119*125-62,119*125+63),
+    # np.arange(122*125-62,122*125+63),np.arange(131*125,133*125),np.arange(148*125,151*125),np.arange(160*125,164*125)])
+
+#first comp
+
+    # items_weak = np.hstack([np.arange(5*125,7*125),np.arange(18*125-62,18*125+63),np.arange(26*125,28*125),np.arange(51*125,54*125),np.arange(63*125,65*125),
+    #                     np.arange(70*125-62,70*125+63),np.arange(74*125-62,74*125+63),np.arange(80*125,84*125),np.arange(101*125-62,101*125+63),np.arange(103*125-62,103*125+63),np.arange(110*125-62,110*125+63),
+    #                     np.arange(116*125-62,116*125+63),np.arange(119*125-62,119*125+63),np.arange(122*125-62,122*125+63),np.arange(130*125,133*125),np.arange(148*125,151*125),np.arange(160*125-62,160*125+63),
+    #                     np.arange(162*125,164*125)])
+# 8s window
+#first
+#     items_weak = np.hstack([np.arange(3*125-62,3*125+63),np.arange(17*125,19*125),np.arange(22*125-62,22*125+63),np.arange(24*125-62,24*125+63),np.arange(48*125-62,48*125+63),np.arange(52*125-62,52*125+63),np.arange(60*125,62*125),
+# np.arange(64*125,68*125),np.arange(71*125,74*125),np.arange(77*125,82*125),np.arange(98*125,102*125),np.arange(103*125,107*125),np.arange(109*125,111*125),np.arange(112*125,120*125),
+# np.arange(129*125-62,129*125+63),np.arange(131*125-62,131*125+63),np.arange(143*125-62,143*125+63),np.arange(145*125-62,145*125+63),np.arange(147*125,152*125),np.arange(159*125,161*125)])
+
+#     items_weak = np.hstack([np.arange(2*125,8*125),np.arange(11*125,30*125),np.arange(32*125,35*125),np.arange(48*125,56*125),np.arange(59*125,68*125),np.arange(70*125,74*125),
+# np.arange(79*125,86*125),np.arange(94*125,123*125),np.arange(125*125,132*125),np.arange(142*125,155*125),np.arange(157*125,162*125),np.arange(167*125,169*125)])
+
+    items_weak = np.hstack([np.arange(48*125,55*125),np.arange(76*125,78*125),np.arange(97*125,103*125)])
 
 
 #[1, 7, 8, 9, 10, 12, 13, 19, 32, 39, 40, 41, 42, 43, 46, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 78, 80, 87, 88, 89, 90, 103, 104, 105, 106, 107,
@@ -264,9 +283,20 @@ def master(signal_to_calculate_smoothness,band,export):
 #array([ 13,  33,  34,  35,  36,  37,  57,  58,  65,  66,  67,  68,  69,
     #     73,  74,  81,  83,  94, 111, 113, 119, 130, 133, 134, 135, 136,
     #    137, 138, 141, 143, 144, 145, 146, 160])
-    items_strong = np.hstack([np.arange(13*125-62,13*125+63),np.arange(33*125,38*125),np.arange(57*125,59*125),np.arange(65*125,70*125),np.arange(73*125,75*125),np.arange(81*125-62,81*125+63),
-    np.arange(83*125-62,83*125+63),np.arange(94*125-62,94*125+63),np.arange(111*125-62,111*125+63),np.arange(113*125-62,113*125+63),np.arange(119*125-62,119*125+63),np.arange(130*125-62,130*125+63),np.arange(133*125,139*125),
-    np.arange(141*125-62,141*125+63),np.arange(143*125,147*125),np.arange(160*125-62,160*125+63)])
+    # items_strong = np.hstack([np.arange(13*125-62,13*125+63),np.arange(33*125,38*125),np.arange(57*125,59*125),np.arange(65*125,70*125),np.arange(73*125,75*125),np.arange(81*125-62,81*125+63),
+    # np.arange(83*125-62,83*125+63),np.arange(94*125-62,94*125+63),np.arange(111*125-62,111*125+63),np.arange(113*125-62,113*125+63),np.arange(119*125-62,119*125+63),np.arange(130*125-62,130*125+63),np.arange(133*125,139*125),
+    # np.arange(141*125-62,141*125+63),np.arange(143*125,147*125),np.arange(160*125-62,160*125+63)])
+
+# #first comp
+#     items_strong = np.hstack([np.arange(1*125-62,1*125+63),np.arange(7*125,11*125), np.arange(12*125,14*125), np.arange(39*125,44*125),np.arange(87*125,91*125),np.arange(134*125,139*125),np.arange(140*125,142*125),np.arange(165*125,167*125),
+#     np.arange(32*125-62,32*125+63),np.arange(46*125-62,46*125+63),np.arange(56*125-62,56*125+63),np.arange(60*125-62,60*125+63),np.arange(127*125-62,127*125+63),np.arange(158*125-62,158*125+63)])
+
+# 8-s time window
+    # items_strong = np.hstack([np.arange(1*125-62,1*125+63),np.arange(8*125,11*125),np.arange(30*125-62,30*125+63),np.arange(35*125,45*125),np.arange(46*125,48*125),np.arange(56*125,59*125),
+    # np.arange(68*125,70*125),np.arange(74*125,76*125),np.arange(86*125,92*125),np.arange(93*125-62,93*125+63),np.arange(123*125,125*125),np.arange(132*125,142*125),np.arange(155*125,157*125),
+    # np.arange(162*125,167*125)])
+
+    items_strong = np.hstack([np.arange(55*125,62*125),np.arange(78*125,80*125),np.arange(103*125,109*125)])
 
     print("strong:",len(items_strong)/125)
     print(len(items_weak)/125)
@@ -305,10 +335,10 @@ def master(signal_to_calculate_smoothness,band,export):
 
 smoothness_roughness_time_series_dict = dict()
 # smoothness_roughness_time_series =master(signal_to_calculate_smoothness=beta,band='beta')
-smoothness_roughness_time_series_dict['theta'] = master(signal_to_calculate_smoothness=theta,band='theta',export=True)
-smoothness_roughness_time_series_dict['alpha'] = master(signal_to_calculate_smoothness=alpha,band='alpha',export=False)
-smoothness_roughness_time_series_dict['low_beta'] = master(signal_to_calculate_smoothness=low_beta,band='lower_beta',export=False)
-smoothness_roughness_time_series_dict['high_beta'] = master(signal_to_calculate_smoothness=high_beta,band='higher_beta',export=False)
+smoothness_roughness_time_series_dict['theta'] = master(signal_to_calculate_smoothness=theta,band='theta')
+smoothness_roughness_time_series_dict['alpha'] = master(signal_to_calculate_smoothness=alpha,band='alpha')
+smoothness_roughness_time_series_dict['low_beta'] = master(signal_to_calculate_smoothness=low_beta,band='lower_beta')
+smoothness_roughness_time_series_dict['high_beta'] = master(signal_to_calculate_smoothness=high_beta,band='higher_beta')
 
 # smoothness_roughness_time_series_dict_conditions =dict()
 # smoothness_roughness_time_series_dict_conditions['theta'] = master(signal_to_calculate_smoothness=theta,band='theta')
@@ -472,8 +502,8 @@ plt.legend()
 plt.xticks(x,labels)
 plt.ylabel('Smoothness')
 plt.xlabel('Frequency bands')
-plt.title('HCP FC thresholded (significance from 3rd ISC component)')
-fig.savefig('/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/smoothness_comp_3.png', dpi=300, bbox_inches='tight')
+plt.title('HCP FC thresholded / 8s-window / 1st ISC component / weak = 170s - strong')
+# fig.savefig('/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/smoothness_comp_1_8swindow.png', dpi=300, bbox_inches='tight')
 # %%
 
 plt.figure(figsize=(25,25))
@@ -503,12 +533,15 @@ plt.tight_layout()
 print(np.where(isc_result[0]<=0.02))
 # %%
 
-significance = np.array(np.where(np.max(np.array(noise_floor_source)[:,2,:],axis=0)<isc_result[2]))
+significance = np.array(np.where(np.max(np.array(noise_floor_source)[:,1,:],axis=0)<isc_result[1]))
 
 
 # %%
-print((sorted(np.argsort(isc_result[0])[:34])))
-
+set(significance[0])
 # %%
-significance[0]
+
+
+
+
+
 # %%

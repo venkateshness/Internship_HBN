@@ -90,7 +90,7 @@ def apply_cca(X, W, fs):
 
     N, D, T = X.shape
     # gamma = 0.1
-    window_sec = 5
+    window_sec = 8
     X = X.reshape(D * N, T)
 
     # Rij
@@ -111,7 +111,7 @@ def apply_cca(X, W, fs):
                   np.diag(np.transpose(W) @ Rw @ W))[::-1]
 
     # Scalp projections
-    # A = np.linalg.solve(Rw @ W, np.transpose(W) @ Rw @ W)  # a, b.
+    A = np.linalg.solve(Rw @ W, np.transpose(W) @ Rw @ W)  # a, b.
 
     # ISC by subject
     #print('by subject is calculating')
@@ -159,4 +159,4 @@ def apply_cca(X, W, fs):
     stop = default_timer()
     #print(f'Elapsed time: {round(stop - start)} seconds.')
 
-    return ISC, ISC_persecond#, ISC_bysubject, A
+    return ISC, ISC_persecond, A#, A

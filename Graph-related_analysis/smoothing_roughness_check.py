@@ -300,7 +300,7 @@ def master(signal_to_calculate_smoothness,band):
 
     print("strong:",len(items_strong)/125)
     print(len(items_weak)/125)
-
+    print(band)
     smoothness_roughness_time_series_weak = slicing(np.squeeze(smoothness_roughness_time_series).T,items_weak)
     smoothness_roughness_time_series_strong = slicing(np.squeeze(smoothness_roughness_time_series).T,items_strong)
 
@@ -468,24 +468,33 @@ error_high_beta = stats_SEM(np.squeeze(smoothness_roughness_time_series_dict['hi
 
 error_alpha = stats_SEM(np.squeeze(smoothness_roughness_time_series_dict['alpha']))
 
-strong_isc = [np.average(np.squeeze(smoothness_roughness_time_series_dict['theta']),axis=1)[0],
-            np.average(np.squeeze(smoothness_roughness_time_series_dict['alpha']),axis=1)[0],
-            np.average(np.squeeze(smoothness_roughness_time_series_dict['low_beta']),axis=1)[0],
-            np.average(np.squeeze(smoothness_roughness_time_series_dict['high_beta']),axis=1)[0]]
+strong_isc = [np.squeeze(smoothness_roughness_time_series_dict['theta'])[0],
+            np.squeeze(smoothness_roughness_time_series_dict['alpha'])[0],
+            np.squeeze(smoothness_roughness_time_series_dict['low_beta'])[0],
+            np.squeeze(smoothness_roughness_time_series_dict['high_beta'])[0]]
 
-weak_isc = [np.average(np.squeeze(smoothness_roughness_time_series_dict['theta']),axis=1)[1],
-            np.average(np.squeeze(smoothness_roughness_time_series_dict['alpha']),axis=1)[1],
-            np.average(np.squeeze(smoothness_roughness_time_series_dict['low_beta']),axis=1)[1],
-            np.average(np.squeeze(smoothness_roughness_time_series_dict['high_beta']),axis=1)[1]]
+weak_isc = [np.squeeze(smoothness_roughness_time_series_dict['theta'])[1],
+            np.squeeze(smoothness_roughness_time_series_dict['alpha'])[1],
+            np.squeeze(smoothness_roughness_time_series_dict['low_beta'])[1],
+            np.squeeze(smoothness_roughness_time_series_dict['high_beta'])[1]]
+
+def iqr(data):
+
+    quartile1, medians, quartile3 = np.percentile(data, [25, 50, 75], axis=1)
+    return quartile1,medians, quartile3
 
 
-ax.bar(x - width/2, strong_isc, width, label='Strong ISC',yerr=[error_theta[0],error_alpha[0],error_low_beta[0],error_high_beta[0]], align='center',color='C0')
-ax.bar(x + width/2, weak_isc, width, label='Weak ISC',yerr=[error_theta[1],error_alpha[1],error_low_beta[1],error_high_beta[1]], align='center', color='C1')
+# ax.bar(x - width/2, strong_isc, width, label='Strong ISC',yerr=[error_theta[0],error_alpha[0],error_low_beta[0],error_high_beta[0]], align='center',color='C0')
+# ax.bar(x + width/2, weak_isc, width, label='Weak ISC',yerr=[error_theta[1],error_alpha[1],error_low_beta[1],error_high_beta[1]], align='center', color='C1')
+ax.violinplot(positions= x - width/2, dataset = strong_isc,widths=width,showextrema=True,showmeans=True )
 
+ax.violinplot(positions=x + width/2, dataset =weak_isc,widths=width,showextrema=True,showmeans=True)
 
-data = pd.DataFrame({'labels':labels,'Smoothness':weak_isc})
+# ax2.vlines(inds, whiskers_min, whiskers_max, color='k', linestyle='-', lw=1)
 
-data2 = pd.DataFrame({'labels':labels,'Smoothness':strong_isc})
+data = pd.DataFrame({'labels':labels,'Smoothness':np.sum(weak_isc,axis=1)})
+
+data2 = pd.DataFrame({'labels':labels,'Smoothness':np.sum(strong_isc,axis=1)})
 data_fin = data.append(data2,ignore_index=True)
 data_fin['cond'] = ['Weak','Weak','Weak','Weak','Strong','Strong','Strong','Strong']
 pvalues_slicing =[pvalues[i][1] for i in range(4)]
@@ -495,15 +504,16 @@ add_stat_annotation(ax,data=data_fin, y='Smoothness', x ='labels', hue='cond',
                     (("Lower Beta", "Strong"), ("Lower Beta", "Weak")),
                     (("Upper Beta", "Strong"), ("Upper Beta", "Weak"))],
                                  perform_stat_test=False, pvalues=pvalues_slicing,
-line_offset_to_box=0.25, line_offset=0.1, line_height=0.05, text_format='simple', loc='inside', verbose=2)
+line_offset_to_box=0.25, line_offset=0.1, line_height=0.05, text_format='star', loc='outside', verbose=2)
+plt.legend(['Strong ISC','Weak ISC'])
 
 plt.tight_layout()
 plt.legend()
 plt.xticks(x,labels)
 plt.ylabel('Smoothness')
-plt.xlabel('Frequency bands')
-plt.title('HCP FC thresholded / 8s-window / 1st ISC component / weak = 170s - strong')
-# fig.savefig('/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/smoothness_comp_1_8swindow.png', dpi=300, bbox_inches='tight')
+plt.xlabel('Frequency bands in the cortical envelope signal')
+plt.title('Smoothness Response')
+fig.savefig('/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/smoothness_violin.png', dpi=300, bbox_inches='tight')
 # %%
 
 plt.figure(figsize=(25,25))

@@ -263,8 +263,10 @@ def master(signal_to_calculate_smoothness,band):
 #     items_weak = np.hstack([np.arange(2*125,8*125),np.arange(11*125,30*125),np.arange(32*125,35*125),np.arange(48*125,56*125),np.arange(59*125,68*125),np.arange(70*125,74*125),
 # np.arange(79*125,86*125),np.arange(94*125,123*125),np.arange(125*125,132*125),np.arange(142*125,155*125),np.arange(157*125,162*125),np.arange(167*125,169*125)])
 
-    items_weak = np.hstack([np.arange(48*125,55*125),np.arange(76*125,78*125),np.arange(97*125,103*125)])
-
+    items_weak = np.hstack([
+    np.arange(124*125,132*125)])
+    
+    
 
 #[1, 7, 8, 9, 10, 12, 13, 19, 32, 39, 40, 41, 42, 43, 46, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 78, 80, 87, 88, 89, 90, 103, 104, 105, 106, 107,
 #  127, 134, 135, 136, 137, 138, 140, 141, 147, 149, 150, 155, 156, 157, 158, 165, 166]
@@ -296,8 +298,7 @@ def master(signal_to_calculate_smoothness,band):
     # np.arange(68*125,70*125),np.arange(74*125,76*125),np.arange(86*125,92*125),np.arange(93*125-62,93*125+63),np.arange(123*125,125*125),np.arange(132*125,142*125),np.arange(155*125,157*125),
     # np.arange(162*125,167*125)])
 
-    items_strong = np.hstack([np.arange(55*125,62*125),np.arange(78*125,80*125),np.arange(103*125,109*125)])
-
+    items_strong =  np.hstack([    np.arange(132*125,142*125)])
     print("strong:",len(items_strong)/125)
     print(len(items_weak)/125)
     print(band)
@@ -513,7 +514,7 @@ plt.xticks(x,labels)
 plt.ylabel('Smoothness')
 plt.xlabel('Frequency bands in the cortical envelope signal')
 plt.title('Smoothness Response')
-fig.savefig('/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/smoothness_violin.png', dpi=300, bbox_inches='tight')
+# fig.savefig('/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/smoothness_violin.png', dpi=300, bbox_inches='tight')
 # %%
 
 plt.figure(figsize=(25,25))

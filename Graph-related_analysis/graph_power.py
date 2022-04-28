@@ -300,45 +300,40 @@ def master(band,label_band):
     # # plt.title('Theta')
     # plt.show()
     return dic_accumulated
+dic = master(alpha,'Theta')
 
-dic_of_env_bands = {'Theta':theta,'Alpha':alpha,'Lower Beta':low_beta,'Upper Beta': high_beta}
-for i in range(4):
+df = pd.DataFrame(columns=['gPower','gFreqs'])
+to_df = defaultdict(dict)
+def ttest(band1, band2):
+        return scipy.stats.ttest_rel(band1,band2)
+def freq_plot(which_freq,env_band):
+    fig =plt.figure(figsize=(45,25))
 
-    dic = master(dic_of_env_bands[list(dic_of_env_bands.keys())[i]], list(dic_of_env_bands.keys())[i])
+    total = (dic['8'][which_freq] +dic['56'][which_freq] +dic['68'][which_freq] + dic['74'][which_freq] + dic['86'][which_freq] + dic['132'][which_freq] + dic['162'][which_freq])/7
+    pre_total = np.mean(total[:125,:],axis=0)
+    post_total = np.mean(total[125:,:],axis=0)
+    print(ttest(pre_total,post_total))
+    plt.plot( np.mean(total,axis=1),color='r')
+    plt.fill_between(range(251+125),np.mean(total,axis=1)-stats_SEM(total),np.mean(total,axis=1)+stats_SEM(total),alpha=0.2)
+    plt.axvline(125)
+    # df['gPower']=df['gPower'].append( pd.Series( np.concatenate(([pre_total,post_total]))))
+    # df['group']=df['group'].append(pd.Series([['pre-']*25,['post-']*25]))
+    # df['Env. bands']=df['Env. bands'].append(pd.Series([[f'{env_band}']*50]))
+    dic2 = defaultdict(dict)
+    dic2['gPower'] = np.squeeze(np.concatenate([pre_total,post_total]).T)
+    dic2['stim_group'] =np.squeeze(np.concatenate([['pre-']*25,['post-']*25]).T)
+    dic2['gFreqs'] = np.squeeze(np.concatenate([[f'{env_band}']*50])).T
+    return dic2
 
-    df = pd.DataFrame(columns=['gPower','gFreqs'])
-    to_df = defaultdict(dict)
-    def ttest(band1, band2):
-            return scipy.stats.ttest_rel(band1,band2)
-    def freq_plot(which_freq,env_band):
-        fig =plt.figure(figsize=(45,25))
+sns.set(style="whitegrid",font_scale=2)
 
-        total = (dic['8'][which_freq] +dic['56'][which_freq] +dic['68'][which_freq] + dic['74'][which_freq] + dic['86'][which_freq] + dic['132'][which_freq] + dic['162'][which_freq])/7
-        pre_total = np.mean(total[:125,:],axis=0)
-        post_total = np.mean(total[125:,:],axis=0)
-        print(ttest(pre_total,post_total))
-        plt.plot( np.mean(total,axis=1),color='r')
-        plt.fill_between(range(251+125),np.mean(total,axis=1)-stats_SEM(total),np.mean(total,axis=1)+stats_SEM(total),alpha=0.2)
-        plt.axvline(125)
-        # df['gPower']=df['gPower'].append( pd.Series( np.concatenate(([pre_total,post_total]))))
-        # df['group']=df['group'].append(pd.Series([['pre-']*25,['post-']*25]))
-        # df['Env. bands']=df['Env. bands'].append(pd.Series([[f'{env_band}']*50]))
-        dic2 = defaultdict(dict)
-        dic2['gPower'] = np.squeeze(np.concatenate([pre_total,post_total]).T)
-        dic2['stim_group'] =np.squeeze(np.concatenate([['pre-']*25,['post-']*25]).T)
-        dic2['gFreqs'] = np.squeeze(np.concatenate([[f'{env_band}']*50])).T
-        dic2['Env band'] = np.concatenate([[f'{list(dic_of_env_bands.keys())[i]}']*50])
-        return dic2
+env_bands = ['Low','Med','High']
+for i in range(3):
 
-    sns.set(style="whitegrid",font_scale=2)
-
-    env_bands = ['Low','Med','High']
-    for i in range(3):
-
-            the_returned=freq_plot(which_freq=i,env_band=env_bands[i])
-            
-            df = pd.concat([pd.DataFrame(the_returned),df],ignore_index=True)
-            print(df.head())
+        the_returned=freq_plot(which_freq=i,env_band=env_bands[i])
+        
+        df = pd.concat([pd.DataFrame(the_returned),df],ignore_index=True)
+        print(df.head())
 
 
 # for i in dic.keys():
@@ -352,7 +347,7 @@ f, ax = plt.subplots(figsize=(12, 15))
 pt.RainCloud(hue="stim_group",y="gPower",x="gFreqs",palette = ['C0','C1'],data=df, width_viol = .7,
             ax = ax, orient = ort , alpha = .45, dodge = True)
 # %%
-
+print(df.head())
 # low_freq_pre_summed, low_freq_post_summed = sum_freqs(low_freq_pre,axis=1),sum_freqs(low_freq_pre,axis=1)
 
 # plt.plot(np.average(np.concatenate([low_freq_pre_summed,low_freq_post_summed],axis=-1).T,axis=1)[:])

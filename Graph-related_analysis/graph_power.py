@@ -257,7 +257,7 @@ def master(band):
     return dic_accumulated
 
 
-dic = master(theta,'Theta')
+dic = master(theta)
 
 df = pd.DataFrame(columns=['gPower','gFreqs'])
 to_df = defaultdict(dict)
@@ -350,6 +350,38 @@ add_stat_annotation(ax, data=df, y="gPower",x="gFreqs", hue="stim_group",
                     perform_stat_test=False, pvalues=pvalues_slicing, text_format='star', loc='outside', verbose=2)
 fig.suptitle('ERD of graph power for the averaged trials across subjects -- Theta')
 fig.supylabel('The relative power difference')
-fig.savefig('/homes/v20subra/S4B2/Graph-related_analysis/ERD/Theta')
+# fig.savefig('/homes/v20subra/S4B2/Graph-related_analysis/ERD/Theta')
 
+index_in_str =[str(i) for i in index]
+dic_parse_freq_wise = [dic.get(key)[0] for key in index_in_str]
+# %%
+
+import scipy.stats as st
+a, b, c = 3, 3, 1
+
+fig = plt.figure(figsize=(25,25))
+for i in range(7):
+    plt.subplot(a, b, c)
+    mean, sigma = np.mean(np.array(dic_parse_freq_wise)[:,:,i],axis=0), np.std(np.array(dic_parse_freq_wise)[:,:,i],axis=0)
+    # conf_int_a = scipy.stats.norm.interval(0.95, loc=mean, scale=sigma)
+    plt.plot(np.array(dic_parse_freq_wise)[i,:,0].T)
+    # plt.plot(mean,color='r',linewidth=5,label='Mean')
+    # plt.fill_between(range(376),np.array(conf_int_a).T[:,0],np.array(conf_int_a).T[:,1],alpha=0.2,label='95% CI')
+    plt.xticks(np.arange(0,376,62.5),np.arange(-1000,2500,500))
+    plt.axvline(125,c='g')
+    plt.axvspan(xmin=0,xmax=113,color='r',alpha=0.2)
+
+    c+=1
+    plt.legend()
+
+fig.supylabel('Relative power difference')
+fig.supxlabel('time (ms)')
+fig.suptitle('ERD across trials -- Subject 1/Theta/Low frequency')
+# fig.savefig('/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/Results_ERD_trial_wise/upper_beta')
+
+
+# %%
+plt.plot(np.array(dic_parse_freq_wise)[1,:,0][110:120])
+# %%
+np.array(dic_parse_freq_wise)[1,:,0][110:120]
 # %%

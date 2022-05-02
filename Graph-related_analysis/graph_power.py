@@ -88,7 +88,7 @@ def NNgraph():
     return weight_matrix_after_NN
 
 
-G = graph_setup(False,66,NNgraph())
+G = graph_setup(False,NNgraph())
 G.compute_fourier_basis()
 #%%
 envelope_signal_bandpassed = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/envelope_signal_bandpassed_low_high_beta.npz', mmap_mode='r')
@@ -180,14 +180,14 @@ def stats_SEM(freqs):
     """SEM estimation -- Standard error of the Mean
 
     Args:
-        freqs (_type_): _description_
+        freqs (dict): The grand-averaged graph power to apply the SEM on
 
     Returns:
-        _type_: _description_
+        array: SEMed graph power 
     """
     return scipy.stats.sem(freqs,axis=1)#/np.sqrt(25)
 
-def accumulate_freqs(freq_pre_low,freq_post_low,freq_pre_med,freq_post_med,freq_pre_high,freq_post_high,label,color,band,index):
+def accumulate_freqs(freq_pre_low,freq_post_low,freq_pre_med,freq_post_med,freq_pre_high,freq_post_high):
     """Concatenate after baseline setup the pre and post; across graph frequencies
 
     Args:
@@ -197,13 +197,10 @@ def accumulate_freqs(freq_pre_low,freq_post_low,freq_pre_med,freq_post_med,freq_
         freq_post_med (array): Post-stimulus; medium frequency
         freq_pre_high (array): Pre-stimulus; high frequency
         freq_post_high (array): Post-stimulus; high frequency
-        label (_type_): _description_
-        color (_type_): _description_
-        band (_type_): _description_
-        index (_type_): _description_
+
 
     Returns:
-        _type_: _description_
+        dict: concatenated graph power of baseline, post-stimulus for all three graph frequencies
     """
     dic_append_everything = defaultdict(dict)
     for i in range(3):
@@ -219,7 +216,15 @@ def accumulate_freqs(freq_pre_low,freq_post_low,freq_pre_med,freq_post_med,freq_
 
 index = [8,56,68,74,86,132,162]
 
-def master(band,label_band):
+def master(band):
+    """The main function that does GFT, function-calls the temporal slicing, frequency summing, pre- post- graph-power accumulating 
+
+    Args:
+        band (array): Envelope band to use
+
+    Returns:
+        dict: Baseline-corrected ERD for all trials 
+    """
     GFTed_cortical_signal = [G.gft(np.array(band[i])) for i in range(25)]
 
     GFTed_cortical_signal_low_freq = np.array(GFTed_cortical_signal)[:,1:51,:]
@@ -247,7 +252,7 @@ def master(band,label_band):
         med_freq_pre_f_summed, med_freq_post_f_summed = sum_freqs(med_freq_pre,axis=1),sum_freqs(med_freq_post,axis=1)
         high_freq_pre_f_summed, high_freq_post_f_summed = sum_freqs(high_freq_pre,axis=1),sum_freqs(high_freq_post,axis=1)
 
-        dic_accumulated[f'{index[i]}'] =accumulate_freqs(low_freq_pre_f_summed,low_freq_post_f_summed,med_freq_pre_f_summed,med_freq_post_f_summed,high_freq_pre_f_summed,high_freq_post_f_summed,'Low Freqs','g',label_band,index[i])
+        dic_accumulated[f'{index[i]}'] =accumulate_freqs(low_freq_pre_f_summed,low_freq_post_f_summed,med_freq_pre_f_summed,med_freq_post_f_summed,high_freq_pre_f_summed,high_freq_post_f_summed)
 
     return dic_accumulated
 
@@ -256,30 +261,50 @@ dic = master(theta,'Theta')
 
 df = pd.DataFrame(columns=['gPower','gFreqs'])
 to_df = defaultdict(dict)
-def ttest(band1, band2):
-        return scipy.stats.ttest_rel(band1,band2)
+def ttest(pre_stim, post_stim):
+    """Stats
+
+    Args:
+        pre_stim (array): ERD for the pre stimulus
+        post_stim (array): ERD for the post stimulus
+
+    Returns:
+        list/array: t and p values
+    """
+    return scipy.stats.ttest_rel(pre_stim,post_stim)
 
 pvalues_slicing = list()
 def freq_plot(which_freq,env_band):
+    """Averaging ERD for all the trials, creating DF, sometimes plotting
+
+    Args:
+        which_freq (array): The graph frequency to average the trials with 
+        env_band (string): String of the envelope band name for creating a dataframe
+
+    Returns:
+        averaged: the grand-average of ERD
+        total: averaged ERP across trials
+        dic2: dictionary containing concatenated ERD for pre- and post- stimulus, etc 
+    """
     fig =plt.figure(figsize=(45,25))
 
     total = (dic['8'][which_freq] +dic['56'][which_freq] +dic['68'][which_freq] + dic['74'][which_freq] + dic['86'][which_freq] + dic['132'][which_freq] + dic['162'][which_freq])/ len(index)
     pre_total = np.mean(total[:125,:],axis=0)
     post_total = np.mean(total[125:,:],axis=0)
     pvalues_slicing.append(ttest(pre_total,post_total)[1])
-    a,b,c = 5,5,1
-    for i in range(25):
-        plt.subplot(a,b,c)
-        plt.plot(total[:,i])
-        plt.axvline(125)
-        plt.xticks(np.arange(0,376,62.5),np.arange(-1000,2500,500))
-        plt.xlabel('time (ms)')
-        plt.axvspan(xmin=0,xmax=113,color='r',alpha=0.2)
-        c+=1
-    plt.suptitle('Theta band/Low Frequency/Averaged trials subject-wise')
-    fig.supxlabel("Relative power difference")
-    if env_band=="Low":
-        fig.savefig('/homes/v20subra/S4B2/Graph-related_analysis/ERD/Theta_low_subjwise')
+    # a,b,c = 5,5,1
+    # for i in range(25):
+    #     plt.subplot(a,b,c)
+    #     plt.plot(total[:,i])
+    #     plt.axvline(125)
+    #     plt.xticks(np.arange(0,376,62.5),np.arange(-1000,2500,500))
+    #     plt.xlabel('time (ms)')
+    #     plt.axvspan(xmin=0,xmax=113,color='r',alpha=0.2)
+    #     c+=1
+    # plt.suptitle('Theta band/Low Frequency/Averaged trials subject-wise')
+    # fig.supxlabel("Relative power difference")
+    # if env_band=="Low":
+    #     fig.savefig('/homes/v20subra/S4B2/Graph-related_analysis/ERD/Theta_low_subjwise')
     averaged = np.mean(total,axis=1)
 
     dic2 = defaultdict(dict)

@@ -59,7 +59,6 @@ Despicable Me-HQ.wav
 /filtered_ipynbs
 /graph_analysis_during_PhD/*
 /Graph-related_analysis/Functional_graph_setup/*
-!/Graph-related_analysis/Functional_graph_setup/Preprocessing.ipynb
 /bootstrapping.png
 /Pub-quality Figures
 /gitignore_
@@ -77,4 +76,6 @@ Despicable Me-HQ.wav
 !/$Downloading_datasets/code_and_data_for_subjects_inclusion/subjects_freesurfer.ods
 !/$Downloading_datasets/code_and_data_for_subjects_inclusion/subjects_to_download_data_for.mat
 
-/Graph-related_analysis/*
+/Graph-related_analysis/smoothing_roughness_check.py
+
+/Graph-related_analysis/ERD/

@@ -284,8 +284,8 @@ def master(band):
 
     return dic_accumulated
 
-dic = master(high_beta)
-band = 'Upper_beta'
+dic = master(low_beta)
+band = 'Low_beta'
 
 """
 The `dic` contains the graph power(or smoothness) for all the trials, and likewise for all the graph frequencies during the stimulus periods of interest.
@@ -433,7 +433,9 @@ for i in range(7):
 fig.supylabel('Relative power difference')
 fig.supxlabel('time (ms)')
 fig.suptitle(f'ERD trial-wise -- {band}')
-fig.savefig(
-    f'/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/Results_ERD_trial_wise/{band}')
+# fig.savefig(
+#     f'/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/Results_ERD_trial_wise/{band}')
 
 #%%
+np.shape(dic_parse_freq_wise)
+# %%

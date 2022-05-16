@@ -3,6 +3,8 @@
 
 
 
+from turtle import color, shape
+from matplotlib import colorbar
 import scipy.stats as st
 from collections import defaultdict
 import numpy as np
@@ -10,8 +12,6 @@ import matplotlib.pyplot as plt
 from pygsp import graphs, filters
 from pygsp import plotting as gsp_plt
 
-
-from pathlib import Path
 from scipy import io as sio
 from pygsp import graphs
 
@@ -21,7 +21,6 @@ import pickle
 import seaborn as sns
 import pandas as pd
 from statannot import add_stat_annotation
-import matplotlib as mpl
 from collections import defaultdict
 import ptitprince as pt
 
@@ -109,6 +108,8 @@ gFreqs = ['Low', 'Med', 'High']
 
 envelope_signal_bandpassed = np.load(
     '/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/envelope_signal_bandpassed_with_beta_dichotomy.npz', mmap_mode='r')
+
+eloreta_signal = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects/video_watching_bundle_STC_parcellated.npz')['video_watching_bundle_STC_parcellated']
 
 alpha = envelope_signal_bandpassed['alpha']
 low_beta = envelope_signal_bandpassed['lower_beta']
@@ -279,30 +280,30 @@ def averaging_ERD():
     
     pvalues.append(ttest(pre_stimulus, post_stimulus)[1])
 
-    a, b, c = 5, 5, 1
-    fig = plt.figure(figsize=(25, 25))
-    for i in range(subjects):# iterating over subjects
-        mean, sigma = np.mean(np.array(list(dic.values()))[:, :, i], axis = 0), np.std(
-            np.array(list(dic.values()))[:, :, i], axis = 0)
-        assert np.shape(mean) == (375,)
-        conf_int_a = scipy.stats.norm.interval(0.95, loc = mean, scale = sigma)
+    # a, b, c = 5, 5, 1
+    # fig = plt.figure(figsize=(25, 25))
+    # for i in range(subjects):# iterating over subjects
+    #     mean, sigma = np.mean(np.array(list(dic.values()))[:, :, i], axis = 0), np.std(
+    #         np.array(list(dic.values()))[:, :, i], axis = 0)
+    #     assert np.shape(mean) == (375,)
+    #     conf_int_a = scipy.stats.norm.interval(0.95, loc = mean, scale = sigma)
 
-        plt.subplot(a,b,c)
-        plt.plot(mean,  color='r', linewidth = 5, label='Mean')
-        plt.plot((np.array(list(dic.values()))[:,:,i]).T)
-        plt.fill_between(range(total_duration_in_samples), np.array(
-            conf_int_a).T[:, 0], np.array(conf_int_a).T[:, 1], alpha = 0.2, label='95% CI')
-        plt.axvline(125)
-        plt.xticks(np.arange(0, total_duration_in_samples+1, 62.5), np.arange(-1000, 2500, 500))
-        plt.axvspan(xmin = 0, xmax = 113, color='r', alpha = 0.2)
-        c+= 1
-        plt.legend()
+    #     plt.subplot(a,b,c)
+    #     plt.plot(mean,  color='r', linewidth = 5, label='Mean')
+    #     plt.plot((np.array(list(dic.values()))[:,:,i]).T)
+    #     plt.fill_between(range(total_duration_in_samples), np.array(
+    #         conf_int_a).T[:, 0], np.array(conf_int_a).T[:, 1], alpha = 0.2, label='95% CI')
+    #     plt.axvline(125)
+    #     plt.xticks(np.arange(0, total_duration_in_samples+1, 62.5), np.arange(-1000, 2500, 500))
+    #     plt.axvspan(xmin = 0, xmax = 113, color='r', alpha = 0.2)
+    #     c+= 1
+    #     plt.legend()
     
     
-    fig.suptitle(f'ERD across trials subject-wise--{band}')
-    fig.supylabel("Relative smoothness")
-    fig.supxlabel('time (ms)')
-    fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/Results_ERD_across_trial/{band}_smoothness')
+    # fig.suptitle(f'ERD across trials subject-wise--{band}')
+    # fig.supylabel("Relative smoothness")
+    # fig.supxlabel('time (ms)')
+    # fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/Results_ERD_across_trial/{band}_smoothness')
 
     # the following code is for the Raincloud plot, in a dataframe
     averaged_subject = np.mean(total, axis = 1)
@@ -311,36 +312,47 @@ def averaging_ERD():
     dic2['gSmoothness'] = np.squeeze(np.concatenate([pre_stimulus, post_stimulus]).T) # vertically appending the pre and post stimulus data for the subjects, so subjects times each
     dic2['stim_group'] = np.squeeze(np.concatenate(
         [['pre-'] * subjects, ['post-'] * subjects]).T)
-    return dic2, averaged_subject, stats_SEM(total) 
+    return dic2, averaged_subject, stats_SEM(total), total
 
 
 
-#%%
 
-dic_of_env_bands = { 'theta': theta, 'alpha':alpha, 'lower_beta' : low_beta, 'upper_beta' : high_beta} # ALL the hilbert-transformed envelopes
+dic_of_env_bands = { 'smoothness_theta': theta, 'smoothness_wideband': eloreta_signal}#, 'alpha':alpha, 'lower_beta' : low_beta, 'upper_beta' : high_beta} # ALL the hilbert-transformed envelopes
+
+
+"""
+The following block is where all the code gets called;
+
+"""
+
 
 for i in range( len (dic_of_env_bands.keys() ) ): # looping over all the envelope bands
     band = list(dic_of_env_bands.keys())[i]
     dic = master( dic_of_env_bands[  band  ]  ) # the main... master function is called given a single envelope
     
-    assert np.shape(dic['8']) == (total_duration_in_samples, subjects)    
+    assert np.shape(dic['8']) == (total_duration_in_samples, subjects)  # sanity check, done for one trial.. will be the same for the remaining
     
     """
     The `dic` contains the smoothness for all the trials during the stimulus periods of interest. The following steps are specific trial-wise analyses
     """
     pvalues = list() # appending the pvalues from the stat tests
 
-    a = 1
+    a = 2
     b = 2
     c = 1
     """
     Averaging ERD trials
     """
-    dic_for_plotting_purpose, grand_average, grand_sem = averaging_ERD() # Averaging the ERD trials
+    dic_for_plotting_purpose, grand_average, grand_sem, total = averaging_ERD() # Averaging the ERD trials
 
     assert np.shape(grand_average) == (total_duration_in_samples,)
     assert np.shape(grand_sem) == (total_duration_in_samples,)
 
+    dic_to_write = defaultdict(dict)
+    dic_to_write[f'{list(dic_of_env_bands.keys())[i]}']['average'] = grand_average
+    dic_to_write[f'{list(dic_of_env_bands.keys())[i]}']['sem'] = grand_sem
+
+    np.savez_compressed(f'/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/power_smoothness_4_in_one_plot/{list(dic_of_env_bands.keys())[i]}', **dic_to_write )
 
     fig = plt.figure(figsize=(25, 15))
     ax = fig.add_subplot(a, b, 1)
@@ -354,56 +366,61 @@ for i in range( len (dic_of_env_bands.keys() ) ): # looping over all the envelop
     ax.set_xlabel('time (ms)')
     ax.axvspan(xmin = 0, xmax = baseline_duration_of_900ms_in_samples,
                 color='r', alpha = 0.2)
+    # width = 0.35
+    # ort = "v" # orientation of the raincloud plot
+    # pal = "blue_red_r"
+    # ax = fig.add_subplot(a, b, 2)
+    # pt.RainCloud(x="stim_group", y="gSmoothness", palette=['C0', 'C1'], data = dic_for_plotting_purpose, ax = ax,
+    #             orient = ort, alpha=.45, dodge = True)
+    # add_stat_annotation(ax, data = dic_for_plotting_purpose, y="gSmoothness", x="stim_group",
+    #                     box_pairs=[(( "pre-"), ("post-"))],
+    #                     perform_stat_test = False, pvalues = pvalues, text_format='star', loc='outside', verbose = 2)
+    # fig.suptitle(
+    #     f'ERD of graph smoothness for the averaged trials across subjects -- {band}')
+    # fig.supylabel('The relative Smoothness difference')
+    # # fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD/{band}_smoothness')
 
-    width = 0.35
-    ort = "v" # orientation of the raincloud plot
-    pal = "blue_red_r"
-    ax = fig.add_subplot(a, b, 2)
-    pt.RainCloud(x="stim_group", y="gSmoothness", palette=['C0', 'C1'], data = dic_for_plotting_purpose, ax = ax,
-                orient = ort, alpha=.45, dodge = True)
-    add_stat_annotation(ax, data = dic_for_plotting_purpose, y="gSmoothness", x="stim_group",
-                        box_pairs=[(( "pre-"), ("post-"))],
-                        perform_stat_test = False, pvalues = pvalues, text_format='star', loc='outside', verbose = 2)
-    fig.suptitle(
-        f'ERD of graph smoothness for the averaged trials across subjects -- {band}')
-    fig.supylabel('The relative Smoothness difference')
-    fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD/{band}_smoothness')
+    # index_in_str = [str(i) for i in trials]#  converting the indices into string for parsing from the dictionary
+    # dic_parse_all_trials = [dic.get(key) for key in index_in_str] # parsing and loading all the trials into this dict
+    # ax = fig.add_subplot(a, b, 3)
 
-    index_in_str = [str(i) for i in trials]#  converting the indices into string for parsing from the dictionary
-    dic_parse_all_trials = [dic.get(key) for key in index_in_str] # parsing and loading all the trials into this dict
+    # sns.heatmap(total.T*100,  cmap='seismic',vmin=-600, vmax = 600)
+    # ax.axvline(125) # The stimulus onset, in samples
+    # ax.set_xticks(np.arange(0, total_duration_in_samples+1, 62.5))
+    # ax.set_xticklabels(np.arange(-1000, 2500, 500))
 
 
 
-    a, b, c = 4, 2, 1
-    """
-    Iterating over trials, for plotting 
-    """
-    fig = plt.figure(figsize=(25, 25))
-    for i in range(7):
-        plt.subplot(a, b, c)
-        mean, sigma = np.mean(np.array(dic_parse_all_trials)[i, :, :], axis = 1), np.std(
-            np.array(dic_parse_all_trials)[i, :, :], axis = 1)
-        print(np.shape(np.array(dic_parse_all_trials)))
-        conf_int_a = scipy.stats.norm.interval(0.95, loc = mean, scale = sigma)
+    # a, b, c = 4, 2, 1
+    # """
+    # Iterating over trials, for plotting 
+    # """
+    # fig = plt.figure(figsize=(25, 25))
+    # for i in range(7):
+    #     plt.subplot(a, b, c)
+    #     mean, sigma = np.mean(np.array(dic_parse_all_trials)[i, :, :], axis = 1), np.std(
+    #         np.array(dic_parse_all_trials)[i, :, :], axis = 1)
+    #     print(np.shape(np.array(dic_parse_all_trials)))
+    #     conf_int_a = scipy.stats.norm.interval(0.95, loc = mean, scale = sigma) # provides CI for upper and lower bound
 
-        plt.plot(np.array(dic_parse_all_trials)[i, :, :])
-        plt.plot(mean, color='r', linewidth = 5, label='Mean (subjects)')
-        plt.fill_between(range(total_duration_in_samples), np.array(
-            conf_int_a).T[:, 0], np.array(conf_int_a).T[:, 1], alpha = 0.2, label='95% CI')
-        plt.xticks(np.arange(0, total_duration_in_samples+1, 62.5),
-                np.arange(-1000, 2500, 500))
-        plt.axvline(125, c='g', linewidth = 3)
-        plt.axvspan(xmin = 0, xmax = baseline_duration_of_900ms_in_samples,
-                    color='r', alpha = 0.2)
-        c += 1
-        plt.legend()
-    fig.suptitle(f'ERD of smoothness trial-wise -- {band}')
-    fig.supylabel('Smoothness')
-    fig.supxlabel('time (ms)')
-    # fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/Results_ERD_trial_wise/{band}_smoothness')
+    #     plt.plot(np.array(dic_parse_all_trials)[i, :, :])
+    #     plt.plot(mean, color='r', linewidth = 5, label='Mean (subjects)')
+    #     plt.fill_between(range(total_duration_in_samples), np.array(
+    #         conf_int_a).T[:, 0], np.array(conf_int_a).T[:, 1], alpha = 0.2, label='95% CI') # CI [0] and CI[1] = upper and lower bound for CI
+    #     plt.xticks(np.arange(0, total_duration_in_samples+1, 62.5),
+    #             np.arange(-1000, 2500, 500))
+    #     plt.axvline(125, c='g', linewidth = 3)
+    #     plt.axvspan(xmin = 0, xmax = baseline_duration_of_900ms_in_samples,
+    #                 color='r', alpha = 0.2)
+    #     c += 1
+    #     plt.legend()
+    # fig.suptitle(f'ERD of smoothness trial-wise -- {band}')
+    # fig.supylabel('Smoothness')
+    # fig.supxlabel('time (ms)')
+    # # fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/Results_ERD_trial_wise/{band}_smoothness')
 
-# %%
 
-# %%
-np.shape(dic_parse_all_trials)
+#%%
+
+
 # %%

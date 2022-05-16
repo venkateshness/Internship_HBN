@@ -284,8 +284,8 @@ def master(band):
 
     return dic_accumulated
 
-dic = master(low_beta)
-band = 'Low_beta'
+dic = master(theta)
+band = 'Theta'
 
 """
 The `dic` contains the graph power(or smoothness) for all the trials, and likewise for all the graph frequencies during the stimulus periods of interest.
@@ -382,6 +382,13 @@ for i in range(3): # iterating over graph frequencies; 0 = low, 1 = Med; 2 = Hig
     ax.axvspan(xmin = 0, xmax = baseline_duration_of_900ms_in_samples,
                color='r', alpha = 0.2)
     ax.set_title(f'g{env_bands[i]} freq')
+    if i == 0:
+            dic_to_write = defaultdict(dict)
+            dic_to_write['gPower']['average'] = averaged
+            dic_to_write['gPower']['sem'] = sem
+
+            np.savez_compressed(f'/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/power_smoothness_4_in_one_plot/gPower', **dic_to_write )
+
 
 width = 0.35
 ort = "v"
@@ -437,5 +444,5 @@ fig.suptitle(f'ERD trial-wise -- {band}')
 #     f'/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/Results_ERD_trial_wise/{band}')
 
 #%%
-np.shape(dic_parse_freq_wise)
+np.shape(dic)
 # %%

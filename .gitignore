@@ -82,6 +82,7 @@ Despicable Me-HQ.wav
 /Graph-related_analysis/plt_style.txt
 
 /AutoAnnotation
+!/AutoAnnotation/master.py
 /3Source_Inversion_full_stack/*
 !/3Source_Inversion_full_stack/.ISC_&_noise_floor.py
 !/3Source_Inversion_full_stack/$eLORETA.py

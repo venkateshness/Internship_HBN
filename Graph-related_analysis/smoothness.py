@@ -109,7 +109,7 @@ gFreqs = ['Low', 'Med', 'High']
 envelope_signal_bandpassed = np.load(
     '/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/envelope_signal_bandpassed_with_beta_dichotomy.npz', mmap_mode='r')
 
-eloreta_signal = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects/video_watching_bundle_STC_parcellated.npz')['video_watching_bundle_STC_parcellated']
+eloreta_signal = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/video_watching_bundle_STC_parcellated.npz')['video_watching_bundle_STC_parcellated']
 
 alpha = envelope_signal_bandpassed['alpha']
 low_beta = envelope_signal_bandpassed['lower_beta']

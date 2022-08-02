@@ -15,11 +15,11 @@ noise_floor_source = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects
 n_comps = 3
 
 significance_sampled = list()
-for i in range(n_comps):
-    significance = np.array(np.where(np.max(np.array(noise_floor_source)[:,i,:],axis=0)<isc_result[i]))
+significance = np.where(np.max(np.array(noise_floor_source)[:,:3,:],axis=0)<isc_result[:3])[1]
+unique_samples = np.unique(significance)
+significance_sampled.append(1)
+significance_sampled.append(unique_samples[np.where(np.diff(unique_samples)>1)[0]+1])
 
-    significance_sampled.append(significance[0][0])
-    significance_sampled.append(significance[0][np.where(np.diff(significance)!=1)[1]+1])
 
 _500_ms_in_samples = 50
 sample_sorted = np.unique(np.array(sorted( np.hstack(significance_sampled) )))
@@ -27,7 +27,6 @@ sample_sorted = np.unique(np.array(sorted( np.hstack(significance_sampled) )))
 # 1. Sound Event Detection
 def pre_stimulus_average(array_to_average_on, timeframe, times, ):
     """Temporal average of the predicted probability for the pre-stimulus period
-
     Args:
         array_to_average_on (array): Predicted prob/RMS of volume change for the entire video frames. Dim = Frames x n_classes
         timeframe (int): Onset point. Range = -500 ms to 0ms
@@ -39,11 +38,9 @@ def pre_stimulus_average(array_to_average_on, timeframe, times, ):
 
 def post_stimulus_average(array_to_average_on, timeframe, times):
     """Temporal average of the predicted probability for the post-stimulus period
-
     Args:
         array_to_average_on (array): Predicted prob/RMS volume change for the entire video frames. Dim = Frames x n_classes
         timeframe (int): Onset point.  Range = 0ms to +500ms
-
     Returns:
         Averaged probs. Dim =  1 x n_classes
     """
@@ -51,11 +48,9 @@ def post_stimulus_average(array_to_average_on, timeframe, times):
 
 def entire_stimulus_average(array_to_average_on, timeframe, times):
     """Temporal average of the predicted probability for the entire event duration: -500ms to +500 ms
-
     Args:
         array_to_average_on (array): Predicted prob/RMS volume change for the entire video frames. Dim = Frames x n_classes
         timeframe (int): Onset point.  Range = -500ms to +500ms
-
     Returns:
         Averaged probs. Dim =  1 x n_classes
     """
@@ -70,11 +65,9 @@ ix_to_lb = {label for i, label in enumerate(labels)}
 
 def df_indexing(label, averaged_probs):
     """Zip the averaged predictions with the multi-level columns for a creation of the dataframe
-
     Args:
         label (string): label for the outer-level column
         array (_type_): _description_
-
     Returns:
         DataFrame with multi-level column 
     """
@@ -96,7 +89,7 @@ for i in sample_sorted:
 df_sed = pd.concat([df_pre, df_post, df_entire], axis=1)
 
 ##################################################################################################################################
-
+#%%
 # 2. Scene Detection
 from scenedetect import detect, ContentDetector
 scene_list = detect('/homes/v20subra/S4B2/3Source_Inversion_full_stack/Videos/DM2_video.mp4', ContentDetector())
@@ -116,20 +109,23 @@ frames_in_samples_pre = 12 #25 fps; 12 for 500 ms
 frames_in_samples_post = 13 #25 fps; 13 for 500 ms
 _1s_in_frames = 25
 for i in sample_sorted * _1s_in_frames:
+
     scene_detection_entire.append(len(set(np.arange(i - frames_in_samples_pre, i + frames_in_samples_post)).intersection(unique_frame_timestamp)))
     scene_detection_pre.append(len(set(np.arange(i - frames_in_samples_pre, i)).intersection(unique_frame_timestamp)))
     scene_detection_post.append(len(set(np.arange(i, i + frames_in_samples_post)).intersection(unique_frame_timestamp)))
     
     if len(set(np.arange(i-frames_in_samples_pre, i + frames_in_samples_post)).intersection(unique_frame_timestamp))>0:
         relative_scence_change_from_onset = unique_frame_timestamp - i
+        print(np.abs(relative_scence_change_from_onset))
         offset.append(relative_scence_change_from_onset[np.abs(relative_scence_change_from_onset).argmin()])
+        # print(offset)
     else:
         offset.append(0)
 
 df_scene_change = pd.DataFrame({ "Offset(in frames)":offset})
 # pd.concat([df_sed, df_scene_change],axis=1)
+#%%
 ##################################################################################################################################
-df_scene_change
 # 3. RMS volume change
 
 
@@ -161,10 +157,11 @@ scale = StandardScaler()
 df_rms_scaled = pd.DataFrame(scale.fit_transform(df_rms))
 df_rms_scaled.columns = ['RMS_pre-stim','RMS_post_stim','RMS_entire_event']
 the_df = pd.concat([df_sed, df_scene_change, df_rms_scaled], axis = 1)
+the_df_raw_rms = pd.concat([df_sed, df_scene_change, df_rms], axis = 1)
 
 from sklearn.feature_selection import VarianceThreshold
 def variance_thresholding(dataset):
-    threshold = 0.02
+    threshold = 0.03
     VT = VarianceThreshold(threshold=threshold)
     the_df_transformed = pd.DataFrame(VT.fit_transform(dataset))
     the_df_transformed.columns = dataset.columns[VT.variances_>threshold]
@@ -177,6 +174,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from nilearn.plotting import plot_matrix
 
 the_df_transformed = variance_thresholding(the_df)
+
 # plot_matrix(cosine_similarity(the_df_transformed), labels = range(38), reorder=True)
 # plt.title('Cosine-similarity for the annotation matrix')
 # plt.xlabel('Events')
@@ -211,8 +209,8 @@ def pca(dataset):
     # plt.ylabel('PC2')
     # plt.show()
     return plot, pca
-
 # %%
+
 
 from sklearn.cluster import KMeans 
 from sklearn.metrics import silhouette_score, silhouette_samples
@@ -223,30 +221,24 @@ from scipy.spatial import ConvexHull
 range_n_clusters = [3]
 
 
-def clustering(which_cluster,cluster_labels=None):
+def clustering(which_cluster,cluster_labels=None, range_n_clusters = range_n_clusters ):
 
     if which_cluster=='sub_cluster':
         # VT = VarianceThreshold(threshold=threshold)
-        the_df_transformed_single_cluster =variance_thresholding(the_df_transformed.iloc[np.where(cluster_labels==1)])
-        the_df_transformed_single_cluster = the_df_transformed_single_cluster.drop(['Offset(in frames)'],axis=1)
+        the_df_transformed_single_cluster = variance_thresholding(the_df_transformed.iloc[np.where(cluster_labels==0)])
+        # the_df_transformed_single_cluster = the_df_transformed_single_cluster.drop(['Offset(in frames)'],axis=1)
         # the_df_transformed_single_cluster = pd.DataFrame(VT.fit_transform(the_df_transformed.iloc[np.where(cluster_labels==1)]))
         # the_df_transformed_single_cluster.columns = the_df_transformed.columns[VT.variances_>threshold]
         # print(the_df_transformed_single_cluster)
 
 
-        data = variance_thresholding(the_df_transformed_single_cluster)
-        plot,for_comp = pca(data)
-        df_for_comp = pd.DataFrame(for_comp.components_)
-        df_for_comp.columns = the_df_transformed_single_cluster.columns
-        
-        print("pca components sub-cluster\n", df_for_comp)
+        dataset = the_df_transformed_single_cluster
+        plot  = pca(dataset)[0]
         
     else:
-
-        plot,for_comp = pca(the_df_transformed)
-        df_comp = pd.DataFrame(for_comp.components_)
-        df_comp.columns = the_df_transformed.columns
-        print("pca components audio-video \n", df_comp)
+        dataset = the_df_transformed
+        plot = pca(dataset)[0]
+        
 
     for n_clusters in range_n_clusters:
         # Create a subplot with 1 row and 2 columns
@@ -259,17 +251,17 @@ def clustering(which_cluster,cluster_labels=None):
         ax1.set_xlim([-0.1, 1])
         # The (n_clusters+1)*10 is for inserting blank space between silhouette
         # plots of individual clusters, to demarcate them clearly.
-        ax1.set_ylim([0, len(plot) + (n_clusters + 1) * 10])
+        ax1.set_ylim([0, len(dataset) + (n_clusters + 1) * 10])
 
         # Initialize the clusterer with n_clusters value and a random generator
         # seed of 10 for reproducibility.
         clusterer = KMeans(n_clusters=n_clusters, random_state=10)
-        cluster_labels = clusterer.fit_predict(plot)
+        cluster_labels = clusterer.fit_predict(dataset)
 
         # The silhouette_score gives the average value for all the samples.
         # This gives a perspective into the density and separation of the formed
         # clusters
-        silhouette_avg = silhouette_score(plot, cluster_labels)
+        silhouette_avg = silhouette_score(dataset, cluster_labels)
         print(
             "For n_clusters =",
             n_clusters,
@@ -278,7 +270,7 @@ def clustering(which_cluster,cluster_labels=None):
         )
 
         # Compute the silhouette scores for each sample
-        sample_silhouette_values = silhouette_samples(plot, cluster_labels)
+        sample_silhouette_values = silhouette_samples(dataset, cluster_labels)
 
         y_lower = 10
         for i in range(n_clusters):
@@ -327,18 +319,7 @@ def clustering(which_cluster,cluster_labels=None):
         # Labeling the clusters
         centers = clusterer.cluster_centers_
         # Draw white circles at cluster centers
-        ax2.scatter(
-            centers[:, 0],
-            centers[:, 1],
-            marker="o",
-            c="white",
-            alpha=1,
-            s=200,
-            edgecolor="k",
-        )
 
-        for i, c in enumerate(centers):
-            ax2.scatter(c[0], c[1], marker="$%d$" % i, alpha=1, s=50, edgecolor="k")
 
         z = plot[:,0]
         y = plot[:,1]
@@ -358,7 +339,44 @@ def clustering(which_cluster,cluster_labels=None):
 
     # plt.legend()
     plt.show()
-    return cluster_labels
-cluster_labels = clustering(which_cluster='')
-cluster_labels =clustering(which_cluster='sub_cluster',cluster_labels=cluster_labels)
+    if which_cluster == 'sub_cluster':
+        return cluster_labels, centers, the_df_transformed_single_cluster
+    else:
+        return cluster_labels, centers
+
+
+cluster_labels_full, center_full = clustering(which_cluster='',range_n_clusters=range_n_clusters)
+centroids_for_full = pd.DataFrame(center_full)
+centroids_for_full.columns = the_df_transformed.columns
+for i in range(3):
+    centroids_for_full.iloc[i,-3:] =np.mean(the_df_raw_rms.iloc[np.where(cluster_labels_full==i)[0], -3: ],axis=0).values
+
+
+range_n_clusters = [3]
+cluster_labels_sub, center_sub, the_df_transformed_single_cluster = clustering(which_cluster='sub_cluster',cluster_labels=cluster_labels_full,range_n_clusters=range_n_clusters)
+
+
+centroids_for_sub = pd.DataFrame(center_sub)
+centroids_for_sub.columns = the_df_transformed_single_cluster.columns
+
+for i in range(3):
+    centroids_for_sub.iloc[i,-3:] =np.mean(the_df_raw_rms.iloc[np.where(cluster_labels_sub==i)[0], -3: ],axis=0).values
+
+# %%
+dic_of_groups = {}
+for i in range(3):
+    indices_full = sample_sorted[np.where(cluster_labels_full==i)[0]]
+    if i==0:
+        for j in range(3):
+            indices_sub = indices_full[np.where(cluster_labels_sub==j)]
+            dic_of_groups[str(j)]= indices_sub
+    else:
+        dic_of_groups[str(i+2)]= indices_full
+dic_of_groups
+# %%
+
+np.savez(file='dict_of_clustered_events',**dic_of_groups)
+
+# %%
+the_df_transformed.iloc[np.where(cluster_labels_full == 2)]
 # %%

@@ -9,6 +9,7 @@ sns.set_theme()
 
 import scipy.stats
 import importlib
+os.chdir('/homes/v20subra/S4B2/')
 from Modular_Scripts import graph_setup
 
 import numpy as np
@@ -24,7 +25,7 @@ low_beta = envelope_signal_bandpassed['lower_beta']
 high_beta = envelope_signal_bandpassed['higher_beta']
 theta = envelope_signal_bandpassed['theta']
 
-os.chdir('/homes/v20subra/S4B2/')
+
 
 dic_of_envelope_signals = {'theta' : theta, 'alpha' : alpha, 'low_beta' : low_beta, 'high_beta' : high_beta}
 
@@ -128,7 +129,7 @@ for labels, signal in dic_of_envelope_signals.items():
     assert np.shape(    cortico_signal_sliced_time_averaged[f'{labels}']    ) == (  subjects,   regions,    number_of_clusters, seconds_per_event   *   fs  )
 
 ##########################################################################################################################################################################
-#%%
+
 
 video_duration = fs * 170
 def smoothness_computation(band):
@@ -271,4 +272,65 @@ dic_of_cortical_signal_baseline_corrected_nw  = dict()
 for i in range(1, 8):
     dic_of_cortical_signal_baseline_corrected_nw[f'{i}']    =   baseline_correction_network_wise_setup(network = i)
 # %%
-dic_of_cortical_signal_baseline_corrected_nw['1'].keys()
+
+_7_networks = ['GSV','Visual', 'Somatomotor', 'Dorsal Attention', 'Ventral Attention', 'Limbic', 'Frontoparietal','DMN']
+_5clusters = ['Positive RMS', 'Fully negative RMS', 'Mixed', '+ve frame offset', '-ve frame offset']
+
+def plotting(band):
+    a = 8
+    b = 5
+    c = 1
+    fig = plt.figure(figsize=(25, 25))
+    for i in range(8):
+
+        for cluster_group in range(number_of_clusters):
+            plt.subplot(a,  b,  c)
+
+            if i==0:
+                label_band = list(dic_of_erd_smoothness_signal.keys())[i]
+                signal = np.array(  dic_of_erd_smoothness_signal[f'{band}'] ) [cluster_group,:,:]
+            
+            else:
+                label_band = list(dic_of_cortical_signal_baseline_corrected_nw.keys())[i-1]
+                signal = np.array(  dic_of_cortical_signal_baseline_corrected_nw[f'{label_band}'][f'{band}'] ) [:,cluster_group,:]
+            
+            assert np.shape(signal) == (subjects, seconds_per_event * fs)
+
+            mean_signal = np.mean( signal, axis = 0 )
+            assert np.shape(mean_signal) == (seconds_per_event * fs,)
+            
+            sem_signal = scipy.stats.sem(  signal, axis = 0 )
+            assert np.shape(sem_signal) == (seconds_per_event * fs,)
+            
+            plt.xticks( list(range(0, seconds_per_event * fs + fs , fs)), labels = [-1000, 0, 1000, 2000] )
+            
+        
+            plt.plot(   mean_signal    )
+            plt.fill_between    (   range( seconds_per_event * fs ), mean_signal - sem_signal, mean_signal + sem_signal, alpha = 0.2, label = 'SEM - subjects')
+
+            if cluster_group == 3:
+                plt.axvline(fs+40, label = 'Frame change', c = 'g', linestyle = '-.')
+            if cluster_group == 4:
+                plt.axvline(fs-45, label = 'Frame change', c = 'g', linestyle = '-.')
+
+            plt.axvspan(0, _900ms_in_samples, alpha = 0.2, color = 'r', label = 'Baseline')
+            plt.axvline(fs, label = 'Onset (ISC)', c = 'g', linestyle = 'dashed')
+            
+            if c in [idx for idx in range(1, 41, 5)]:
+                plt.ylabel(f'{_7_networks[i]}',rotation=25, size = 'large', color = 'r')
+            
+            if c <= 5:
+                plt.title(f'{_5clusters[cluster_group]}')
+            plt.legend()
+            c += 1
+    fig.supylabel('relative variation')
+    fig.suptitle(f'{band} band')
+    fig.supxlabel('latency (ms)')
+    fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_7_networks/{band}.jpg')
+
+plotting('theta')
+plotting('alpha')
+plotting('low_beta')
+plotting('high_beta')
+
+# %%

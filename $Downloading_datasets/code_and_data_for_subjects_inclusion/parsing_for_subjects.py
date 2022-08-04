@@ -27,7 +27,7 @@ subjects_aged = list()
 def find_subject_age(which_df,age):
     subjects_aged.append (which_df[which_df['Age']>=age]['participant_id'].values)
 
-age = 16
+age = 5
 find_subject_age(df_CBIC,age)
 find_subject_age(df_RU,age)
 find_subject_age(df_CUNY,age)

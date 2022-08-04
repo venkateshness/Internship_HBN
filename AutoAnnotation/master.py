@@ -20,9 +20,11 @@ unique_samples = np.unique(significance)
 significance_sampled.append(1)
 significance_sampled.append(unique_samples[np.where(np.diff(unique_samples)>1)[0]+1])
 
-
+#%%
 _500_ms_in_samples = 50
 sample_sorted = np.unique(np.array(sorted( np.hstack(significance_sampled) )))
+sample_sorted
+
 #######################################################################################################################################
 # 1. Sound Event Detection
 def pre_stimulus_average(array_to_average_on, timeframe, times, ):
@@ -76,18 +78,19 @@ def df_indexing(label, averaged_probs):
     return df
 
 for i in sample_sorted:
-    audiotagging_entire.append(entire_stimulus_average(framewise_probs, i+1, 100))
+    
+    audiotagging_entire.append(entire_stimulus_average(framewise_probs, i, times =100))
     df_entire = df_indexing('Entire_stimulus', audiotagging_entire)
 
-    audiotagging_pre.append(pre_stimulus_average(framewise_probs, i+1, 100))
+    audiotagging_pre.append(pre_stimulus_average(framewise_probs, i, 100))
     df_pre = df_indexing('Pre_stimulus', audiotagging_pre)
 
-    audiotagging_post.append(post_stimulus_average(framewise_probs, i+1, 100))
+    audiotagging_post.append(post_stimulus_average(framewise_probs, i, 100))
     df_post = df_indexing('Post_stimulus', audiotagging_post)
 
 # Concatenating all three stimulus periods
 df_sed = pd.concat([df_pre, df_post, df_entire], axis=1)
-
+df_sed
 ##################################################################################################################################
 #%%
 # 2. Scene Detection
@@ -380,3 +383,13 @@ np.savez(file='dict_of_clustered_events',**dic_of_groups)
 # %%
 the_df_transformed.iloc[np.where(cluster_labels_full == 2)]
 # %%
+np.shape(framewise_probs)
+# %%
+the_df_raw_rms.iloc[np.where(cluster_labels_full==0)].iloc[np.where(cluster_labels_sub==2)].iloc[:,-3:]
+
+# %%
+rms_signal = rms.T[30 * 125 - 31: 30 * 125 +32]
+rms_signal_baseline = rms_signal[:31]
+plt.plot(( rms_signal - np.mean(rms_signal_baseline) )/ np.mean(rms_signal_baseline))
+# %%
+rms

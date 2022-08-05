@@ -19,12 +19,11 @@ G = graph_setup.graph_setup_main()
 
 dic_of_envelope_signals = dict()
 
-percentiles = ['90', '95', '98', '50']
+percentiles = ['90', '95', '98', '50', '0']
 
 def dicting(percentile):
 
-    envelope_signal_thresholded = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/eloreta_cortical_signal_thresholded/{percentile}_percentile.npz')
-
+    envelope_signal_thresholded = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/eloreta_cortical_signal_thresholded/{percentile}_percentile.npz')        
 
     alpha = envelope_signal_thresholded['alpha']
     theta = envelope_signal_thresholded['theta']
@@ -39,8 +38,9 @@ def dicting(percentile):
 dic_of_all_signals = {percentiles[0] : dicting(percentiles[0]), 
                       percentiles[1] : dicting(percentiles[1]),
                       percentiles[2] : dicting(percentiles[2]),
-                      percentiles[3] : dicting(percentiles[3])}
-# %%
+                      percentiles[3] : dicting(percentiles[3]),
+                      percentiles[4] : dicting(percentiles[4])}
+
 
 video_duration = 21250
 subjects = 25
@@ -142,7 +142,7 @@ for labels_outer, signal_outer in dic_of_smoothness_signals.items():
         smoothness_signal_sliced_time_averaged[f'{labels_outer}'][f'{labels_inner}']    =   np.squeeze   (   smoothness_event_averaging(   np.expand_dims( signal_inner, 1).T  ,   dim_spatial =   1    )  )
         assert np.shape(    smoothness_signal_sliced_time_averaged[f'{labels_outer}'][f'{labels_inner}'] ) == (  subjects,  number_of_clusters, seconds_per_event  )
         
-# %%
+
 
 dic_of_baseline_smoothness_signal = defaultdict(dict)
 
@@ -174,13 +174,12 @@ for labels_outer, signal_outer in smoothness_signal_sliced_time_averaged.items()
 
 
 
-# %%
-
 
 def plotting(band):
-    a = 4
+    a = 5
     b = 5
     c = 1
+    counter =0
     fig = plt.figure(figsize=(25,15))
 
     for labels_outer, signal_outer in dic_of_baseline_smoothness_signal.items():
@@ -203,13 +202,12 @@ def plotting(band):
                 
                 plt.axvline(pre_stim_in_samples + 1)
                 plt.axvspan(0, pre_stim_in_samples, label = 'Baseline', color = 'r', alpha = 0.2)
-                plt.legend()
-
+                plt.xticks(np.arange(0,125,31), labels = ['-500', '-250', '0', '250', '500'])
 
                 if cluster_group == 3:
-                    plt.axvline(pre_stim_in_samples + 30, label = 'Frame change', c = 'g', linestyle = '-.')
+                    plt.axvline(pre_stim_in_samples + 30, c = 'g', linestyle = '-.')
                     plt.axvline(pre_stim_in_samples + 40, label = 'Frame change', c = 'g', linestyle = '-.')
-                    plt.axvline(pre_stim_in_samples + 50, label = 'Frame change', c = 'g', linestyle = '-.')
+                    plt.axvline(pre_stim_in_samples + 50, c = 'g', linestyle = '-.')
                 
                 if cluster_group == 4:
                     plt.axvline(pre_stim_in_samples - 45, label = 'Frame change', c = 'g', linestyle = '-.')
@@ -230,14 +228,27 @@ def plotting(band):
                     pvalues[samples - pre_stim_in_samples] = scipy.stats.ttest_rel(mean_pre_stim_signal, signal_signal)[1]
 
                 pvalues_corrected = fdrcorrection(pvalues)[1]
-                print(sum(pvalues_corrected<=0.05))
+                # print(sum(pvalues_corrected<=0.05))
 
                 for pvals_index in range(len(pvalues)):
                     if pvals_index in np.where(pvalues<=0.05)[0]:
-                        print('yes')
+                        # print('yes')
                         plt.axvline(pvals_index + pre_stim_in_samples , color = 'orange', alpha = 0.2)
-
+              
+                if c in [idx for idx in range(1, 41, 5)]:
+                    
+                    plt.ylabel(f'{percentiles[  counter ]}_percentile',rotation=25, size = 'large', color = 'r')
+                    counter += 1 
                 c += 1
+                plt.legend()
+                
+
+    fig.suptitle('GSV at varying threshold of the cortical signal (Uncorrected pvalues)')
+    fig.supxlabel('latency (ms) ')
+    fig.supylabel('Relative variation')
+    fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_august/GSV/{band}.jpg')
+
+
 
 plotting('theta')
 plotting('alpha')
@@ -245,8 +256,3 @@ plotting('low_beta')
 plotting('high_beta')
 
 #%%
-
-#%%
-
-plt.plot(np.array(dic_of_baseline_smoothness_signal['90']['theta'][0]).T)
-# %%

@@ -353,7 +353,6 @@ def plotting(band):
     fig.supylabel('relative variation')
     fig.suptitle(f'{band} band')
     fig.supxlabel('latency (ms)')
-    # fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_7_networks/{band}.jpg')
 
 plotting('theta')
 plotting('alpha')

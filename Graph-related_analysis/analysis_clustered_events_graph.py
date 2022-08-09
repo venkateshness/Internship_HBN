@@ -1,6 +1,5 @@
 #%%
 from collections import defaultdict
-from email.policy import default
 import numpy as np
 import importlib
 import os
@@ -174,6 +173,7 @@ for labels_outer, signal_outer in smoothness_signal_sliced_time_averaged.items()
 
 
 
+_5clusters = ['RMS diff(entire event)= >1', '0.5 < RMS < 0.97', '< 0.2', '+ve frame offset', '-ve frame offset']
 
 def plotting(band):
     a = 5
@@ -200,7 +200,6 @@ def plotting(band):
                 plt.plot(mean_signal)
                 plt.fill_between(range(seconds_per_event), mean_signal - sem_signal, mean_signal + sem_signal, alpha = 0.2, label = 'SEM - subjects', color = 'b')
                 
-                plt.axvline(pre_stim_in_samples + 1)
                 plt.axvspan(0, pre_stim_in_samples, label = 'Baseline', color = 'r', alpha = 0.2)
                 plt.xticks(np.arange(0,125,31), labels = ['-500', '-250', '0', '250', '500'])
 
@@ -212,9 +211,9 @@ def plotting(band):
                 if cluster_group == 4:
                     plt.axvline(pre_stim_in_samples - 45, label = 'Frame change', c = 'g', linestyle = '-.')
 
-                plt.axvspan(0, pre_stim_in_samples , alpha = 0.2, color = 'r', label = 'Baseline')
                 plt.axvline(pre_stim_in_samples, label = 'Onset (ISC)', c = 'g', linestyle = 'dashed')
-                
+                plt.axvspan(0, pre_stim_in_samples, color = 'r', alpha = 0.2)
+
                 
                 pvalues = np.zeros(post_stim_in_samples )
 
@@ -230,6 +229,9 @@ def plotting(band):
                 pvalues_corrected = fdrcorrection(pvalues)[1]
                 # print(sum(pvalues_corrected<=0.05))
 
+                if c <= 5:
+                    plt.title(f'{_5clusters[cluster_group]}')
+
                 for pvals_index in range(len(pvalues)):
                     if pvals_index in np.where(pvalues<=0.05)[0]:
                         # print('yes')
@@ -243,10 +245,10 @@ def plotting(band):
                 plt.legend()
                 
 
-    fig.suptitle('GSV at varying threshold of the cortical signal (Uncorrected pvalues)')
+    fig.suptitle(f'GSV at varying threshold of the cortical signal (Uncorrected pvalues) SC -- {band} band')
     fig.supxlabel('latency (ms) ')
     fig.supylabel('Relative variation')
-    fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_august/GSV/{band}.jpg')
+    fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_august/GSV/SC/{band}.jpg')
 
 
 
@@ -255,4 +257,4 @@ plotting('alpha')
 plotting('low_beta')
 plotting('high_beta')
 
-#%%
+# %%

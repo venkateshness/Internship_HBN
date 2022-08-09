@@ -17,12 +17,11 @@ from nilearn import datasets, plotting, image, maskers
 # Average events (hilbert envelope)
 
 # Unthresholded cortical signal
-envelope_signal_bandpassed = np.load(
-    '/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/envelope_signal_bandpassed_with_beta_dichotomy.npz', mmap_mode='r')
+envelope_signal_bandpassed = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/eloreta_cortical_signal_thresholded/0_percentile.npz')
 
 alpha = envelope_signal_bandpassed['alpha']
-low_beta = envelope_signal_bandpassed['lower_beta']
-high_beta = envelope_signal_bandpassed['higher_beta']
+low_beta = envelope_signal_bandpassed['low_beta']
+high_beta = envelope_signal_bandpassed['high_beta']
 theta = envelope_signal_bandpassed['theta']
 
 
@@ -63,7 +62,6 @@ for i, roi in enumerate(np.unique(glasser_vec)):
 
 
 G = graph_setup.graph_setup_main()
-G.compute_fourier_basis()
 
 # %%
 subjects = 25

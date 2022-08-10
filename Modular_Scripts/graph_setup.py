@@ -45,12 +45,12 @@ def NNgraph():
         Matrix of floats: A weight matrix for the thresholded graph
     """
 
-    # pickle_file = '/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl'
+    pickle_file = '/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl'
 
-    # with open(pickle_file, 'rb') as f:
-    #     [connectivity] = pickle.load(f)
-    # np.fill_diagonal(connectivity, 0)
-    connectivity = sio.loadmat('/homes/v20subra/S4B2/GSP/SC_avg56.mat')['SC_avg56']
+    with open(pickle_file, 'rb') as f:
+        [connectivity] = pickle.load(f)
+    np.fill_diagonal(connectivity, 0)
+    # connectivity = sio.loadmat('/homes/v20subra/S4B2/GSP/SC_avg56.mat')['SC_avg56']
     graph = torch.from_numpy(connectivity)
     knn_graph = torch.zeros(graph.shape)
     for i in range(knn_graph.shape[0]):

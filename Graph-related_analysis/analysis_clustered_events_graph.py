@@ -22,7 +22,7 @@ percentiles = ['98','95', '90', '50', '0']
 
 def dicting(percentile):
 
-    envelope_signal_thresholded = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{percentile}_percentile.npz')        
+    envelope_signal_thresholded = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{percentile}_percentile.npz')        
 
     alpha = envelope_signal_thresholded['alpha']
     theta = envelope_signal_thresholded['theta']
@@ -83,7 +83,6 @@ for labels_outer, signal_outer in dic_of_all_signals.items():
 
             event_level.append( smoothness_computation(signal_inner[:,event_group,:,:]) )
         dic_of_smoothness_signals[f'{labels_outer}'][f'{labels_inner}'] = event_level
-        print(np.shape(dic_of_smoothness_signals[f'{labels_outer}'][f'{labels_inner}']))
         assert np.shape(dic_of_smoothness_signals[f'{labels_outer}'][f'{labels_inner}']) == (number_of_clusters, video_duration, subjects)
 
 
@@ -111,11 +110,7 @@ def plotting(band):
             
             for cluster_group in range(number_of_clusters):
 
-                signal_unstandardised = signal_band_wise_percentile_wise[cluster_group]
-                signal_final = list()
-                for subject in range(subjects):
-                    signal_final.append(    (signal_unstandardised[subject] - np.mean(signal_unstandardised[subject]))/np.std(signal_unstandardised[subject]))
-                assert np.shape(signal_final) == (subjects, seconds_per_event)
+                signal_final = signal_band_wise_percentile_wise[cluster_group]
 
                 plt.style.use("fivethirtyeight")
                 mean_signal = np.mean(signal_final, axis = 0)
@@ -145,9 +140,11 @@ def plotting(band):
                 pre_stim_signal = np.array(signal_final)[:,:pre_stim_in_samples]
                 assert np.shape(pre_stim_signal) == (subjects, pre_stim_in_samples)                
 
+                mean_pre_stim_signal = np.mean(pre_stim_signal, axis = 1)
+
                 for samples in range(pre_stim_in_samples, seconds_per_event ):
                     signal_signal = np.array(signal_final)[:,samples]
-                    pvalues[samples - pre_stim_in_samples] = scipy.stats.ttest_1samp(signal_signal, popmean = 0)[1]
+                    pvalues[samples - pre_stim_in_samples] = scipy.stats.ttest_rel(mean_pre_stim_signal, signal_signal)[1]
 
                 pvalues_corrected = fdrcorrection(pvalues)[1]
                 # print(sum(pvalues_corrected<=0.05))
@@ -171,7 +168,7 @@ def plotting(band):
     fig.suptitle(f'GSV at varying threshold of the cortical signal (FDR-Corrected pvalues) FC -- {band} band')
     fig.supxlabel('latency (ms) ')
     fig.supylabel('Relative variation')
-    # fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_august/GSV/FC/{band}.jpg')
+    fig.savefig(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/Results/ERD_august/GSV/FC/{band}.jpg')
 
 
 

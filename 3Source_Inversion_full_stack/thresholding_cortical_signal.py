@@ -21,7 +21,7 @@ regions = 360
 events = np.load('/homes/v20subra/S4B2/AutoAnnotation/dict_of_clustered_events.npz')
 dict_of_sliced_bc_averaged = defaultdict(dict)
 fs = 125
-pre_stim = 62
+pre_stim = 25
 post_stim = 63
 second_in_sample = pre_stim + post_stim
 number_of_clusters = 5
@@ -70,7 +70,7 @@ def slicing_averaging(band):
             assert np.shape(event_level) == (len(event_time), regions, second_in_sample)
             cluster_level.append(np.mean(event_level, axis=0))
         
-        cluster_level = standardisation(np.array(cluster_level))
+        # cluster_level = standardisation(np.array(cluster_level))
 
         assert np.shape(cluster_level) == (number_of_clusters, regions, second_in_sample)
         subject_level.append(cluster_level)
@@ -82,7 +82,6 @@ for labels, signal in  dict_of_unthresholded_signals_for_all_bands.items():
     slicing_averaging(labels)
     assert np.shape(dict_of_sliced_bc_averaged[f'{labels}']) == (subjects, number_of_clusters, regions, second_in_sample)
 
-#%%
 
 dict_of_thresholded_signals_for_all_bands = dict()
 percentile = [98, 95, 90, 50, 0]

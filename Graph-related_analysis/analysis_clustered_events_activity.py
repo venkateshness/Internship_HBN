@@ -1,21 +1,27 @@
 #%%
 from cProfile import label
-from turtle import shape
+from turtle import addshape, shape
 import numpy as np
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn import cluster
+from sklearn.decomposition import randomized_svd
+from torch import rand
 sns.set_theme()
 
 import scipy.stats
 import importlib
 os.chdir('/homes/v20subra/S4B2/')
 from Modular_Scripts import graph_setup
-
+importlib.reload(graph_setup)
 import numpy as np
 from nilearn import datasets, plotting, image, maskers
+import networkx as nx
+from collections import defaultdict
+
 # Average events (hilbert envelope)
+
 
 # Unthresholded cortical signal
 envelope_signal_bandpassed_bc_corrected = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/0_percentile.npz')
@@ -68,7 +74,7 @@ dic_of_envelope_signals_unthresholded = packaging_bands(envelope_signal_bandpass
 dic_of_envelope_signals_thresholded = packaging_bands(envelope_signal_bandpassed_bc_corrected_thresholded)
 
 
-G = graph_setup.graph_setup_main()
+laplacian,_ = graph_setup.NNgraph()
 
 
 subjects = 25
@@ -87,7 +93,7 @@ events = np.load('/homes/v20subra/S4B2/AutoAnnotation/dict_of_clustered_events.n
 
 video_duration = seconds_per_event
 
-def smoothness_computation(band):
+def smoothness_computation(band, laplacian):
     """The main function that does GFT, function-calls the temporal slicing, frequency summing, pre- post- graph-power accumulating 
 
     Args:
@@ -97,7 +103,6 @@ def smoothness_computation(band):
         dict: Baseline-corrected ERD for all trials 
     """
 
-    laplacian = G.L.toarray()
     
     one = np.array(band).T # dim(one) = entire_video_duration x ROIs x subjects
     two = np.swapaxes(one,axis1=1,axis2=2) # dim (two) = entire_video_duration x subjects x ROIs
@@ -122,9 +127,14 @@ for labels, signal in dic_of_envelope_signals_thresholded.items():
     for event in range(number_of_clusters):
         signal_for_gsv = np.array(signal)[:, event, :, :]
 
-        placeholder_gsv.append( smoothness_computation (  signal_for_gsv ))
+        placeholder_gsv.append( smoothness_computation (  signal_for_gsv, laplacian))
 
     smoothness_computed[f'{   labels  }'] = placeholder_gsv
+
+smoothness_computed_bootstapping = defaultdict(dict)
+
+
+#%%    
 
 
 def baseline_correction_network_wise_setup(network):
@@ -162,17 +172,22 @@ for i in range(1, 8):
     dic_of_cortical_signal_baseline_corrected_nw[f'{i}']    =   baseline_correction_network_wise_setup(network = i)
 
 
+bands = ['theta', 'alpha', 'low_beta', 'high_beta']
+aud_ROI_label = 24
+for i in bands:
+    dic_of_cortical_signal_baseline_corrected_nw['8'] = np.squeeze( np.mean (dic_of_envelope_signals_unthresholded[f'{i}'][:,:,[aud_ROI_label, aud_ROI_label + 179],:], axis = 2) )
+
 from statsmodels.stats.multitest import fdrcorrection, multipletests
 
-_7_networks = ['GSV','Visual', 'Somatomotor', 'Dorsal Attention', 'Ventral Attention', 'Limbic', 'Frontoparietal','DMN']
+_7_networks = ['GSV','Visual', 'Somatomotor', 'Dorsal Attention', 'Ventral Attention', 'Auditory C']
 _5clusters = ['RMS diff(entire event)= >1', '0.5 < RMS < 0.97', '< 0.2', '+ve frame offset', '-ve frame offset']
 
 def plotting(band):
-    a = 5
+    a = 6
     b = 5
     c = 1
     fig = plt.figure(figsize=(25, 25))
-    for i in range(5):
+    for i in range(6):
 
         for cluster_group in range(number_of_clusters):
             plt.style.use("fivethirtyeight")
@@ -197,14 +212,13 @@ def plotting(band):
             
             plt.xticks(np.arange(0,88,25), labels = ['-200', '0', '200', '400'])
             
-        
             plt.plot(   mean_signal    )
             plt.fill_between    (   range( seconds_per_event ), mean_signal - sem_signal, mean_signal + sem_signal, alpha = 0.2, label = 'SEM - subjects')
 
             if cluster_group == 3:
                 plt.axvline(pre_stim_in_samples + 30, label = 'Frame change', c = 'g', linestyle = '-.')
-                plt.axvline(pre_stim_in_samples + 40, label = 'Frame change', c = 'g', linestyle = '-.')
-                plt.axvline(pre_stim_in_samples + 50, label = 'Frame change', c = 'g', linestyle = '-.')
+                plt.axvline(pre_stim_in_samples + 40, c = 'g', linestyle = '-.')
+                plt.axvline(pre_stim_in_samples + 50, c = 'g', linestyle = '-.')
             
 
             plt.axvspan(0, pre_stim_in_samples , alpha = 0.2, color = 'r', label = 'Baseline')
@@ -218,13 +232,20 @@ def plotting(band):
 
         
             signal_baseline = signal[:pre_stim_in_samples]
-            signal_baseline_averaged = np.mean(signal_baseline, axis = 1)
+            assert np.shape(signal_baseline) == (subjects, seconds_per_event)
             
+            signal_baseline_averaged = np.mean(signal_baseline, axis = 1)
+            assert np.shape(signal_baseline_averaged) == (subjects,)
+
             pvalues = np.zeros(post_stim_in_samples )
 
             for samples in range(pre_stim_in_samples, seconds_per_event ):
-                signal_signal = signal[:,samples]
-                pvalues[samples - pre_stim_in_samples] = scipy.stats.ttest_rel(signal_baseline_averaged, signal_signal)[1]
+                signal_post_onset = signal[:,samples]
+                if i == 0:
+                    
+                    pvalues[samples - pre_stim_in_samples] = scipy.stats.ttest_rel (signal_post_onset, signal_baseline_averaged,  )[1]
+                else:   
+                    pvalues[samples - pre_stim_in_samples] = scipy.stats.ttest_1samp(signal_post_onset, popmean=0)[1]
             
             pvalues_corrected = multipletests(pvalues, method = "bonferroni")[1]
             # print(sum(pvalues_corrected<=0.05))
@@ -238,12 +259,14 @@ def plotting(band):
             plt.legend()
             c += 1
     fig.supylabel('relative variation')
-    fig.suptitle(f'GSV SC graph. {band} band - FDR-corrected')
+    fig.suptitle(f'GSV & activity in Yeo NW / FC graph. {band} band - BonF-corrected')
     fig.supxlabel('latency (ms)')
+    fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_august/GSV/FC/{band}.jpg')
 
 plotting('theta')
 plotting('alpha')
 plotting('low_beta')
 plotting('high_beta')
+
 
 # %%

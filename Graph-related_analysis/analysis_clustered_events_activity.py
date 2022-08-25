@@ -1,5 +1,6 @@
 #%%
 from cProfile import label
+from cgi import test
 from turtle import addshape, shape
 import numpy as np
 import os
@@ -95,10 +96,8 @@ video_duration = seconds_per_event
 
 def smoothness_computation(band, laplacian):
     """The main function that does GFT, function-calls the temporal slicing, frequency summing, pre- post- graph-power accumulating 
-
     Args:
         band (array): Envelope band to use
-
     Returns:
         dict: Baseline-corrected ERD for all trials 
     """
@@ -120,6 +119,7 @@ def smoothness_computation(band, laplacian):
     
     return smoothness_roughness_time_series
 
+
 smoothness_computed = dict()
 
 for labels, signal in dic_of_envelope_signals_thresholded.items():
@@ -131,11 +131,8 @@ for labels, signal in dic_of_envelope_signals_thresholded.items():
 
     smoothness_computed[f'{   labels  }'] = placeholder_gsv
 
-smoothness_computed_bootstapping = defaultdict(dict)
-
-
-#%%    
-
+# %%
+ 
 
 def baseline_correction_network_wise_setup(network):
     dic_of_cortical_signal_baseline_corrected = dict()
@@ -220,7 +217,7 @@ def plotting(band):
                 plt.axvline(pre_stim_in_samples + 40, c = 'g', linestyle = '-.')
                 plt.axvline(pre_stim_in_samples + 50, c = 'g', linestyle = '-.')
             
-
+            plt.axvline(pre_stim_in_samples + 12, c = 'c', linestyle = '-')
             plt.axvspan(0, pre_stim_in_samples , alpha = 0.2, color = 'r', label = 'Baseline')
             plt.axvline(pre_stim_in_samples, label = 'Onset (ISC)', c = 'g', linestyle = 'dashed')
             
@@ -261,12 +258,33 @@ def plotting(band):
     fig.supylabel('relative variation')
     fig.suptitle(f'GSV & activity in Yeo NW / FC graph. {band} band - BonF-corrected')
     fig.supxlabel('latency (ms)')
-    fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_august/GSV/FC/{band}.jpg')
+    # fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_august/GSV/FC/{band}.jpg')
 
 plotting('theta')
 plotting('alpha')
 plotting('low_beta')
 plotting('high_beta')
 
+
+# %%
+test_signal = np.array(dic_of_envelope_signals_thresholded['low_beta'])[:,3,:,:]
+
+for_all_subjects = list()
+
+for subject in range(subjects):
+    subject_wise = list()
+    for timepoints in range(seconds_per_event):
+        sig = test_signal[subject,:,timepoints]
+
+        stage1 = np.matmul(sig.T, laplacian.numpy())
+
+        final = np.matmul(stage1, sig)
+        subject_wise.append(final)
+    for_all_subjects.append(subject_wise)
+
+plt.plot(np.mean(np.vstack(for_all_subjects).T,axis=1))
+# %%
+# %%
+plt.plot(np.mean(smoothness_computed['low_beta'][3],axis=1))
 
 # %%

@@ -35,3 +35,5 @@ def NNgraph():
     values, eigs = torch.linalg.eigh(laplacian)
     return laplacian, adjacency
 
+
+# %%

@@ -13,18 +13,19 @@ sns.set_theme()
 import scipy.stats
 import importlib
 os.chdir('/homes/v20subra/S4B2/')
+
 from Modular_Scripts import graph_setup
 importlib.reload(graph_setup)
-import numpy as np
 from nilearn import datasets, plotting, image, maskers
 import networkx as nx
 from collections import defaultdict
 from tqdm import tqdm
-#%%
 
 from bct.utils import BCTParamError, binarize, get_rng
 from bct.utils import pick_four_unique_nodes_quickly
+
 def randmio_und_connected(R, itr, seed=None):
+
     '''
     This function randomizes an undirected network, while preserving the
     degree distribution. The function does not preserve the strength
@@ -137,7 +138,7 @@ def randmio_und_connected(R, itr, seed=None):
 
     return R, eff
 
-#%%
+
 
 envelope_signal_bandpassed_bc_corrected = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/0_percentile.npz')
 
@@ -180,25 +181,23 @@ def smoothness_computation(band, laplacian):
     Returns:
         dict: Baseline-corrected ERD for all trials 
     """
+    for_all_subjects = list()
 
+    for subject in range(subjects):
+        subject_wise = list()
+        for timepoints in range(seconds_per_event):
+            sig = band[subject,:,timepoints]
+
+            stage1 = np.matmul(sig.T, laplacian)
+
+            final = np.matmul(stage1, sig)
+            subject_wise.append(final)
+        for_all_subjects.append(subject_wise)
     
-    one = np.array(band).T # dim(one) = entire_video_duration x ROIs x subjects
-    two = np.swapaxes(one,axis1=1,axis2=2) # dim (two) = entire_video_duration x subjects x ROIs
+    data_to_return = np.array(for_all_subjects).T
+    assert np.shape( data_to_return   ) == (video_duration, subjects)
+    return data_to_return
 
-    signal = np.expand_dims(two,2) # dim (signal) = entire_video_duration x subjects x 1 x ROIs
-
-    stage1 = np.tensordot(signal,laplacian,axes=(3,0)) # dim (laplacian) = (ROIs x ROIs).... dim (stage1) = same as dim (signal)
-
-    signal_stage2 = np.swapaxes(signal,2,3) # dim(signal_stage2) = (entire_video_duration x subjects x ROIs x 1)
-
-    assert np.shape(signal_stage2) == (video_duration, subjects, regions, 1)
-
-
-    smoothness_roughness_time_series = np.squeeze( np.matmul(stage1,signal_stage2) ) # dim = entire_video_duration x subjects
-    assert np.shape(smoothness_roughness_time_series) == (video_duration, subjects)
-    
-    return smoothness_roughness_time_series
-# %%
 smoothness_computed = dict()
 
 for labels, signal in dic_of_envelope_signals_thresholded.items():
@@ -209,38 +208,175 @@ for labels, signal in dic_of_envelope_signals_thresholded.items():
         placeholder_gsv.append( smoothness_computation (  signal_for_gsv, laplacian))
 
     smoothness_computed[f'{   labels  }'] = placeholder_gsv
-# %%
+
+#%%
 smoothness_computed_bootstapping = defaultdict(dict)
+from joblib import Parallel, delayed
 
-for labels, signal in dic_of_envelope_signals_thresholded.items():
+import multiprocessing
+NB_CPU = multiprocessing.cpu_count()
 
-    for i in tqdm.tqdm(range(1000)):
-        _, adjacency = graph_setup.NNgraph()
-        G = adjacency.numpy()
+rewiring_proportion_investigation = defaultdict(dict)
+n_trials = 1000
 
-        randomized_graph, eff = randmio_und_connected(G, itr = 500, seed = i)
-        randomized_graph_adjacency = randomized_graph
+_,adjacency = graph_setup.NNgraph()
+total_n_edges = sum(sum(adjacency.numpy()))
+
+_10_total_n_edges = total_n_edges/10
+_to_swap_10_n_edges = int(_10_total_n_edges/4)
+
+# def permute_ROIs(time_series):
+#     assert np.shape(time_series) == (subjects, number_of_clusters, regions, seconds_per_event)
+#     subject_wise = list()
+#     for subject in range(subjects):
+#         event_wise = list()
+#         for event in range(number_of_clusters):
+#             signal = time_series[subject, event]
+#             assert np.shape(signal) == (regions, seconds_per_event)
+            
+#             perm_idx = np.random.permutation(360)
+
+#             signal_permuted = signal[perm_idx]
+#             event_wise.append(signal_permuted)
+
+#         subject_wise.append(event_wise)
+
+#     return subject_wise
+
+# dic_of_envelope_signals_thresholded_permuted = defaultdict(dict)
+
+# for labels, signals in dic_of_envelope_signals_thresholded.items():
+#     dic_of_envelope_signals_thresholded_permuted[f'{labels}'] = permute_ROIs(signals)
+
+def surrogate_signal(signal, eig_vector_original, is_sc_ignorant):
+    all_subject_reconstructed = list()
+
+    random_signs = np.round(np.random.rand(np.shape(eig_vector_original)[1]))
+    random_signs[random_signs==0]=-1
+    random_signs_diag = np.diag(random_signs)
+    
+    for subject in range(subjects):
+        subject_wise_signal = np.array(signal)[subject]
         
-        # print(sum(sum(randomized_graph_adjacency * G)))
-        # print('eff',eff)
-        laplacian_stats = randomized_graph
-
-        placeholder_gsv = list()
-
-        for event in range(number_of_clusters):
-            signal_for_gsv = np.array(signal)[:, event, :, :]
-            placeholder_gsv.append( smoothness_computation(signal_for_gsv, laplacian = laplacian_stats) )
+        if is_sc_ignorant:
+            eig_vectors_manip = np.matmul(np.fliplr(eig_vector_original), random_signs_diag)
         
-        assert np.shape(placeholder_gsv) == (number_of_clusters, seconds_per_event, subjects)
-        smoothness_computed_bootstapping[f'{labels}'][f'{i}'] = placeholder_gsv
-# %%
-arr = np.array(list(smoothness_computed_bootstapping['high_beta'].values()))
+        else:
+            eig_vectors_manip = np.matmul(eig_vector_original, random_signs_diag)       
+        
+        spatial = np.array(np.matmul(subject_wise_signal.T, eig_vectors_manip))
 
-s_ = np.mean( smoothness_computed['high_beta'][3], axis=1)
-s_bs = np.mean( arr[:,3,:,:]  , axis=2).T
-plt.plot(s_bs, color='r', label = 'null')
-plt.plot(s_)
-plt.xlabel('time (samples)')
+
+        signal_reconstructed = np.matmul(eig_vector_original, spatial.T)
+        assert np.shape(signal_reconstructed) == (regions, seconds_per_event)
+
+        all_subject_reconstructed.append(signal_reconstructed)
+    return np.array(all_subject_reconstructed)
+
+
+#1. Degree re-calculation
+#2. Surrogated Laplacian
+#3. Permute ROIs
+#4. Surrogate signal
+
+def surrogate_laplacian(eig_vectors, eig_vals, is_sc_ignorant ):
+
+    random_signs = np.round(np.random.rand(np.shape(eig_vectors)[1]))
+    random_signs[random_signs==0]=-1
+    random_signs_diag = np.diag(random_signs)
+    eig_vals_diag = np.diag(eig_vals)
+    
+    if is_sc_ignorant:
+        eig_vectors_manip = np.matmul(np.fliplr(eig_vectors), random_signs_diag)
+    
+    else:
+        eig_vectors_manip = np.matmul(eig_vectors, random_signs_diag)
+
+    eig_vectors_inv = np.linalg.inv(eig_vectors_manip)
+    laplacian_reconstructed = np.matmul(np.matmul(eig_vectors_manip, eig_vals_diag), eig_vectors_inv)
+
+    return laplacian_reconstructed
+                
+
+rewiring_edges = [_to_swap_10_n_edges, _to_swap_10_n_edges * 2, _to_swap_10_n_edges * 5]
+
+for n_iter in rewiring_edges:
+    for labels, signal in dic_of_envelope_signals_thresholded.items():
+        if labels== 'theta':
+            # _, adjacency = graph_setup.NNgraph()
+            # G = adjacency.numpy()
+            
+
+            adjacency = networkx.erdos_renyi_graph(360, 0.5)
+            G = networkx.to_numpy_array(adjacency)
+
+            def parallelisation(i):
+                
+
+                    randomized_graph_adj, eff = randmio_und_connected(G, itr = n_iter, seed = i)
+                    degree = np.diag(np.sum(randomized_graph_adj, axis = 0))
+
+                    laplacian_for_stats =  degree - randomized_graph_adj            
+                    [eig_vals, eig_vectors] = np.linalg.eigh(laplacian_for_stats)
+
+                    placeholder_gsv = list()
+                    for event in range(number_of_clusters):
+                        signal_for_gsv = np.array(signal)[:, event, :, :]
+                        # signal_reconstructed = surrogate_signal(signal_for_gsv, eig_vectors, is_sc_ignorant=True)
+
+                        placeholder_gsv.append( smoothness_computation(signal_for_gsv, laplacian = laplacian_for_stats) )
+
+                    assert np.shape(placeholder_gsv) == (number_of_clusters, seconds_per_event, subjects)
+
+                    return placeholder_gsv
+
+            placeholder_gsv = Parallel(n_jobs=NB_CPU-1,max_nbytes=None)(delayed(parallelisation)(j) for j in tqdm(range(n_trials)))
+            smoothness_computed_bootstapping[f'{labels}'] = placeholder_gsv
+
+    rewiring_proportion_investigation[f'{n_iter}'] = smoothness_computed_bootstapping['theta']
+
 # %%
-np.shape(arr)
+a = 1
+b = 3
+c = 1
+
+fig = plt.figure(figsize=(15,5))
+n_graph_edges = 3300
+
+rewiring_edges_labels = ['10', '20', '50']
+for subplot_label, subplot_signal in rewiring_proportion_investigation.items():
+    plt.subplot(a,b,c)
+    plt.style.use('fivethirtyeight')
+    assert np.shape(subplot_signal) == (n_trials, number_of_clusters, seconds_per_event, subjects)
+    
+    subplot_signal_mean_bs = np.mean (np.array(subplot_signal)[:, 0,  :,  :], axis = 2)
+    plt.plot(subplot_signal_mean_bs.T, c= 'r')
+
+    signal = smoothness_computed['theta'][0]
+    signal_mean = np.mean(signal,axis=1)
+    signal_std = scipy.stats.sem(signal, axis = 1)
+
+    upper_bound = signal_mean + signal_std
+    lower_bound = signal_mean - signal_std
+
+    plt.plot(signal_mean, c = 'deepskyblue', label = 'original')
+    plt.fill_between(range(seconds_per_event), upper_bound, lower_bound, alpha = 0.2, color = 'deepskyblue')
+
+    plt.title(f"Rewiring prop = {rewiring_edges_labels[c-1]}%")
+    plt.xticks(np.arange(0,88,25), labels = ['-200', '0', '200', '400'])
+    plt.axvline(pre_stim_in_samples, color = 'g', linestyle = '-.')
+    plt.xlabel('time (ms)')
+    plt.ylabel('relative variation')
+    plt.axvspan(0, pre_stim_in_samples, color ='orange', alpha = 0.2)
+    plt.legend()
+    c+=1
+fig.suptitle('GSV / graph-ignorant Surrogate Signal. FC graph/ Theta/ event 0')
+
+
+# %%
+#1. Degree re-calculation
+#2. Surrogated Laplacian
+#3. Permute ROIs
+#4. Surrogate signal
+
 # %%

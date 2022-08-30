@@ -6,34 +6,41 @@ from scipy import io as sio
 from pygsp import graphs
 import pickle
 import numpy as np
+import scipy
 import torch
 import networkx as nx
-def NNgraph():
+def NNgraph(graph):
     """Nearest Neighbour graph Setup.
 
     Returns:
         Matrix of floats: A weight matrix for the thresholded graph
     """
+    if graph =='FC':
 
-    pickle_file = '/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl'
+        pickle_file = '/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl'
 
-    with open(pickle_file, 'rb') as f:
-        [connectivity] = pickle.load(f)
-    np.fill_diagonal(connectivity, 0)
-    # connectivity = sio.loadmat('/homes/v20subra/S4B2/GSP/SC_avg56.mat')['SC_avg56']
+        with open(pickle_file, 'rb') as f:
+            [connectivity] = pickle.load(f)
+        np.fill_diagonal(connectivity, 0)
+
+    elif graph == 'SC':
+        connectivity = sio.loadmat('/homes/v20subra/S4B2/GSP/SC_avg56.mat')['SC_avg56']
+    
+    elif graph == 'kalofias':
+        connectivity = sio.loadmat('/homes/v20subra/S4B2/Graph-related_analysis/kalofiasbraingraphs.mat')['FC_smooth_log']
+
     graph = torch.from_numpy(connectivity)
     knn_graph = torch.zeros(graph.shape)
     for i in range(knn_graph.shape[0]):
         graph[i, i] = 0
         best_k = torch.sort(graph[i, :])[1][-8:]
-        knn_graph[i, best_k] = 1
-        knn_graph[best_k, i] = 1
+        knn_graph[i, best_k] = 1#graph[i, best_k].float()
+        knn_graph[best_k, i] = 1#graph[best_k, i].float()
 
     degree = torch.diag(knn_graph.sum(dim = 0))
     adjacency = knn_graph
     laplacian   = degree - adjacency
     values, eigs = torch.linalg.eigh(laplacian)
     return laplacian, adjacency
-
 
 # %%

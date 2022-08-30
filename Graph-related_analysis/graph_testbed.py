@@ -31,7 +31,7 @@ def packaging_bands(signal_array):
 dic_of_envelope_signals_unthresholded = packaging_bands(envelope_signal_bandpassed_bc_corrected)
 dic_of_envelope_signals_thresholded = packaging_bands(envelope_signal_bandpassed_bc_corrected_thresholded)
 
-laplacian,_ = graph_setup.NNgraph()
+laplacian,_ = graph_setup.NNgraph(graph = 'FC')
 
 
 subjects = 25
@@ -78,14 +78,15 @@ for labels, signal in dic_of_envelope_signals_thresholded.items():
     placeholder_gsv = list()
     for event in range(number_of_clusters):
         signal_for_gsv = np.array(signal)[:, event, :, :]
+        signal_normalized = signal_for_gsv/np.diag(laplacian)[np.newaxis,:,np.newaxis]
 
-        placeholder_gsv.append( smoothness_computation (  signal_for_gsv, laplacian))
+        placeholder_gsv.append( smoothness_computation (  signal_normalized, laplacian))
 
     smoothness_computed[f'{   labels  }'] = placeholder_gsv
 
 
 ########
-# G = networkx.erdos_renyi_graph(360, 0.032)
+# G = networkx.erdos_renyi_graph(360, 0.1)
 # adjacency = networkx.to_numpy_array(G)
 
 # degree = np.diag(np.sum(adjacency, axis = 0))
@@ -98,25 +99,13 @@ for labels, signal in dic_of_envelope_signals_thresholded.items():
 
 # laplacian_random_graph = degree - adjacency
 
+laplacian_kalofias, _ = graph_setup.NNgraph(graph = 'SC')
 
-G = networkx.random_degree_sequence_graph(np.diag(laplacian))
-adjacency = networkx.to_numpy_array(G)
-laplacian_random_graph = np.diag(np.diag(laplacian)) - adjacency
+# G = networkx.random_degree_sequence_graph(np.diag(laplacian))
+# adjacency = networkx.to_numpy_array(G)
+# laplacian_random_graph = np.diag(np.diag(laplacian)) - adjacency
 
-
-smoothness_computed_random_graph = dict()
-
-for labels, signal in dic_of_envelope_signals_thresholded.items():
-    placeholder_gsv = list()
-    for event in range(number_of_clusters):
-        signal_for_gsv = np.array(signal)[:, event, :, :]
-
-        placeholder_gsv.append( smoothness_computation (  signal_for_gsv, laplacian_random_graph))
-
-    smoothness_computed_random_graph[f'{   labels  }'] = placeholder_gsv
-
-#%%
-def surrogate_signal(signal, eig_vector_original, is_sc_ignorant, seed):
+def surrogate_signal(signal, eig_vector_original, is_sc_ignorant):
     all_subject_reconstructed = list()
 
     random_signs = np.round(np.random.rand(np.shape(eig_vector_original)[1]))
@@ -127,8 +116,7 @@ def surrogate_signal(signal, eig_vector_original, is_sc_ignorant, seed):
         subject_wise_signal = np.array(signal)[subject]
         
         if is_sc_ignorant:
-            eig_vector_permuted = eig_vector_original[:,np.random.permutation(360)]
-            eig_vectors_manip = np.matmul(eig_vector_permuted, random_signs_diag)
+            eig_vectors_manip = np.matmul(np.fliplr(eig_vector_original), random_signs_diag)
         
         else:
             eig_vectors_manip = np.matmul(eig_vector_original, random_signs_diag)       
@@ -142,65 +130,23 @@ def surrogate_signal(signal, eig_vector_original, is_sc_ignorant, seed):
         all_subject_reconstructed.append(signal_reconstructed)
     return np.array(all_subject_reconstructed)
 
-n_trials = 1000
-# perm = np.random.randint(0, regions, time)
-from joblib import Parallel, delayed
 
-import multiprocessing
-NB_CPU = multiprocessing.cpu_count()
-boostrap_permuted = list()
-# signal_for_testing[13,:] = 10
+smoothness_computed_kalofias_graph = dict()
 
-[eig_vals, eig_vect] = np.linalg.eigh(laplacian_random_graph)
-def parallel(j):
+for labels, signal in dic_of_envelope_signals_thresholded.items():
+    placeholder_gsv = list()
+    for event in range(number_of_clusters):
+        signal_for_gsv = np.array(signal)[:, event, :, :]
+        
+        # [eigvals, eigvecs] = np.linalg.eigh(    laplacian_kalofias  )
 
-    return surrogate_signal(signal_for_gsv, eig_vect, is_sc_ignorant=True, seed = j)
+        # surrogate = surrogate_signal(signal_for_gsv, eigvecs, is_sc_ignorant=True)
 
-placeholder_gsv = Parallel(n_jobs=NB_CPU-1,max_nbytes=None)(delayed(parallel)(j) for j in tqdm(range(n_trials)))
-boostrap_permuted = placeholder_gsv
-#%%
+        signal_normalized = signal_for_gsv/np.diag(laplacian_kalofias)[np.newaxis,:,np.newaxis]
+        placeholder_gsv.append( smoothness_computation (  signal_normalized, laplacian_kalofias))
 
-trial_wise_bootstrap = list()
+    smoothness_computed_kalofias_graph[f'{   labels  }'] = placeholder_gsv
 
-def smoothness_computation(band):
-    """The main function that does GFT, function-calls the temporal slicing, frequency summing, pre- post- graph-power accumulating 
-    Args:
-        band (array): Envelope band to use
-    Returns:
-        dict: Baseline-corrected ERD for all trials 
-    """
-
-    
-    one = np.array(band).T # dim(one) = entire_video_duration x ROIs x subjects
-    two = np.swapaxes(one,axis1=1,axis2=2) # dim (two) = entire_video_duration x subjects x ROIs
-
-    signal = np.expand_dims(two,2) # dim (signal) = entire_video_duration x subjects x 1 x ROIs
-
-    stage1 = np.tensordot(signal,laplacian,axes=(3,0)) # dim (laplacian) = (ROIs x ROIs).... dim (stage1) = same as dim (signal)
-
-    signal_stage2 = np.swapaxes(signal,2,3) # dim(signal_stage2) = (entire_video_duration x subjects x ROIs x 1)
-    assert np.shape(signal_stage2) == (video_duration, subjects, regions, 1)
-
-    smoothness_roughness_time_series = np.squeeze( np.matmul(stage1,signal_stage2) ) # dim = entire_video_duration x subjects
-    assert np.shape(smoothness_roughness_time_series) == (video_duration, subjects)
-    
-    return smoothness_roughness_time_series
-
-boostrap_permuted : np.array(boostrap_permuted)
-trial_wise_bootstrap = list()
-def parallel_smoothness_computation(j):
-    for trials in tqdm(range(n_trials)):
-
-        sig = boostrap_permuted[trials]
-            
-        return smoothness_computation(sig)
-        # print(np.shape(smoothness_boostrap))
-trial_wise_bootstrap = Parallel(n_jobs=NB_CPU-1,max_nbytes=None)(delayed(parallel_smoothness_computation)(j) for j in tqdm(range(n_trials)))
-    
-    # subjectwise_bootstrap.append(smoothness_boostrap)
-
-    # trial_wise_bootstrap.append(subjectwise_bootstrap)
-# plt.plot(np.array(subjectwise_bootstrap).T)
 # %%
 import seaborn as sns
 sns.set_theme()
@@ -214,19 +160,20 @@ def plot(ax, data):
     sem = scipy.stats.sem(data, axis = 1)
 
     if ax == 0:
-        plt.plot( mean, color='cyan', label = 'Original')
-        plt.fill_between(range(seconds_per_event), mean - sem, mean + sem, alpha = 0.2, color = 'cyan')
+        plt.plot( mean, color='b', label = 'Original')
+        plt.fill_between(range(seconds_per_event), mean - sem, mean + sem, alpha = 0.2, color = 'b')
 
     else :
-        plt.plot( mean, color='r', label = 'Random G')
+        plt.plot( mean, color='r', label = 'Kalofias')
         plt.fill_between(range(seconds_per_event), mean - sem, mean + sem, alpha = 0.2, color = 'r')
 
 
 
 plot(0, data = smoothness_computed['theta'][0])
 
-# plot(1,data = np.array(subjectwise_bootstrap).T)
-plt.title('GSV of the original signal')
+plot(1,data = smoothness_computed_kalofias_graph['theta'][0])
+plt.xlabel("time (ms)")
+plt.title('Signal; Null Setting 1')
 plt.legend()
 plt.show()
 # %%
@@ -260,4 +207,16 @@ for time in range(seconds_per_event):
     print(sum(signal_for_gsv[:,idx_max,time]>0))
 
 # %%
+# %%
+
+# %%
+signal_for_gsv[0,:,0]
+# %%
+signal_normalized[0,:,0]
+
+# %%
+normed =(signal_for_gsv/np.diag(laplacian)[np.newaxis,:,np.newaxis])[0,:,0]
+
+# %%
+normed * np.diag(laplacian)
 # %%

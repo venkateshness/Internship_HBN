@@ -14,8 +14,6 @@ importlib.reload(graph_setup)
 from collections import defaultdict
 import networkx
 
-envelope_signal_bandpassed_bc_corrected = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/0_percentile.npz')
-
 envelope_signal_bandpassed_bc_corrected_thresholded = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/98_percentile.npz')
 
 def packaging_bands(signal_array):
@@ -28,7 +26,6 @@ def packaging_bands(signal_array):
 
     return dic
 
-dic_of_envelope_signals_unthresholded = packaging_bands(envelope_signal_bandpassed_bc_corrected)
 dic_of_envelope_signals_thresholded = packaging_bands(envelope_signal_bandpassed_bc_corrected_thresholded)
 
 laplacian,_ = graph_setup.NNgraph(graph = 'FC')
@@ -72,82 +69,23 @@ def smoothness_computation(band, laplacian):
     assert np.shape( data_to_return   ) == (video_duration, subjects)
     return data_to_return
 
-smoothness_computed = dict()
+def fullstack(graph):
+    laplacian_kalofias, _ = graph_setup.NNgraph(graph = graph)
+    smoothness_computed_graph = dict()
+  
+    for labels, signal in dic_of_envelope_signals_thresholded.items():
+        placeholder_gsv = list()
+  
+        for event in range(number_of_clusters):
+            signal_for_gsv = np.array(signal)[:, event, :, :]
 
-for labels, signal in dic_of_envelope_signals_thresholded.items():
-    placeholder_gsv = list()
-    for event in range(number_of_clusters):
-        signal_for_gsv = np.array(signal)[:, event, :, :]
-        signal_normalized = signal_for_gsv/np.diag(laplacian)[np.newaxis,:,np.newaxis]
+            signal_normalized = signal_for_gsv/np.diag(laplacian_kalofias)[np.newaxis,:,np.newaxis]
+            placeholder_gsv.append( smoothness_computation (  signal_normalized, laplacian_kalofias))
 
-        placeholder_gsv.append( smoothness_computation (  signal_normalized, laplacian))
+        smoothness_computed_graph[f'{   labels  }'] = placeholder_gsv
 
-    smoothness_computed[f'{   labels  }'] = placeholder_gsv
+    return smoothness_computed_graph
 
-
-########
-# G = networkx.erdos_renyi_graph(360, 0.1)
-# adjacency = networkx.to_numpy_array(G)
-
-# degree = np.diag(np.sum(adjacency, axis = 0))
-# print(np.mean(sum(degree)))
-# # adjacency = np.random.rand(360,360)
-# # np.fill_diagonal(adjacency, 0)
-
-# # degree = np.diag(np.sum(adjacency, axis = 0))
-
-
-# laplacian_random_graph = degree - adjacency
-
-laplacian_kalofias, _ = graph_setup.NNgraph(graph = 'SC')
-
-# G = networkx.random_degree_sequence_graph(np.diag(laplacian))
-# adjacency = networkx.to_numpy_array(G)
-# laplacian_random_graph = np.diag(np.diag(laplacian)) - adjacency
-
-def surrogate_signal(signal, eig_vector_original, is_sc_ignorant):
-    all_subject_reconstructed = list()
-
-    random_signs = np.round(np.random.rand(np.shape(eig_vector_original)[1]))
-    random_signs[random_signs==0]=-1
-    random_signs_diag = np.diag(random_signs)
-    
-    for subject in range(subjects):
-        subject_wise_signal = np.array(signal)[subject]
-        
-        if is_sc_ignorant:
-            eig_vectors_manip = np.matmul(np.fliplr(eig_vector_original), random_signs_diag)
-        
-        else:
-            eig_vectors_manip = np.matmul(eig_vector_original, random_signs_diag)       
-        
-        spatial = np.array(np.matmul(subject_wise_signal.T, eig_vectors_manip))
-
-
-        signal_reconstructed = np.matmul(eig_vector_original, spatial.T)
-        assert np.shape(signal_reconstructed) == (regions, seconds_per_event)
-
-        all_subject_reconstructed.append(signal_reconstructed)
-    return np.array(all_subject_reconstructed)
-
-
-smoothness_computed_kalofias_graph = dict()
-
-for labels, signal in dic_of_envelope_signals_thresholded.items():
-    placeholder_gsv = list()
-    for event in range(number_of_clusters):
-        signal_for_gsv = np.array(signal)[:, event, :, :]
-        
-        # [eigvals, eigvecs] = np.linalg.eigh(    laplacian_kalofias  )
-
-        # surrogate = surrogate_signal(signal_for_gsv, eigvecs, is_sc_ignorant=True)
-
-        signal_normalized = signal_for_gsv/np.diag(laplacian_kalofias)[np.newaxis,:,np.newaxis]
-        placeholder_gsv.append( smoothness_computation (  signal_normalized, laplacian_kalofias))
-
-    smoothness_computed_kalofias_graph[f'{   labels  }'] = placeholder_gsv
-
-# %%
 import seaborn as sns
 sns.set_theme()
 plt.style.use('fivethirtyeight')
@@ -160,63 +98,31 @@ def plot(ax, data):
     sem = scipy.stats.sem(data, axis = 1)
 
     if ax == 0:
-        plt.plot( mean, color='b', label = 'Original')
+        plt.plot( mean, color='b', label = 'Original FC')
         plt.fill_between(range(seconds_per_event), mean - sem, mean + sem, alpha = 0.2, color = 'b')
 
-    else :
-        plt.plot( mean, color='r', label = 'Kalofias')
+    elif ax == 1 :
+        plt.plot( mean, color='r', label = 'Original SC')
+        plt.fill_between(range(seconds_per_event), mean - sem, mean + sem, alpha = 0.2, color = 'r')
+    
+    elif ax == 2 :
+        plt.plot( mean, color='b', label = 'Kalofias FC', linestyle = 'dashed')
+        plt.fill_between(range(seconds_per_event), mean - sem, mean + sem, alpha = 0.2, color = 'b')
+
+    elif ax == 3 :
+        plt.plot( mean, color='r', label = 'Kalofias SC', linestyle = 'dashed')
         plt.fill_between(range(seconds_per_event), mean - sem, mean + sem, alpha = 0.2, color = 'r')
 
 
+# plot(0, data = fullstack('FC')['theta'][0])
+plot(1, data = fullstack('SC')['theta'][0])
 
-plot(0, data = smoothness_computed['theta'][0])
+# plot(2, data = fullstack('kalofiasFC')['theta'][0])
+plot(3, data = fullstack('kalofiasSC')['theta'][0])
 
-plot(1,data = smoothness_computed_kalofias_graph['theta'][0])
+
 plt.xlabel("time (ms)")
-plt.title('Signal; Null Setting 1')
+plt.title('GSV on different unthresholded graphs')
 plt.legend()
 plt.show()
-# %%
-import pandas as pd
-roi_labels = np.hstack([pd.read_excel('/homes/v20subra/S4B2/Graph-related_analysis/Glasser_2016_Table.xlsx',header=None)[2].values[2:]] * 2)
-
-# %%
-for time in range(25,seconds_per_event):
-    for i in range(360):
-        idx = len(np.where(signal_for_gsv[:,:,time][:,i]>0)[0])
-
-        if idx >5:
-            print(roi_labels[i])
-            print(time)
-# %%
-
-roi_labels[np.where(laplacian== np.max(np.diag(laplacian)))[0]]
-
-# %%
-#The "curve" is still the same; surrogate signal is the only way to break that
-#Synthetic data
-#1. if connected: Node with highest degree increases GSV
-#2. Degree with highest node has rarely signal for subjects (2 at max)
-#3. 
-
-# signal_for_gsv[0][:,0]
-
-#2
-idx_max = np.where(np.diag(laplacian)==np.max(np.diag(laplacian)))[0]
-for time in range(seconds_per_event):
-    print(sum(signal_for_gsv[:,idx_max,time]>0))
-
-# %%
-# %%
-
-# %%
-signal_for_gsv[0,:,0]
-# %%
-signal_normalized[0,:,0]
-
-# %%
-normed =(signal_for_gsv/np.diag(laplacian)[np.newaxis,:,np.newaxis])[0,:,0]
-
-# %%
-normed * np.diag(laplacian)
 # %%

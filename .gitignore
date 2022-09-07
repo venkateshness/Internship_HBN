@@ -93,3 +93,6 @@ Despicable Me-HQ.wav
 /Graph-related_analysis/kalofiasbraingraphs.mat
 /Graph-related_analysis/distance_SC.mat
 /Graph-related_analysis/distance_FC.mat
+
+/gspbox
+/Graph-related_analysis/decoupling_index.py

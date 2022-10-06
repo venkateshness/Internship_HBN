@@ -17,21 +17,31 @@ dict_of_unthresholded_signals_for_all_bands = {'theta':theta, 'alpha': alpha, 'l
 duration = 21250
 subjects = 25
 regions = 360
-# #%%
-events = np.load('/homes/v20subra/S4B2/AutoAnnotation/dict_of_clustered_events.npz')
-dict_of_sliced_bc_averaged = defaultdict(dict)
+
+clusters = np.load('/homes/v20subra/S4B2/AutoAnnotation/dict_of_clustered_events_19_events.npz')
+
 fs = 125
 pre_stim = 25
 post_stim = 63
 second_in_sample = pre_stim + post_stim
-number_of_clusters = 5
+number_of_clusters = 3
+
 
 def baseline_correction(signal):
+    """Subject-wise signal to apply the baseline correction on. Dim =  regions x seconds_in_sample
 
-    first, second = np.shape(signal)
+    Args:
+        signal (array): epoch array per subject
+
+    Returns:
+        array: Baseline-corrected signal
+    """
+    region, _ = np.shape(signal)
     baseline_corr = list()
-    for first_dim in range(first):
-        signal_1s_window = signal[first_dim]
+
+    for r in range(region):
+
+        signal_1s_window = signal[r]
         signal_baseline = signal_1s_window[:pre_stim]
 
         mean_signal_baseline = np.mean(signal_baseline)
@@ -39,39 +49,58 @@ def baseline_correction(signal):
 
     return baseline_corr
     
-def standardisation(signal):
-    first, second, third = np.shape(signal)
-    signal_standardised_first_dim = list()
+# def standardisation(signal):
+#     """Standardisation of the signal. Dim = subject x regions x time
+
+#     Args:
+#         signal (array): epoch array for all subjects
+
+#     Returns:
+#         array: standardised signal
+#     """
+#     first, second, third = np.shape(signal)
+#     signal_standardised_first_dim = list()
    
-    for first_dim in range(first):
-        signal_standardised_second_dim = list()
-        for second_dim in range(second):
-            signal_1s_window = signal[first_dim,second_dim]
-            signal_standardised_second_dim.append((signal_1s_window - np.mean(signal_1s_window))/ np.std(signal_1s_window))
-        signal_standardised_first_dim.append(signal_standardised_second_dim)
+#     for first_dim in range(first):
+#         signal_standardised_second_dim = list()
+        
+#         for second_dim in range(second):
+        
+#             signal_1s_window = signal[first_dim,second_dim]
+#             signal_standardised_second_dim.append((signal_1s_window - np.mean(signal_1s_window))/ np.std(signal_1s_window))
+        
+#         signal_standardised_first_dim.append(signal_standardised_second_dim)
     
-    return signal_standardised_first_dim
+#     return signal_standardised_first_dim
+
+dict_of_sliced_bc_averaged = defaultdict(dict)
 
 def slicing_averaging(band):
+    """Slicing and Averaging of the cortical signal according to cluster groups. Dim = subjects x regions x time
+
+    Args:
+        band (string): frequency bands
+    """
     subject_level = list()
 
-    for subject in range(subjects):
-        cluster_level = list()
-        for event_label, event_time in events.items():
-            signal = dict_of_unthresholded_signals_for_all_bands[f'{band}'][subject,    :,  :]
-    
-            event_level = list()
-            for event in event_time:
-                signal_sliced_non_bc = signal[:,   event * fs - pre_stim : event * fs + post_stim]
+    for subject in range(subjects):# Subject-wise
 
-                signal_sliced_bc = baseline_correction(signal_sliced_non_bc)
+        cluster_level = list()
+        for event_label, event_time in clusters.items(): # Cluster-wise
+            
+            signal = dict_of_unthresholded_signals_for_all_bands[f'{band}'][subject,    :,  :]
+            event_level = list()
+            
+            for event in event_time: #event-wise
+                signal_sliced_non_bc = signal[:,   event * fs - pre_stim : event * fs + post_stim]
+                
+                signal_sliced_bc = baseline_correction(signal_sliced_non_bc) # apply baseline correction
                 event_level.append(signal_sliced_bc)
 
             assert np.shape(event_level) == (len(event_time), regions, second_in_sample)
             cluster_level.append(np.mean(event_level, axis=0))
         
         # cluster_level = standardisation(np.array(cluster_level))
-
         assert np.shape(cluster_level) == (number_of_clusters, regions, second_in_sample)
         subject_level.append(cluster_level)
 
@@ -83,14 +112,19 @@ for labels, signal in  dict_of_unthresholded_signals_for_all_bands.items():
     assert np.shape(dict_of_sliced_bc_averaged[f'{labels}']) == (subjects, number_of_clusters, regions, second_in_sample)
 
 
+# Thresholding the sliced signal
+
 dict_of_thresholded_signals_for_all_bands = dict()
 percentile = [98, 95, 90, 50, 0]
-for perc in percentile:
-    for labels, signal in dict_of_sliced_bc_averaged.items():
+
+for perc in percentile:# each percentile
+
+    for labels, signal in dict_of_sliced_bc_averaged.items():# band-wise
+
         all_subject = list()
-        
+
         for subject in range(subjects):
-            per_subject = list()
+            per_subject = list()    
             
             for event_group in range(number_of_clusters):
 
@@ -109,5 +143,5 @@ for perc in percentile:
 
         dict_of_thresholded_signals_for_all_bands[f'{labels}'] = all_subject_swapped
     print('writing')
-    np.savez(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{perc}_percentile',**dict_of_thresholded_signals_for_all_bands)
-# %%
+
+    #np.savez(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/19_events/{perc}_percentile',**dict_of_thresholded_signals_for_all_bands)

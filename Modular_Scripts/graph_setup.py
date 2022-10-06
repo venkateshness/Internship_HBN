@@ -9,45 +9,46 @@ import numpy as np
 import scipy
 import torch
 import networkx as nx
-def NNgraph(graph):
+def NNgraph():
     """Nearest Neighbour graph Setup.
 
     Returns:
         Matrix of floats: A weight matrix for the thresholded graph
     """
-    if graph =='FC':
+    # if graph =='FC':
 
-        pickle_file = '/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl'
+    pickle_file = '/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl'
 
-        with open(pickle_file, 'rb') as f:
-            [connectivity] = pickle.load(f)
-        np.fill_diagonal(connectivity, 0)
+    with open(pickle_file, 'rb') as f:
+        [connectivity] = pickle.load(f)
+    np.fill_diagonal(connectivity, 0)
 
-    elif graph == 'SC':
-        connectivity = sio.loadmat('/homes/v20subra/S4B2/GSP/SC_avg56.mat')['SC_avg56']
+    # elif graph == 'SC':
+    #     connectivity = sio.loadmat('/homes/v20subra/S4B2/GSP/SC_avg56.mat')['SC_avg56']
     
-    elif graph == 'kalofiasFC':
-        connectivity = sio.loadmat('/homes/v20subra/S4B2/gspbox/kalofiasbraingraphs.mat')['FC_smooth_log']
+    # elif graph == 'kalofiasFC':
+    #     connectivity = sio.loadmat('/homes/v20subra/S4B2/gspbox/kalofiasbraingraphs.mat')['FC_smooth_log']
     
-    elif graph == 'kalofiasSC':
-        connectivity = sio.loadmat('/homes/v20subra/S4B2/gspbox/kalofiasbraingraphs.mat')['SC_smooth_log']
+    # elif graph == 'kalofiasSC':
+    #     connectivity = sio.loadmat('/homes/v20subra/S4B2/gspbox/kalofiasbraingraphs.mat')['SC_smooth_log']
 
     graph = torch.from_numpy(connectivity)
     graph.fill_diagonal_(0)
-    knn_graph = graph
+    knn_graph = torch.zeros(graph.shape)
     
-    # for i in range(knn_graph.shape[0]):
-    #     graph[i, i] = 0
-    #     best_k = torch.sort(graph[i, :])[1][-360:]
-    #     knn_graph[i, best_k] = graph[i, best_k].float()
-    #     knn_graph[best_k, i] = graph[best_k, i].float()
+    for i in range(knn_graph.shape[0]):
+        graph[i, i] = 0
+        best_k = torch.sort(graph[i, :])[1][-8:]
+        knn_graph[i, best_k] = 1 #graph[i, best_k].float()
+        knn_graph[best_k, i] = 1 #graph[best_k, i].float()
 
 
-    degree = torch.tensor(np.diag(sum(connectivity!=0)))#torch.diag(knn_graph.sum(dim = 0))
+    degree = torch.diag(knn_graph.sum(dim = 0)) #torch.tensor(np.diag(sum(connectivity!=0))) 
     adjacency = knn_graph
+    
     laplacian   = degree - adjacency
     values, eigs = torch.linalg.eigh(laplacian)
-    return laplacian, adjacency
+    return laplacian
 
 #%%
 # from scipy import io as sio

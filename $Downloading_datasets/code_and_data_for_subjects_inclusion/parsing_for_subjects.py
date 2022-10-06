@@ -23,6 +23,8 @@ df_RU =pd.read_csv('participants_RU.tsv',sep='\t')
 df_CUNY =pd.read_csv('participants_CUNY.tsv',sep='\t')
 df_CBIC =pd.read_csv('participants_CBIC.tsv',sep='\t')
 
+print(df_SI)
+
 subjects_aged = list()
 def find_subject_age(which_df,age):
     subjects_aged.append (which_df[which_df['Age']>=age]['participant_id'].values)

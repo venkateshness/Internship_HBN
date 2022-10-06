@@ -1,4 +1,5 @@
 #%%
+from collections import defaultdict
 import numpy as np
 import mne_connectivity
 import os
@@ -35,12 +36,13 @@ def pli_graph(band, fmin, fmax):
 
     for subject in range(len(stc_filtered)):
 
-        pli = mne_connectivity.phase_slope_index(np.expand_dims(stc_filtered[subject],0), sfreq= 125,fmin = fmin, fmax = fmax)
-
-        pli_reshaped = np.reshape(pli.get_data(), (regions, regions))
-        pli_reshaped_full = pli_reshaped + pli_reshaped.T
-        weights.append(pli_reshaped_full)
-    return weights
+        pli = mne_connectivity.spectral_connectivity_epochs(np.expand_dims(stc_filtered[subject],0), method ='pli', sfreq= 125,fmin = fmin, fmax = fmax)
+        print(np.shape(pli))
+        
+    #     pli_reshaped = np.reshape(pli.get_data(), (regions, regions))
+    #     pli_reshaped_full = pli_reshaped + pli_reshaped.T
+    #     weights.append(pli_reshaped_full)
+    # return weights
 
 theta_graph = pli_graph('theta', 4, 8)
 alpha_graph = pli_graph('alpha', 8, 13)
@@ -48,6 +50,12 @@ low_beta_graph = pli_graph('low_beta', 13, 20)
 high_beta_graph = pli_graph('high_beta', 20, 30)
 
 # %%
+pli_graph_dict = dict()
 
-
+pli_graph_dict['theta'] = theta_graph
+pli_graph_dict['alpha'] = alpha_graph
+pli_graph_dict['low_beta'] = low_beta_graph
+pli_graph_dict['high_beta'] = high_beta_graph
+# %%
+np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_new/graph_space/pli_graph_21_subjects',**pli_graph_dict)
 # %%

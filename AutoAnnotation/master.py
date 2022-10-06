@@ -9,8 +9,8 @@ from panns_inference import AudioTagging, SoundEventDetection, labels
 import pandas as pd
 framewise_probs = np.load("/homes/v20subra/S4B2/AutoAnnotation/framewise_probs.npz")["framewise_probs"]
 
-isc_result = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/cortical_space/sourceCCA_ISC_8s_window.npz')['sourceISC']#CCA on the eLORETA signal
-noise_floor_source = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/cortical_space/noise_floor_8s_window.npz')['isc_noise_floored']#Noise floor
+isc_result = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_new/cortical_space/sourceCCA_ISC_8s_window.npz')['sourceISC']#CCA on the eLORETA signal
+noise_floor_source = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_new/cortical_space/noise_floor_8s_window.npz')['isc_noise_floored']#Noise floor
 
 n_comps = 3
 
@@ -369,22 +369,17 @@ for i in range(3):
 dic_of_groups = {}
 for i in range(3):
     indices_full = sample_sorted[np.where(cluster_labels_full==i)[0]]
-    if i==0:
-        for j in range(3):
-            indices_sub = indices_full[np.where(cluster_labels_sub==j)]
-            dic_of_groups[str(j)]= indices_sub
-    else:
-        dic_of_groups[str(i+2)]= indices_full
+    
+    dic_of_groups[str(i)]= indices_full
 dic_of_groups
 # %%
 
-# np.savez(file='dict_of_clustered_events',**dic_of_groups)
+np.savez(file='/homes/v20subra/S4B2/AutoAnnotation/dict_of_clustered_events_19_events.npz',**dic_of_groups)
 
 # %%
-the_df_transformed.iloc[np.where(cluster_labels_full == 2)]
+the_df_transformed.iloc[np.where(cluster_labels_full == 1)]
 # %%
 np.shape(framewise_probs)
 # %%
 the_df_raw_rms.iloc[np.where(cluster_labels_full==0)].iloc[np.where(cluster_labels_sub==2)].iloc[:,-3:]
 
-# %%

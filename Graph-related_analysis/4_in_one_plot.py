@@ -1,6 +1,7 @@
 #%%
 from cProfile import label
 from collections import defaultdict
+from email.mime import audio
 from cv2 import mean, norm
 from matplotlib import axis, colors
 import numpy as np
@@ -65,7 +66,7 @@ total_roi = 360
 dic_for_envelope_signal_plot = defaultdict()   
 
 envelope_signal_bandpassed = np.load(
-    '/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/envelope_signal_bandpassed_with_beta_dichotomy.npz', mmap_mode='r')
+    '/users2/local/Venkatesh/Generated_Data/25_subjects_new/envelope_signal_bandpassed.npz', mmap_mode='r')
 
 
 """
@@ -218,7 +219,7 @@ def plot(band, A_mean, A_sem):
     fig.suptitle(f'{band} Envelope obtained from the cortical activation signal')
     fig.supxlabel('time (ms)')
     plt.show()
-    fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/eloreta/{band}')
+    # fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/eloreta/{band}')
 bands = ['theta', 'alpha', 'lower_beta', 'higher_beta']
 
 for i in range(len(bands)):
@@ -227,31 +228,64 @@ for i in range(len(bands)):
 
 # %%
 
-sourceCCA = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/sourceCCA_ISC_8s_window.npz')['sourceISC']
-noise_floor = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/noise_floor_8s_window.npz')['isc_noise_floored']
-significance = np.where(np.max(np.array(noise_floor)[:,0,:],axis=0)<sourceCCA[0])[0]
+sourceCCA = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_new/cortical_space/sourceCCA_ISC_8s_window.npz')['sourceISC']
+noise_floor = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_new/cortical_space/noise_floor_8s_window.npz')['isc_noise_floored']
 
 
 # %%
+from scenedetect import detect, ContentDetector
+import pandas as pd
+significance_sampled = [8, 20, 31, 33, 36, 37, 41, 43, 53, 55,  65, 69, 77, 80, 86, 88, 91, 101, 103, 105, 124, 130, 134, 135, 141, 145, 153, 157, 164, 166]
+
+scene_list = detect('/homes/v20subra/S4B2/3Source_Inversion_full_stack/Videos/DM2_video.mp4', ContentDetector())
+frame_timestamp = list()
+for i, scene in enumerate(scene_list):
+    frame_timestamp.append([scene[0].get_frames(), scene[1].get_frames()])
+
+unique_frame_timestamp = np.unique(frame_timestamp)
+
+
+#%%
+scene_change = np.round((unique_frame_timestamp/25)[1:-1])
 
 def axvspan():
-    for i in range(len(trials)-1):
-        plt.axvspan( xmin= trials[i]-1, xmax = trials[i], color='b', alpha = 0.2)
-        plt.axvspan( xmin= trials[i], xmax = trials[i]+2, color='r', alpha = 0.2)
-    plt.axvspan( xmin= trials[-1]-1, xmax = trials[-1], color='b', alpha = 0.2, label= 'Pre-stimulus')
-    plt.axvspan( xmin= trials[-1], xmax = trials[-1]+2, color='r', alpha = 0.2, label = 'Post-stimulus')
+    for i in scene_change:
+        plt.axvline(i, c='g', alpha = 0.2)
 
+plt.style.use('fivethirtyeight')
 
-fig = plt.figure(figsize=(15,10))
-plt.plot(noise_floor[:,0,:].T,c='grey',alpha=0.2)
-plt.plot(sourceCCA[0])
-plt.plot(significance,sourceCCA[0][significance],c='r',marker='o',ls="", label ="Significant ISC; p < 0")
-plt.xlabel('time (s)')
-plt.ylabel('ISC coefficients')
-plt.title("ISC First component")
-axvspan()
-plt.legend()
-plt.show()
-fig.savefig('/homes/v20subra/S4B2/3Source_Inversion_full_stack/first_comp')
+def isc_compwise(component):
+    fig = plt.figure(figsize=(15,10))
+    significance = np.where(np.max(np.array(noise_floor)[:,component,:],axis=0)<sourceCCA[component])[0]
+
+    plt.plot(noise_floor[:,component,:].T,c='grey',alpha=0.2)
+    plt.plot(sourceCCA[component])
+    plt.plot(significance,sourceCCA[component][significance],c='r',marker='o',ls="", label ="Significant ISC; p < 0")
+    plt.xlabel('time (s)')
+    plt.ylabel('ISC coefficients')
+    plt.title(f"ISC component {component+1}")
+    axvspan()
+    plt.legend()
+    plt.show()
+    # fig.savefig('/homes/v20subra/S4B2/3Source_Inversion_full_stack/first_comp')
+isc_compwise(0)
+
 # %%
-plt.axvspan()
+
+# %%
+unique_frame_timestamp/25
+# %%
+np.where(np.max(np.array(noise_floor)[:,0,:],axis=0)<sourceCCA[0])[0]
+
+# %%
+scene_change
+# %%
+from moviepy.editor import *
+
+clip = VideoFileClip('/homes/v20subra/S4B2/3Source_Inversion_full_stack/Videos/DM2_video.mp4') # or .avi, .webm, .gif ...
+clip.subclip(7,10).write_videofile('test.mp4', fps = 25)
+# %%
+
+txtClip = TextClip('Cool effect',color='white', font="Amiri-Bold",
+                   kerning = 5, fontsize=100)
+# %%

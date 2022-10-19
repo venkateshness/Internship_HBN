@@ -24,7 +24,32 @@ from statsmodels.stats.multitest import fdrcorrection, multipletests
 
 event_type = '30_events'
 # Unthresholded cortical signal
-envelope_signal_bandpassed_bc_corrected = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{event_type}/0_percentile.npz')
+envelope_signal_bandpassed_bc_corrected = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{event_type}/0_percentile_with_zscore.npz')
+
+total_subjects = ['NDARAD481FXF','NDARBK669XJQ',
+'NDARCD401HGZ','NDARDX770PJK',
+'NDAREC182WW2','NDARGY054ENV',
+'NDARHP176DPE','NDARLB017MBJ',
+'NDARMR242UKQ','NDARNT042GRA',
+'NDARRA733VWX','NDARRD720XZK',
+'NDARTR840XP1','NDARUJ646APQ',
+'NDARVN646NZP','NDARWJ087HKJ',
+'NDARXB704HFD','NDARXJ468UGL',
+'NDARXJ696AMX','NDARXU679ZE8',
+'NDARXY337ZH9','NDARYM257RR6',
+'NDARYY218AGA','NDARYZ408VWW','NDARZB377WZJ']
+
+subjects_data_available_for =list()
+
+for i in range(1,25):
+     if (os.path.isfile(f'/users2/local/Venkatesh/HBN/CPAC_preprocessed/sub-{total_subjects[i]}_ses-1/functional_to_standard/_scan_rest/_selector_CSF-2mmE-M_aC-CSF+WM-2mm-DPC5_M-SDB_P-2_BP-B0.01-T0.1_C-S-1+2-FD-J0.5/bandpassed_demeaned_filtered_antswarp.nii.gz')):
+         subjects_data_available_for.append(i)
+        #  subjects_data_available_for.append(total_subjects[i])
+
+envelope_signal_bandpassed_bc_corrected_21_subjects = defaultdict(dict)
+for labels, signal in envelope_signal_bandpassed_bc_corrected.items():
+
+    envelope_signal_bandpassed_bc_corrected_21_subjects[f'{labels}'] = envelope_signal_bandpassed_bc_corrected[f'{labels}'][subjects_data_available_for]
 
 
 ########################################################################################################################################
@@ -56,7 +81,7 @@ for i, roi in enumerate(np.unique(glasser_vec)):
 
 ##########################################################################################################################################
 
-envelope_signal_bandpassed_bc_corrected_thresholded = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{event_type}/98_percentile.npz')
+# envelope_signal_bandpassed_bc_corrected_thresholded = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal_100ms/{event_type}/98_percentile_with_zscore.npz')
 
 def packaging_bands(signal_array):
     """Package into the frequency band in a dic.
@@ -76,13 +101,13 @@ def packaging_bands(signal_array):
 
     return dic
 
-dic_of_envelope_signals_unthresholded = packaging_bands(envelope_signal_bandpassed_bc_corrected)
-dic_of_envelope_signals_thresholded = packaging_bands(envelope_signal_bandpassed_bc_corrected_thresholded)
+dic_of_envelope_signals_unthresholded = packaging_bands(envelope_signal_bandpassed_bc_corrected_21_subjects)
+# dic_of_envelope_signals_thresholded = packaging_bands(envelope_signal_bandpassed_bc_corrected_thresholded)
 
 
-laplacian = graph_setup.NNgraph() # fMRI RS graph
+# laplacian = graph_setup.NNgraph() # fMRI RS graph
 
-subjects = 25
+subjects = 21
 number_of_clusters = 3
 fs = 125
 pre_stim_in_samples = 25
@@ -98,49 +123,52 @@ regions = 360
 video_duration = seconds_per_event
 
 #helper function
-def smoothness_computation(band, laplacian):
-    """Smoothness computation subjectwise for each bands.
+# def smoothness_computation(band, laplacian):
+#     """Smoothness computation subjectwise for each bands.
 
-    Args:
-        band (array): signal array per subject
+#     Args:
+#         band (array): signal array per subject
 
-    Returns:
-        dict: GSV
-    """
-    per_subject = list()
-    for event in range(number_of_clusters):# each cluster group
-        per_event = list()
+#     Returns:
+#         dict: GSV
+#     """
+#     per_subject = list()
+#     for event in range(number_of_clusters):# each cluster group
+#         per_event = list()
         
-        for timepoints in range(seconds_per_event): #each timepoints
-            signal = band[event, :,timepoints]
+#         for timepoints in range(seconds_per_event): #each timepoints
+#             signal = band[event, :,timepoints]
 
-            stage1 = np.matmul(signal.T, laplacian)
+#             stage1 = np.matmul(signal.T, laplacian)
 
-            final = np.matmul(stage1, signal)
-            per_event.append(final)
+#             final = np.matmul(stage1, signal)
+#             per_event.append(final)
         
-        per_subject.append(per_event)
+#         per_subject.append(per_event)
 
-    data_to_return = np.array(per_subject).T
-    assert np.shape( data_to_return   ) == (video_duration, number_of_clusters)
-    return data_to_return
+#     data_to_return = np.array(per_subject).T
+#     assert np.shape( data_to_return   ) == (video_duration, number_of_clusters)
+#     return data_to_return
 
-
+graph = 'SC'
 #Compute GSV for each subjects
+smoothness_computed_file = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/graph_space/smoothness_trial_wise_for{event_type}{graph}.npz')
 smoothness_computed = defaultdict(dict)
+# smoothness_computed = np.swapaxes(smoothness_computed, 1, 2)
 
-for labels, signal in dic_of_envelope_signals_thresholded.items():
+for labels, signal in smoothness_computed_file.items():
     smoothness_subject = list()
 
-    for subject in range(subjects):
+    # for subject in range(subjects):
         
-        signal_normalized = dic_of_envelope_signals_thresholded[f'{labels}'][subject]/np.diag(laplacian)[np.newaxis, :, np.newaxis]
+    #     signal_normalized = dic_of_envelope_signals_unthresholded[f'{labels}'][subject]/np.diag(laplacian)[np.newaxis, :, np.newaxis]
         
-        smoothness_subject.append(smoothness_computation(signal_normalized, laplacian))
+    #     smoothness_subject.append(smoothness_computation(signal_normalized, laplacian))
+    smoothness_computed[f'{labels}'] = np.swapaxes(signal, 1, 2)
+    smoothness_computed[f'{labels}'] = smoothness_computed[f'{labels}'][subjects_data_available_for]
 
-    smoothness_computed[f'{labels}'] = np.array(smoothness_subject)
 
-
+#%%
 ##############################################################################################################################
 
 def yeo_network_wise_setup(network): # Network wise
@@ -266,11 +294,7 @@ def plotting(band):
                 plt.title(f'{_5clusters[cluster_group]}')
 
         
-            signal_baseline = signal[:pre_stim_in_samples]
-            assert np.shape(signal_baseline) == (subjects, seconds_per_event)
-            
-            signal_baseline_averaged = np.mean(signal_baseline, axis = 1)
-            assert np.shape(signal_baseline_averaged) == (subjects,)
+
 
             pvalues = np.zeros(post_stim_in_samples )
 
@@ -279,33 +303,33 @@ def plotting(band):
                 
                 pvalues[samples - pre_stim_in_samples] = scipy.stats.ttest_1samp(signal_post_onset, popmean=0)[1]
             
-            pvalues_corrected = multipletests(pvalues, method = "bonferroni")[1]
-            # t, c, c_pv, h0 = mne.stats.permutation_cluster_1samp_test(signal, adjacency = None, n_permutations=1)
+            # pvalues_corrected = multipletests(pvalues, method = "bonferroni")[1]
+            t, c, c_pv, h0 = mne.stats.permutation_cluster_1samp_test(signal, adjacency = None, n_permutations=1000)
 
             # print(sum(pvalues_corrected<=0.05))
             # pvalues_corrected = fdrcorrection(pvalues)[1]
             
             
-            # if len(c)>0:
-            #     idx =np.argwhere(c_pv<=0.05)
-            #     if len(idx)>0:
-            #         idx = np.hstack(np.array(idx))
+            if len(c)>0:
+                idx =np.argwhere(c_pv<=0.05)
+                if len(idx)>0:
+                    idx = np.hstack(np.array(idx))
 
-            #         for id in idx:
-            #             # print(np.squeeze(c)[id].min())
-            #             # print(np.squeeze(c)[id].max())
-            #             plt.axvspan(np.squeeze(c)[id].min(), np.squeeze(c)[id].max(), color = 'green', alpha =0.1)
+                    for id in idx:
+                        # print(np.squeeze(c)[id].min())
+                        # print(np.squeeze(c)[id].max())
+                        plt.axvspan(np.squeeze(c)[id].min(), np.squeeze(c)[id].max(), color = 'green', alpha =0.1)
 
-            for pvals_index in range(len(pvalues_corrected)):
-                if pvals_index in np.where(pvalues_corrected<=0.05)[0]:
-                    plt.axvline(pvals_index + pre_stim_in_samples , color = 'orange', alpha = 0.2)
+            # for pvals_index in range(len(pvalues_corrected)):
+            #     if pvals_index in np.where(pvalues_corrected<=0.05)[0]:
+            #         plt.axvline(pvals_index + pre_stim_in_samples , color = 'orange', alpha = 0.2)
 
             plt.legend()
             counter += 1
     fig.supylabel('relative variation')
-    fig.suptitle(f'{event_type}/ GSV + Cortical activity in Yeo NW/ {band} band / corrected, n_perm = 10000')
+    fig.suptitle(f'{graph} Graph / 21 Subjects / {event_type}/ GSV + Cortical activity in Yeo NW/ {band} band / corrected, n_perm = 1000')
     fig.supxlabel('latency (ms)')
-    # fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_oct/intra-cluster/{event_type}/{band}.jpg')
+    fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_baseline_C_zscore_{graph}/intra-cluster/{event_type}/{band}.jpg')
 
 plotting('theta')
 plotting('alpha')
@@ -334,21 +358,23 @@ def band_wise_stats(band):
         if nw == 0:
             signal_for_anova = smoothness_computed[f'{band}']
             signal_for_anova = np.swapaxes(signal_for_anova, 1, 2)
-            
             signal_for_anova_ = [signal_for_anova[:,0,:], signal_for_anova[:,1,:], signal_for_anova[:,2,:]]
 
 
         if nw >0:
             signal_for_anova = np.array(dic_of_cortical_signal_baseline_corrected_nw[f'{nw}'][f'{band}'])
             signal_for_anova_ = [signal_for_anova[:,0,:], signal_for_anova[:,1,:], signal_for_anova[:,2,:]]
-
+        # print(np.shape(signal_for_anova_))
         plt.subplot(a, b, counter)
         
-        F_obs, c, c_pv, H0= mne.stats.permutation_cluster_test(signal_for_anova_, tail = 0, adjacency=None, out_type='mask', n_permutations=10000 )
+        if nw > 0:
+            F_obs, c, c_pv, H0= mne.stats.permutation_cluster_test(signal_for_anova_, tail = 0, adjacency=None, out_type='mask', n_permutations=1000 , verbose = False)
 
+        if nw == 0:
+            F, pvals = scipy.stats.f_oneway(signal_for_anova_[0], signal_for_anova_[1], signal_for_anova_[2])
 
      
-        print("ANOVA signal shape",np.shape(signal_for_anova_))
+        # print("ANOVA signal shape",np.shape(signal_for_anova_))
         signal_c1 = signal_for_anova_[0]
         plt.plot(np.mean (signal_c1, axis = 0), label = _3clusters[0])
         c1 = std(signal_c1)
@@ -364,12 +390,26 @@ def band_wise_stats(band):
         c3 = std(signal_c3)
         plt.fill_between(range(seconds_per_event), c3[0], c3[1], alpha = 0.2)
 
-        if len(c)>0:
-            idx =np.argwhere(c_pv<=0.05)
-            if len(idx)>0:
-                for i in idx:
-                    print(i[0])
-                    plt.axvspan(c[i[0]][0].start, c[i[0]][0].stop, color = 'green', alpha =0.1)
+        if nw > 0:
+            if len(c)>0:
+                idx =np.argwhere(c_pv<=0.05)
+                if len(idx)>0:
+                    for i in idx:
+                        print(i[0])
+                        plt.axvspan(c[i[0]][0].start, c[i[0]][0].stop, color = 'green', alpha =0.1)
+        plt.xticks(np.arange(0, video_duration, pre_stim_in_samples), labels = ['-200', '0', '200', '400'])
+
+        if nw ==0:
+            pvalues_corrected = fdrcorrection(pvals)[1]
+    
+            idx = np.argwhere(pvalues_corrected<0.05)
+            if len(idx) > 0:
+                for ids in idx:
+                    print(ids)
+                    plt.axvline(ids)
+
+            if len(np.argwhere(pvals < 0.05)) > 0:
+                plt.axvline(np.argwhere(pvals<0.05)[0], alpha = 0.2, color = 'cyan')
 
         plt.legend()
         plt.title(f"{labels_[nw]}")
@@ -377,8 +417,8 @@ def band_wise_stats(band):
         counter+=1
 
     fig.supxlabel("time (ms)")
-    fig.suptitle(f"ANOVA; corrected with n_perms = 10000 / 95%CI / band = {band} / # event = {event_type}")
-    # fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_oct/Anova_group_wise/{band}')
+    fig.suptitle(f"{graph} Graph / 21_subjs / ANOVA; corrected with n_perms = 1000 / 95%CI / band = {band} / # event = {event_type}")
+    fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_baseline_C_zscore_{graph}/Anova_group_wise/{band}')
 
 band_wise_stats("theta")
 band_wise_stats("alpha")
@@ -407,8 +447,8 @@ def plotting_pairs(band):
     for i in [ i for i in range(9) if i != 5 ]: # neglecting Limbic network 
 
         for cluster_group in range(len(cluster_pairs)):
-            print(cluster_pairs[cluster_group][0]-1)
-            print(cluster_pairs[cluster_group][1]-1)
+            # print(cluster_pairs[cluster_group][0]-1)
+            # print(cluster_pairs[cluster_group][1]-1)
             plt.subplot(a,  b,  counter)
             plt.style.use('fivethirtyeight')
             if i == 0:# Plot GSV on top
@@ -456,49 +496,45 @@ def plotting_pairs(band):
                 plt.title(f'{_3clusters[cluster_group]}')
 
         
-            signal_baseline = signal[:pre_stim_in_samples]
-            assert np.shape(signal_baseline) == (subjects, seconds_per_event)
+
+            pvalues = np.zeros(seconds_per_event )
+            for samples in range(seconds_per_event ):
+                signal_ = signal[:,samples]
+                
+                pvalues[samples] = scipy.stats.ttest_1samp(signal_, popmean=0)[1]
             
-            signal_baseline_averaged = np.mean(signal_baseline, axis = 1)
-            assert np.shape(signal_baseline_averaged) == (subjects,)
+            pvalues_corrected = fdrcorrection(pvalues)[1]
+            for pvals_index in range(len(pvalues_corrected)):
+                if pvals_index in np.where(pvalues_corrected<=0.05)[0]:
+                    plt.axvline(pvals_index , color = 'orange', alpha = 0.2)
 
-            pvalues = np.zeros(post_stim_in_samples )
+            for pvals_index in range(len(pvalues)):
+                
+                if pvals_index in np.where(pvalues<=0.05)[0]:
+                    
+                    plt.axvline(pvals_index , color = 'cyan', alpha = 0.2)
 
 
-            t, c, c_pv, h0 = mne.stats.permutation_cluster_1samp_test(signal, adjacency = None, n_permutations=10000)
-            if len(c)>0:
-                idx =np.argwhere(c_pv<=0.05)
-                if len(idx)>0:
-                    idx = np.hstack(np.array(idx))
 
-                    for id in idx:
-                        plt.axvspan(np.squeeze(c)[id].min(), np.squeeze(c)[id].max(), color = 'green', alpha =0.1)
+            # t, p = scipy.stats.ttest_1samp(signal, popmean = 0)
+            # if len(c)>0:
+            #     idx =np.argwhere(c_pv<=0.05)
+            #     if len(idx)>0:
+            #         idx = np.hstack(np.array(idx))
+
+            #         for id in idx:
+            #             plt.axvspan(np.squeeze(c)[id].min(), np.squeeze(c)[id].max(), color = 'green', alpha =0.1)
 
             plt.legend()
             counter += 1
     fig.supylabel('relative variation')
-    fig.suptitle(f'{event_type}/ Paired t-test {band} band / corrected, n_perm = 10000')
+    fig.suptitle(f'{graph} Graph / 21 subjs / {event_type}/ Paired t-test {band} band / fdr-corrected and uncorrected (in cyan)')
     fig.supxlabel('latency (ms)')
-    # fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_oct/paired/{event_type}/{band}.jpg')
+    fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_baseline_C_zscore_{graph}/paired/{event_type}/{band}.jpg')
     
 plotting_pairs('theta')
 plotting_pairs('alpha')
 plotting_pairs('low_beta')
 plotting_pairs('high_beta')
 
-# %%
-signal_cluster_1 = smoothness_computed['theta'][:,:,0]
-signal_cluster_2 = smoothness_computed['theta'][:,:,1]
-signal_cluster_3 = smoothness_computed['theta'][:,:,2]
-# %%
-for i in range(25):
-    plt.hist(signal_cluster_1[:,i], bins=20, label ='C1')
-    plt.hist(signal_cluster_2[:,i], bins=20, label = 'C2')
-    plt.hist(signal_cluster_3[:,i], bins=20, label = 'C3')
-    plt.hist(np.hstack( np.array([signal_cluster_1, signal_cluster_2, signal_cluster_3])[:,:,i] ), alpha = 0.1, bins = 20, label = 'overall distri')
-    plt.legend()
-    plt.title(f'sample {i}')
-    plt.show()
-# %%
-plt.hist(np.hstack( np.array([signal_cluster_1, signal_cluster_2, signal_cluster_3])[:,:,0] ))
 # %%

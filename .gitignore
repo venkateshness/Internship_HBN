@@ -99,3 +99,7 @@ Despicable Me-HQ.wav
 /Modular_Scripts/pyoptflow
 /dict_of_clustered_events.npz
 /Graph-related_analysis/ERD_oct
+Graph-related_analysis/ERD_baseline_C_zscore
+Graph-related_analysis/ERD_baseline_C_zscore_100ms
+Graph-related_analysis/ERD_baseline_C_zscore_SC
+Graph-related_analysis/analysis_c_e_a_19_events.py

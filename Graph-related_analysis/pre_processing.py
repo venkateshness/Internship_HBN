@@ -245,5 +245,5 @@ for labels in gsv_original_all_bands.keys():
 fig.suptitle(f'{event_type} / GSV on fMRI RSFC / cortical signal = unthresholded, with Bonferroni correction')
 fig.supylabel('relative variation')
 fig.supxlabel('time lag (ms)')
-fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_august/GSV/FC/{event_type}/GSV.jpg')
+# fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_august/GSV/FC/{event_type}/GSV.jpg')
 # %%

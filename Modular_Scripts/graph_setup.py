@@ -9,22 +9,22 @@ import numpy as np
 import scipy
 import torch
 import networkx as nx
-def NNgraph():
+def NNgraph(graph):
     """Nearest Neighbour graph Setup.
 
     Returns:
         Matrix of floats: A weight matrix for the thresholded graph
     """
-    # if graph =='FC':
+    if graph =='FC':
 
-    pickle_file = '/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl'
+        pickle_file = '/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl'
 
-    with open(pickle_file, 'rb') as f:
-        [connectivity] = pickle.load(f)
-    np.fill_diagonal(connectivity, 0)
+        with open(pickle_file, 'rb') as f:
+            [connectivity] = pickle.load(f)
+        np.fill_diagonal(connectivity, 0)
 
-    # elif graph == 'SC':
-    #     connectivity = sio.loadmat('/homes/v20subra/S4B2/GSP/SC_avg56.mat')['SC_avg56']
+    elif graph == 'SC':
+        connectivity = sio.loadmat('/homes/v20subra/S4B2/GSP/SC_avg56.mat')['SC_avg56']
     
     # elif graph == 'kalofiasFC':
     #     connectivity = sio.loadmat('/homes/v20subra/S4B2/gspbox/kalofiasbraingraphs.mat')['FC_smooth_log']
@@ -51,15 +51,16 @@ def NNgraph():
     return laplacian
 
 #%%
-# from scipy import io as sio
+# _, adjacency_FC = NNgraph()
 
-# connectivity = sio.loadmat('/homes/v20subra/S4B2/GSP/SC_avg56.mat')['SC_avg56']
-# connectivity_distance = 1/connectivity
-# np.fill_diagonal(connectivity_distance, 0)
+# # from scipy import stats
+# # from nilearn.plotting import plot_matrix
+# # plot_matrix(np.corrcoef(, np.random.rand(25,25)))
 
-# distance_SC = dict()
-# distance_SC['distance_SC'] = connectivity_distance
-# sio.savemat('/homes/v20subra/S4B2/Graph-related_analysis/distance_SC.mat', distance_SC)
-# # %%
-# sio.loadmat('/homes/v20subra/S4B2/Graph-related_analysis/distance_FC.mat')
+# #%%
+# _, adjacency_SC = NNgraph()
+
+# from scipy import stats
+# from nilearn.plotting import plot_matrix
+# plot_matrix(np.corrcoef( adjacency_FC, adjacency_SC))
 # # %%

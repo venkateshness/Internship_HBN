@@ -1,8 +1,9 @@
 #%%
+from tabnanny import verbose
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import defaultdict
-
+import mne
 
 envelope_signal_bandpassed = np.load(
     '/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/0_percentile.npz', mmap_mode='r')
@@ -17,15 +18,15 @@ dict_of_unthresholded_signals_for_all_bands = {'theta':theta, 'alpha': alpha, 'l
 duration = 21250
 subjects = 25
 regions = 360
+event_type = '19_events'
 
-clusters = np.load('/homes/v20subra/S4B2/AutoAnnotation/dict_of_clustered_events_19_events.npz')
+clusters = np.load(f'/homes/v20subra/S4B2/AutoAnnotation/dict_of_clustered_events_{event_type}.npz')
 
 fs = 125
-pre_stim = 25
+pre_stim = 13
 post_stim = 63
 second_in_sample = pre_stim + post_stim
 number_of_clusters = 3
-
 
 def baseline_correction(signal):
     """Subject-wise signal to apply the baseline correction on. Dim =  regions x seconds_in_sample
@@ -94,7 +95,7 @@ def slicing_averaging(band):
             for event in event_time: #event-wise
                 signal_sliced_non_bc = signal[:,   event * fs - pre_stim : event * fs + post_stim]
                 
-                signal_sliced_bc = baseline_correction(signal_sliced_non_bc) # apply baseline correction
+                signal_sliced_bc = mne.baseline.rescale(signal_sliced_non_bc, times = np.array(list(range(second_in_sample)))/fs,  baseline = (None, 0.1), mode = 'zscore', verbose = False) # apply baseline correction
                 event_level.append(signal_sliced_bc)
 
             assert np.shape(event_level) == (len(event_time), regions, second_in_sample)
@@ -144,4 +145,8 @@ for perc in percentile:# each percentile
         dict_of_thresholded_signals_for_all_bands[f'{labels}'] = all_subject_swapped
     print('writing')
 
-    #np.savez(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/19_events/{perc}_percentile',**dict_of_thresholded_signals_for_all_bands)
+    np.savez(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal_100ms/{event_type}/{perc}_percentile_with_zscore',**dict_of_thresholded_signals_for_all_bands)
+
+
+
+# %%

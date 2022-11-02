@@ -14,7 +14,12 @@ import os
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import librosa
+import importlib
+import os
+os.chdir('/homes/v20subra/S4B2/')
 
+from Modular_Scripts import graph_setup
+importlib.reload(graph_setup)
 sns.set_theme()
 
 subjects = 21
@@ -74,25 +79,6 @@ for labels, signals in envelope_signal_bandpassed_bc_corrected.items():
     envelope_signal_bandpassed_bc_corrected_sliced[f'{labels}'] = envelope_signal_bandpassed_bc_corrected[f'{labels}'][idx_for_the_existing_subjects]
 
 
-def NNgraph(corr_mat):
-    """Nearest Neighbour graph Setup.
-
-    Returns:
-        Matrix of floats: A weight matrix for the thresholded graph
-    """
-    
-    connectivity = corr_mat
-
-    graph = torch.from_numpy(connectivity)
-    graph.fill_diagonal_(0)
-    knn_graph = graph
-    
-
-    degree = torch.tensor(np.diag(sum(connectivity!=0)))#torch.diag(knn_graph.sum(dim = 0))
-    adjacency = knn_graph
-    laplacian   = degree - adjacency
-    # values, eigs = torch.linalg.eigh(laplacian)
-    return laplacian, adjacency
 
 def smoothness_computation(band, laplacian):
     """The main function that does GFT, function-calls the temporal slicing, frequency summing, pre- post- graph-power accumulating 
@@ -136,6 +122,8 @@ parcellated_data = np.load("/users2/local/Venkatesh/Generated_Data/25_subjects_n
 
 gsv_original_all_bands = defaultdict(dict)
 
+laplacian_for_21_subjects = list()
+
 for labels, signal in envelope_signal_bandpassed_bc_corrected_sliced.items():
     gsv_original_graph = list()
 
@@ -145,15 +133,17 @@ for labels, signal in envelope_signal_bandpassed_bc_corrected_sliced.items():
         correlation_matrix = connectivitymeasure(parcellated_data[subject])
 
         # print('running weight_matrix_after_NN')
-        laplacian, adjacency = NNgraph(correlation_matrix)
-        
+        laplacian = graph_setup.NNgraph('individual',correlation_matrix)
+        if labels == 'theta':
+            laplacian_for_21_subjects.append(laplacian.numpy())
         
         signal_normalized = envelope_signal_bandpassed_bc_corrected_sliced[f'{labels}'][subject]/np.diag(laplacian)[np.newaxis, :, np.newaxis]
         gsv_original_graph.append(smoothness_computation(signal_normalized, laplacian))
 
     gsv_original_all_bands[f'{labels}'] = gsv_original_graph
 
-
+np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_new/graph_space/21_fmri_graph',laplacian = laplacian_for_21_subjects)
+#%%
 from scipy import io as sio
 
 gsv_resting_state_all_bands = defaultdict(dict)
@@ -246,4 +236,8 @@ fig.suptitle(f'{event_type} / GSV on fMRI RSFC / cortical signal = unthresholded
 fig.supylabel('relative variation')
 fig.supxlabel('time lag (ms)')
 # fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/ERD_august/GSV/FC/{event_type}/GSV.jpg')
+# %%
+
+# %%
+laplacian_for_21_subjects[0]
 # %%

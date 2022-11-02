@@ -4,7 +4,7 @@ import numpy as np
 from collections import defaultdict
 import mne
 from sklearn import cluster
-
+import torch
 import importlib
 import os
 os.chdir('/homes/v20subra/S4B2/')
@@ -13,7 +13,7 @@ from Modular_Scripts import graph_setup
 importlib.reload(graph_setup)
 
 duration = 21250
-subjects = 25
+subjects = 21
 regions = 360
 event_type = '30_events'
 fs = 125
@@ -21,9 +21,8 @@ pre_stim = 25
 post_stim = 63
 second_in_sample = pre_stim + post_stim
 number_of_clusters = 3
-graph = 'SC'
+graph_type = 'individual'
 
-laplacian = graph_setup.NNgraph(graph) # fMRI RS graph
 clusters = np.load(f'/homes/v20subra/S4B2/AutoAnnotation/dict_of_clustered_events_{event_type}.npz')
 
 envelope_signal_bandpassed = np.load(
@@ -35,6 +34,39 @@ high_beta = envelope_signal_bandpassed['high_beta']
 
 dict_of_unthresholded_signals_for_all_bands = dict()
 dict_of_unthresholded_signals_for_all_bands = {'theta':theta, 'alpha': alpha, 'low_beta':low_beta, 'high_beta':high_beta}
+
+total_subjects = ['NDARAD481FXF','NDARBK669XJQ',
+'NDARCD401HGZ','NDARDX770PJK',
+'NDAREC182WW2','NDARGY054ENV',
+'NDARHP176DPE','NDARLB017MBJ',
+'NDARMR242UKQ','NDARNT042GRA',
+'NDARRA733VWX','NDARRD720XZK',
+'NDARTR840XP1','NDARUJ646APQ',
+'NDARVN646NZP','NDARWJ087HKJ',
+'NDARXB704HFD','NDARXJ468UGL',
+'NDARXJ696AMX','NDARXU679ZE8',
+'NDARXY337ZH9','NDARYM257RR6',
+'NDARYY218AGA','NDARYZ408VWW','NDARZB377WZJ']
+
+subjects_data_available_for =list()
+
+for i in range(1,25):
+     if (os.path.isfile(f'/users2/local/Venkatesh/HBN/CPAC_preprocessed/sub-{total_subjects[i]}_ses-1/functional_to_standard/_scan_rest/_selector_CSF-2mmE-M_aC-CSF+WM-2mm-DPC5_M-SDB_P-2_BP-B0.01-T0.1_C-S-1+2-FD-J0.5/bandpassed_demeaned_filtered_antswarp.nii.gz')):
+         subjects_data_available_for.append(total_subjects[i])
+
+
+envelope_signal_bandpassed_bc_corrected = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{event_type}/0_percentile.npz')
+
+idx_for_the_existing_subjects = np.argwhere(np.isin(total_subjects, subjects_data_available_for)).ravel()
+
+
+dict_of_unthresholded_signals_for_all_bands_sliced = defaultdict(dict)
+
+for labels, signals in dict_of_unthresholded_signals_for_all_bands.items():
+    dict_of_unthresholded_signals_for_all_bands_sliced[f'{labels}'] = dict_of_unthresholded_signals_for_all_bands[f'{labels}'][idx_for_the_existing_subjects]
+
+pli = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_new/graph_space/pli_graph_21_subjects.npz')
+
 # %%
 #helper function
 def smoothness_computation(band, laplacian):
@@ -63,7 +95,6 @@ def smoothness_computation(band, laplacian):
     return data_to_return
 
 
-
 dict_of_sliced_bc_averaged = defaultdict(dict)
 from itertools import chain
 def slicing_averaging(band):
@@ -82,6 +113,9 @@ def slicing_averaging(band):
             signal = dict_of_unthresholded_signals_for_all_bands[f'{band}'][subject,    :,  :]
             event_level = list()
             
+            if graph_type == 'individual':
+                laplacian = graph_setup.NNgraph('individual' ,pli[f'{band}'][subject])
+
             for event in event_time: #event-wise
                 signal_sliced_non_bc = signal[:,   event * fs - pre_stim : event * fs + post_stim]
                 
@@ -108,6 +142,6 @@ for labels, signal in  dict_of_unthresholded_signals_for_all_bands.items():
 
 
 # %%
-np.savez_compressed(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/graph_space/smoothness_trial_wise_for{event_type}{graph}',**dict_of_sliced_bc_averaged)
+np.savez_compressed(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/graph_space/smoothness_trial_wise_for{event_type}{graph_type}_PLI',**dict_of_sliced_bc_averaged)
 
 #%%

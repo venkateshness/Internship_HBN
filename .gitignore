@@ -103,3 +103,9 @@ Graph-related_analysis/ERD_baseline_C_zscore
 Graph-related_analysis/ERD_baseline_C_zscore_100ms
 Graph-related_analysis/ERD_baseline_C_zscore_SC
 Graph-related_analysis/analysis_c_e_a_19_events.py
+Graph-related_analysis/GSVs
+Graph-related_analysis/eigvector.mat
+Graph-related_analysis/gsv_as_a_fn_of_graphs_plotting.py
+Graph-related_analysis/laplacian.mat
+Graph-related_analysis/X_RS_10subjects.mat
+SDI.png

@@ -34,7 +34,7 @@ def NNgraph(graph_type, connectivity_matrix = None):
     # elif graph == 'kalofiasSC':
     #     connectivity = sio.loadmat('/homes/v20subra/S4B2/gspbox/kalofiasbraingraphs.mat')['SC_smooth_log']
 
-    graph = torch.from_numpy(connectivity)
+    graph = connectivity
     # knn_graph = torch.zeros(graph.shape)
     
     # for i in range(knn_graph.shape[0]):
@@ -47,8 +47,8 @@ def NNgraph(graph_type, connectivity_matrix = None):
     # G = nx.from_numpy_matrix(graph.numpy())
     # laplacian = nx.normalized_laplacian_matrix(G).toarray()
     
-    degree = torch.diag(np.power(sum(graph != 0), -0.5))
-    laplacian = torch.eye(graph.shape[0]) - torch.matmul(degree, torch.matmul(graph, degree))
+    degree = np.diag(np.power(np.sum(graph, axis=1), -0.5))
+    laplacian = np.eye(graph.shape[0]) - np.matmul(degree, np.matmul(graph, degree))
     # values, eigs = torch.linalg.eigh(laplacian)
     # print(l - laplacian.numpy())
 

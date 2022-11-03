@@ -109,3 +109,10 @@ Graph-related_analysis/gsv_as_a_fn_of_graphs_plotting.py
 Graph-related_analysis/laplacian.mat
 Graph-related_analysis/X_RS_10subjects.mat
 SDI.png
+
+current_data.tar.gz
+Graph-related_analysis/zX_RS_10subjects.mat
+Graph-related_analysis/SDI_debug.py
+Graph-related_analysis/SDI_debug_to_HBN.py
+Graph-related_analysis/eigvector-2.mat
+Graph-related_analysis/SDI_results

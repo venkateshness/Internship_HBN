@@ -15,10 +15,10 @@ importlib.reload(graph_setup)
 from collections import defaultdict
 import scipy.linalg as la
 
-laplacian = graph_setup.NNgraph('SC')
+laplacian = graph_setup.NNgraph('FC')
 [eigvals, eigevecs] = la.eigh(laplacian)
 
-total_no_of_events = '30_events'
+total_no_of_events = '19_events'
 envelope_signal_bandpassed_bc_corrected = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{total_no_of_events}/0_percentile_with_zscore.npz')
 
 video_duration = 88
@@ -120,7 +120,7 @@ def surrogacy(eigvector, signal):#updated
 
     return surrogate_signal
 
-def signal_to_SDI(lf_signal, hf_signal):#no change
+def signal_to_SDI(lf_signal, hf_signal, normalization = False):#no change
             # Norm
     normed_baseline_signal = defaultdict(dict)
     normed_post_onset_signal = defaultdict(dict)
@@ -133,8 +133,15 @@ def signal_to_SDI(lf_signal, hf_signal):#no change
 
     assert np.shape(SDIndex_baseline) == (subjects, regions)
     assert np.shape(SDIndex_post_onset) == (subjects, regions)
-    #SD Index
 
+    if normalization:
+        empirical_SDIndex_bc = (SDIndex_post_onset - SDIndex_baseline) / np.mean(SDIndex_baseline, axis = 0)
+        mean_SDIndex_bc = np.mean(empirical_SDIndex_bc, axis = 0)
+    else:
+        empirical_SDIndex_bc = SDIndex_post_onset - SDIndex_baseline
+        mean_SDIndex_bc = np.mean(empirical_SDIndex_bc, axis = 0)
+
+    #SD Index
     def average_subs(dict):
         dict['lf'] = np.mean ( dict['lf'], axis = 0)
         dict['hf'] = np.mean ( dict['hf'], axis = 0)
@@ -143,23 +150,15 @@ def signal_to_SDI(lf_signal, hf_signal):#no change
         
         return dict
 
-    mean_normed_baseline = average_subs(normed_baseline_signal)
-    mean_normed_post_onset = average_subs(normed_post_onset_signal)
 
-    mean_SDIndex_baseline = SDIndex(mean_normed_baseline)
-    mean_SDIndex_post_onset = SDIndex(mean_normed_post_onset)
-
-
-    return SDIndex_baseline, SDIndex_post_onset, mean_SDIndex_baseline, mean_SDIndex_post_onset
+    return empirical_SDIndex_bc, mean_SDIndex_bc
 
 
 
-def band_wise_SDI(band):
+def band_wise_SDI(band, normalization):
         #GFT
-    SDI_BL = list()
-    SDI_PO = list()
-    bc_SDI = list()
-    diff_SDI = list()
+    SDI_BC = list()
+    # SDI_PO = list()
 
     for cluster_ in range(number_of_clusters):
         signal = envelope_signal_bandpassed_bc_corrected[f'{band}'][:, cluster_]
@@ -192,11 +191,11 @@ def band_wise_SDI(band):
         #Signal-filtering empirical data
 
         lf_signal, hf_signal = signal_filtering(psd, low_freqs, high_freqs)
-        SDI_baseline, SDI_post_onset, mean_SDI_baseline, mean_SDI_post_onset = signal_to_SDI(lf_signal, hf_signal)
+        empirical_SDIndex_bc, meanSDIndex_bc = signal_to_SDI(lf_signal, hf_signal, normalization = normalization)
 
 
         ########################################
-        #############Surrogate data#############
+        # #############Surrogate data#############
         surrogate_signal = surrogacy(eigevecs, signal)
         surrogate_psd = [gft(surrogate_signal[n]) for n in range(n_surrogate)]
         
@@ -205,59 +204,42 @@ def band_wise_SDI(band):
         surrogate_lf_signal, surrogate_hf_signal = zip(*[signal_filtering(surrogate_psd[n], low_freqs, high_freqs) for n in range(n_surrogate)])
         assert np.shape(surrogate_lf_signal) == (n_surrogate, subjects, regions, video_duration)
 
-        surrogate_SDI_baseline, surrogate_SDI_post_onset, _, _ = zip(*[signal_to_SDI(surrogate_lf_signal[n], surrogate_hf_signal[n]) for n in range(n_surrogate)])
-        assert np.shape(surrogate_SDI_baseline) == (n_surrogate, subjects, regions)
-
+        surrogate_SDIndex_bc, _ = zip(*[signal_to_SDI(surrogate_lf_signal[n], surrogate_hf_signal[n], normalization = normalization) for n in range(n_surrogate)])
+        assert np.shape(surrogate_SDIndex_bc) == (n_surrogate, subjects, regions)
 
 
         ## Comparison between stats and empirical data
-        max_baseline, min_baseline = np.max(surrogate_SDI_baseline, axis = 0), np.min(surrogate_SDI_baseline, axis = 0)
-        max_post_onset, min_post_onset = np.max(surrogate_SDI_post_onset, axis = 0), np.min(surrogate_SDI_post_onset, axis = 0)
-        
-        detection_max_baseline = np.sum(SDI_baseline > max_baseline, axis = 0)
-        detection_min_baseline = np.sum(SDI_baseline < min_baseline, axis = 0)
+        max_surrogate, min_surrogate = np.max(surrogate_SDIndex_bc, axis = 0), np.min(surrogate_SDIndex_bc, axis = 0)
 
-        detection_max_post_onset = np.sum(SDI_post_onset > max_post_onset, axis = 0)
-        detection_min_post_onset = np.sum(SDI_post_onset < min_post_onset, axis = 0)
+        detection_max = np.sum(empirical_SDIndex_bc > max_surrogate, axis = 0)
+        detection_min = np.sum(empirical_SDIndex_bc < min_surrogate, axis = 0)
+
 
         x = np.arange(1,101)
         sf = binom.sf(x, 100, p = 0.05)
         thr = np.min(np.where( sf< 0.05/360))
         thr = np.floor(subjects/100*thr) + 1
         
-        significant_max_baseline = (detection_max_baseline > thr) * 1
-        significant_min_baseline = (detection_min_baseline > thr) * 1
+        significant_max = (detection_max > thr) * 1
+        significant_min = (detection_min > thr) * 1
+
+        idx = np.sort(np.unique(np.hstack([np.where(significant_max == 1), np.where(significant_min == 1)])))
+        significant_SDI_bc = meanSDIndex_bc[ idx]
+
+        final_SDI_bc = np.zeros((360,))
+        final_SDI_bc[idx] = meanSDIndex_bc[ idx]
+
+
+        # final_SDI_baseline[idx_baseline]  = significant_SDI_baseline
+        # final_SDI_post_onset[idx_post_onset]  = significant_SDI_post_onset
         
-        significant_max_post_onset = (detection_max_post_onset > thr) * 1
-        significant_min_post_onset = (detection_min_post_onset > thr) * 1
+        # final_SDI_baseline = np.log2(final_SDI_baseline/np.mean(surrogate_SDI_baseline, axis = (0,1)))
+        # final_SDI_post_onset = np.log2(final_SDI_post_onset/np.mean(surrogate_SDI_post_onset, axis = (0,1)))
 
-        idx_baseline = np.sort(np.unique(np.hstack([np.where(significant_max_baseline == 1), np.where(significant_min_baseline == 1)])))
-        idx_post_onset = np.sort(np.unique(np.hstack([np.where(significant_max_post_onset == 1), np.where(significant_min_post_onset == 1)])))
+        SDI_BC.append(final_SDI_bc)
+        # SDI_PO.append(mean_SDI_post_onset)
 
-        significant_SDI_baseline = mean_SDI_baseline[ idx_baseline]
-        significant_SDI_post_onset = mean_SDI_post_onset[idx_post_onset]
-        print(np.shape(significant_SDI_baseline))
-        final_SDI_baseline = np.ones((360,))
-        final_SDI_post_onset = np.ones((360,))
-
-        final_SDI_baseline[idx_baseline]  = significant_SDI_baseline
-        final_SDI_post_onset[idx_post_onset]  = significant_SDI_post_onset
-        
-        print(sum(final_SDI_baseline!=1))
-
-        bc_SDI_values = (np.array(final_SDI_post_onset) - np.array(final_SDI_baseline))/np.mean(final_SDI_baseline)
-        diff_SDI_values = np.array(final_SDI_post_onset) - np.array(final_SDI_baseline)
-
-        final_SDI_baseline = np.log2(final_SDI_baseline/np.mean(surrogate_SDI_baseline, axis = (0,1)))
-        final_SDI_post_onset = np.log2(final_SDI_post_onset/np.mean(surrogate_SDI_post_onset, axis = (0,1)))
-
-        SDI_BL.append(final_SDI_baseline)
-        SDI_PO.append(final_SDI_post_onset)
-        bc_SDI.append(bc_SDI_values)
-        diff_SDI.append(diff_SDI_values)
-
-
-    return SDI_BL, SDI_PO, bc_SDI, diff_SDI
+    return SDI_BC#, SDI_PO
 
         
 # band_wise_SDI('theta')
@@ -265,17 +247,11 @@ def band_wise_SDI(band):
 # band_wise_SDI('low_beta')
 # band_wise_SDI('high_beta')
 
+normalization_condition = True
+
 SDI = defaultdict(dict)
-BC = defaultdict(dict)
-differenced = defaultdict(dict)
-
 for labels, signal  in envelope_signal_bandpassed_bc_corrected.items():
-    index_bl, index_po, bc_index, diff_index = band_wise_SDI(f'{labels}')
-    SDI[f'{labels}'] = index_bl, index_po
-    BC[f'{labels}'] = bc_index
-    differenced[f'{labels}'] = diff_index
-
-
+    SDI[f'{labels}'] = band_wise_SDI(f'{labels}', normalization = normalization_condition )
 
 
 # %%
@@ -290,20 +266,24 @@ from os.path import join as opj
 import matplotlib.pyplot as plt
 from tqdm.notebook import tqdm
 
-a, b, c = 4, 6, 1
+
+c = 1
 if total_no_of_events == '19_events':
     event_type = ['Audio', '+ve Offset', '-ve offset']
 else:
     event_type = ['C1', 'C2', 'C3']
-
 for_j = ['BL', 'PO']
 
-for band, signal_band in differenced.items():
+if normalization_condition:
+    to_save = f'/homes/v20subra/S4B2/Graph-related_analysis/SDI_results/{total_no_of_events}/BC/'
+
+else:
+    to_save = f'/homes/v20subra/S4B2/Graph-related_analysis/SDI_results/{total_no_of_events}/differenced/'
+
+for band, signal_band in SDI.items():
     for i in range(number_of_clusters):
-        # for j in range(2):
 
                 signal = signal_band[i]
-                
                 
                 path_Glasser = '/homes/v20subra/S4B2/GSP/Glasser_masker.nii.gz'
                 
@@ -317,39 +297,9 @@ for band, signal_band in differenced.items():
 
                 U0_brain = signals_to_img_labels(signal,path_Glasser,mnitemp['mask'])
                 
-                plot = plotting.plot_img_on_surf(U0_brain,colorbar=True, title = f'{band} / {event_type[i]}', cmap='coolwarm')#, output_file = f'/homes/v20subra/S4B2/Graph-related_analysis/SDI_results/FC/{total_no_of_events}_differenced/{c}')
-                #, output_file = f'/homes/v20subra/S4B2/Graph-related_analysis/SDI_results/{total_no_of_events}/BL_PO_untouched/{c}
+                plotting.plot_img_on_surf(U0_brain,colorbar=True, title = f'{band} / {event_type[i]} ', output_file = f'{to_save}{c}')
                 plt.show()
+                # U0_brain.to_filename(f'Graph-related_analysis/SDI_results/stat_maps/{band}_{i}_{j}.nii.gz')
                 c+=1
-
-
-# %%
-import numpy as np
-
-
-video_watching = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_new/video_watching_bundle_STC_parcellated.npz')['video_watching_bundle_STC_parcellated']
-
-global_peak = 55
-sf = 125
-percentile = 85
-video = np.mean(video_watching[:,:, global_peak*sf], axis = 0)
-path_Glasser = '/homes/v20subra/S4B2/GSP/Glasser_masker.nii.gz'
-
-
-mnitemp = fetch_icbm152_2009()
-mask_mni=image.load_img(mnitemp['mask'])
-glasser_atlas=image.load_img(path_Glasser)
-
-perc = np.percentile(video, percentile)
-video [video<perc] = 0
-
-signal=np.expand_dims( video, axis=0) # add dimension 1 to signal array
-
-U0_brain = signals_to_img_labels(signal,path_Glasser,mnitemp['mask'])
-
-plotting.plot_img_on_surf(U0_brain,colorbar=True, title = 'Cortical Activity at onset during global peak (top 10%ile)')
-
-# %%
-from enigmatoolbox.utils.parcellation import surface_to_parcel
 
 # %%

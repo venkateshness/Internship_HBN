@@ -4,7 +4,20 @@ import matplotlib.pyplot as plt
 sns.set_theme()
 
 
-def plot(x, y, xlabel=None, ylabel=None, title=None, color=None,  top=None, bottom=None, axis=None, fill_between=False, marker=None, ls=None):
+def plot(
+    x,
+    y,
+    xlabel=None,
+    ylabel=None,
+    title=None,
+    color=None,
+    top=None,
+    bottom=None,
+    axis=None,
+    fill_between=False,
+    marker=None,
+    ls=None,
+):
     """ A single script to serve all seaborn-related plots
 
     Args:
@@ -20,11 +33,11 @@ def plot(x, y, xlabel=None, ylabel=None, title=None, color=None,  top=None, bott
         fill_between (bool, optional): [description]. Defaults to False.
         marker ([type], optional): [description]. Defaults to None.
         ls ([type], optional): [description]. Defaults to None.
-    """    ''''''
+    """ """"""
     plt.figure()
     plt.plot(x, y, linewidth=2, marker=marker, ls=ls, color=color)
     if fill_between:
-        plt.fill_between(x, bottom, top, color='b', alpha=.1)
+        plt.fill_between(x, bottom, top, color="b", alpha=0.1)
         # plt.axis(axis)
 
     plt.xlabel(xlabel)

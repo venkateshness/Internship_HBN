@@ -1,7 +1,10 @@
 #%%
 import numpy as np
 import pandas as pd
-a = pd.read_csv('/homes/v20subra/S4B2/Eyetracking/NDARAA075AMK_Video-DM_Events.txt', delimiter = '\n')
+
+a = pd.read_csv(
+    "/homes/v20subra/S4B2/Eyetracking/NDARAA075AMK_Video-DM_Events.txt", delimiter="\n"
+)
 
 
 # %%
@@ -13,7 +16,9 @@ from pliers.converters import VideoFrameIterator
 from pliers.filters import FrameSamplingFilter
 from pliers.extractors import GoogleVisionAPIFaceExtractor, merge_results
 
-video = VideoStim('/homes/v20subra/S4B2/3Source_Inversion_full_stack/Videos/DM2_video.mp4')
+video = VideoStim(
+    "/homes/v20subra/S4B2/3Source_Inversion_full_stack/Videos/DM2_video.mp4"
+)
 
 # Convert the VideoStim to a list of ImageStims
 conv = VideoFrameIterator()
@@ -31,5 +36,5 @@ data = merge_results(face_features)
 len(frames)
 
 # %%
-4268/25
+4268 / 25
 # %%

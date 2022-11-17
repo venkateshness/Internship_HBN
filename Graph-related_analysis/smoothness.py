@@ -1,8 +1,6 @@
 # %%
 
 
-
-
 from turtle import color, shape
 from matplotlib import colorbar
 import scipy.stats as st
@@ -40,24 +38,26 @@ def graph_setup(unthresholding, weights):
     Returns:
         Graph: Returns the Graph, be it un- or thresholded, which the latter is done using the 8Nearest-Neighbour
     """
-    coordinates = sio.loadmat(
-        '/homes/v20subra/S4B2/GSP/Glasser360_2mm_codebook.mat')['codeBook']
+    coordinates = sio.loadmat("/homes/v20subra/S4B2/GSP/Glasser360_2mm_codebook.mat")[
+        "codeBook"
+    ]
 
-    G = graphs.Graph(weights, gtype = 'HCP subject',
-                     lap_type = 'combinatorial', coords = coordinates)
-    G.set_coordinates('spring')
-    print('{} nodes, {} edges'.format(G.N, G.Ne))
+    G = graphs.Graph(
+        weights, gtype="HCP subject", lap_type="combinatorial", coords=coordinates
+    )
+    G.set_coordinates("spring")
+    print("{} nodes, {} edges".format(G.N, G.Ne))
 
     if unthresholding:
-        pickle_file = '/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl'
+        pickle_file = "/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl"
 
-        with open(pickle_file, 'rb') as f:
+        with open(pickle_file, "rb") as f:
             [connectivity] = pickle.load(f)
         np.fill_diagonal(connectivity, 0)
 
         G = graphs.Graph(connectivity)
         print(G.is_connected())
-        print('{} nodes, {} edges'.format(G.N, G.Ne))
+        print("{} nodes, {} edges".format(G.N, G.Ne))
 
     return G
 
@@ -69,9 +69,9 @@ def NNgraph():
         Matrix of floats: A weight matrix for the thresholded graph
     """
 
-    pickle_file = '/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl'
+    pickle_file = "/homes/v20subra/S4B2/GSP/MMP_RSFC_brain_graph_fullgraph.pkl"
 
-    with open(pickle_file, 'rb') as f:
+    with open(pickle_file, "rb") as f:
         [connectivity] = pickle.load(f)
     np.fill_diagonal(connectivity, 0)
 
@@ -83,10 +83,9 @@ def NNgraph():
         knn_graph[i, best_k] = 1
         knn_graph[best_k, i] = 1
 
-    degree = torch.diag(torch.pow(knn_graph.sum(dim = 0), -0.5))
+    degree = torch.diag(torch.pow(knn_graph.sum(dim=0), -0.5))
 
-    weight_matrix_after_NN = torch.matmul(
-        degree, torch.matmul(knn_graph, degree))
+    weight_matrix_after_NN = torch.matmul(degree, torch.matmul(knn_graph, degree))
     return weight_matrix_after_NN
 
 
@@ -97,24 +96,30 @@ G.compute_fourier_basis()
 
 trials = [8, 56, 68, 74, 86, 132, 162]
 fs = 125
-subjects = 25# baseline = -1000ms to -100ms, so 900ms; since fs = 125, 900 ms = 113 samples
+subjects = (
+    25  # baseline = -1000ms to -100ms, so 900ms; since fs = 125, 900 ms = 113 samples
+)
 baseline_duration_of_900ms_in_samples = 113
 total_duration_in_samples = 375
 low_freq_range = np.arange(1, 51)
 med_freq_range = np.arange(51, 200)
 high_freq_range = np.arange(200, 360)
 pvalues = list()
-gFreqs = ['Low', 'Med', 'High']
+gFreqs = ["Low", "Med", "High"]
 
 envelope_signal_bandpassed = np.load(
-    '/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/envelope_signal_bandpassed_with_beta_dichotomy.npz', mmap_mode='r')
+    "/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/envelope_signal_bandpassed_with_beta_dichotomy.npz",
+    mmap_mode="r",
+)
 
-eloreta_signal = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/video_watching_bundle_STC_parcellated.npz')['video_watching_bundle_STC_parcellated']
+eloreta_signal = np.load(
+    "/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/video_watching_bundle_STC_parcellated.npz"
+)["video_watching_bundle_STC_parcellated"]
 
-alpha = envelope_signal_bandpassed['alpha']
-low_beta = envelope_signal_bandpassed['lower_beta']
-high_beta = envelope_signal_bandpassed['higher_beta']
-theta = envelope_signal_bandpassed['theta']
+alpha = envelope_signal_bandpassed["alpha"]
+low_beta = envelope_signal_bandpassed["lower_beta"]
+high_beta = envelope_signal_bandpassed["higher_beta"]
+theta = envelope_signal_bandpassed["theta"]
 
 
 def slicing(what_to_slice, where_to_slice, axis):
@@ -131,13 +136,13 @@ def slicing(what_to_slice, where_to_slice, axis):
     if axis > 2:
         array_to_append.append(what_to_slice[:, :, where_to_slice])
     else:
-        print( "size for the what_to_slice:", np.shape(what_to_slice))
+        print("size for the what_to_slice:", np.shape(what_to_slice))
         array_to_append.append(what_to_slice[:, where_to_slice])
     return array_to_append
 
 
 def slicing_time(coefficients, indices):
-    """A precursor function to do temporal slicing. 
+    """A precursor function to do temporal slicing.
     Dimension inflow = subject x entire video duration
 
     Args:
@@ -145,25 +150,25 @@ def slicing_time(coefficients, indices):
         indices(array of range):  Indices for the time period containing baseline, stimulus data
 
     Returns:
-        items_whole: A sliced array for the pre-strong period. 
-        Dim outflow = subject x `total_duration_in_samples` 
+        items_whole: A sliced array for the pre-strong period.
+        Dim outflow = subject x `total_duration_in_samples`
 
     """
-    items_whole = np.squeeze(slicing(coefficients, indices, axis = 2))
+    items_whole = np.squeeze(slicing(coefficients, indices, axis=2))
     return items_whole
 
 
 def baseline(whole):
-    """ ERD baseline setup. Dim = sub x sliced_time
+    """ERD baseline setup. Dim = sub x sliced_time
 
-        Args:
-            whole (array): Pre- and Post-stimulus/strong; duration = -1 to 2, so 3 seconds
+    Args:
+        whole (array): Pre- and Post-stimulus/strong; duration = -1 to 2, so 3 seconds
 
-        Returns:
-            array : Subject-wise ERD setup. Dim = sub x sliced_time
+    Returns:
+        array : Subject-wise ERD setup. Dim = sub x sliced_time
     """
     pre = whole[:, :baseline_duration_of_900ms_in_samples]
-    return np.array((whole.T - np.mean(pre, axis = 1))/np.mean(pre, axis = 1))
+    return np.array((whole.T - np.mean(pre, axis=1)) / np.mean(pre, axis=1))
 
 
 def stats_SEM(freqs):
@@ -173,9 +178,9 @@ def stats_SEM(freqs):
         freqs (dict): The grand-averaged graph smoothness to apply the SEM on
 
     Returns:
-        array: SEMed graph smoothness 
+        array: SEMed graph smoothness
     """
-    return scipy.stats.sem(freqs, axis = 1)
+    return scipy.stats.sem(freqs, axis=1)
 
 
 def smoothness_baseline_setup(smoothness_input_for_baseline_setup):
@@ -195,55 +200,72 @@ def smoothness_baseline_setup(smoothness_input_for_baseline_setup):
 
 
 def master(band):
-    """The main function that does GFT, function-calls the temporal slicing, frequency summing, pre- post- graph-power accumulating 
+    """The main function that does GFT, function-calls the temporal slicing, frequency summing, pre- post- graph-power accumulating
 
     Args:
         band (array): Envelope band to use
 
     Returns:
-        dict: Baseline-corrected ERD for all trials 
+        dict: Baseline-corrected ERD for all trials
     """
 
     laplacian = G.L.toarray()
-    
-    
-    one = np.array(band).T # dim(one) = entire_video_duration x ROIs x subjects
-    two = np.swapaxes(one,axis1=1,axis2=2) # dim (two) = entire_video_duration x subjects x ROIs
 
-    signal = np.expand_dims(two,2) # dim (signal) = entire_video_duration x subjects x 1 x ROIs
+    one = np.array(band).T  # dim(one) = entire_video_duration x ROIs x subjects
+    two = np.swapaxes(
+        one, axis1=1, axis2=2
+    )  # dim (two) = entire_video_duration x subjects x ROIs
 
-    stage1 = np.tensordot(signal,laplacian,axes=(3,0)) # dim (laplacian) = (ROIs x ROIs).... dim (stage1) = same as dim (signal)
+    signal = np.expand_dims(
+        two, 2
+    )  # dim (signal) = entire_video_duration x subjects x 1 x ROIs
 
-    signal_stage2 = np.swapaxes(signal,2,3) # dim(signal_stage2) = (entire_video_duration x subjects x ROIs x 1)
+    stage1 = np.tensordot(
+        signal, laplacian, axes=(3, 0)
+    )  # dim (laplacian) = (ROIs x ROIs).... dim (stage1) = same as dim (signal)
+
+    signal_stage2 = np.swapaxes(
+        signal, 2, 3
+    )  # dim(signal_stage2) = (entire_video_duration x subjects x ROIs x 1)
     print(np.shape(signal_stage2))
 
-#   ( entire_video_duration x subjects x 1 x ROIs) x (entire_video_duration x subjects x ROIs x 1) 
+    #   ( entire_video_duration x subjects x 1 x ROIs) x (entire_video_duration x subjects x ROIs x 1)
 
-#######################################
-###TESTING############################
-# a = np.random.random((21250,25,1,360))
-# b = np.random.random((21250,25,360,1))
-#######################################
+    #######################################
+    ###TESTING############################
+    # a = np.random.random((21250,25,1,360))
+    # b = np.random.random((21250,25,360,1))
+    #######################################
 
-
-    smoothness_roughness_time_series = np.squeeze( np.matmul(stage1,signal_stage2) ) # dim = entire_video_duration x subjects
-    print("np.shape(smoothness_roughness_time_series):",np.shape(smoothness_roughness_time_series))
+    smoothness_roughness_time_series = np.squeeze(
+        np.matmul(stage1, signal_stage2)
+    )  # dim = entire_video_duration x subjects
+    print(
+        "np.shape(smoothness_roughness_time_series):",
+        np.shape(smoothness_roughness_time_series),
+    )
 
     dic_accumulated = defaultdict(dict)
 
-    for i in range(len(trials)): # looping over each trials
-        indices = np.hstack([
-            np.arange(trials[i] * fs - fs, trials[i] * fs + 2 * fs)]) # taking data from -1 to +2 seconds, thus 3s in total
-        print("the whole-indices length", np.shape(indices)) # the indices for the said 3 seconds
-        smoothness_sliced = slicing_time( smoothness_roughness_time_series.T, indices= indices)
- 
-        assert np.shape(smoothness_sliced) == (subjects,len(indices)) # check for the integrity of the slicing
-        
-        dic_accumulated[f'{trials[i]}'] = smoothness_baseline_setup(smoothness_sliced)
+    for i in range(len(trials)):  # looping over each trials
+        indices = np.hstack(
+            [np.arange(trials[i] * fs - fs, trials[i] * fs + 2 * fs)]
+        )  # taking data from -1 to +2 seconds, thus 3s in total
+        print(
+            "the whole-indices length", np.shape(indices)
+        )  # the indices for the said 3 seconds
+        smoothness_sliced = slicing_time(
+            smoothness_roughness_time_series.T, indices=indices
+        )
+
+        assert np.shape(smoothness_sliced) == (
+            subjects,
+            len(indices),
+        )  # check for the integrity of the slicing
+
+        dic_accumulated[f"{trials[i]}"] = smoothness_baseline_setup(smoothness_sliced)
 
     return dic_accumulated
-
-
 
 
 def ttest(pre_stim, post_stim):
@@ -256,7 +278,7 @@ def ttest(pre_stim, post_stim):
     Returns:
         list/array: t and p values
     """
-    
+
     return scipy.stats.ttest_rel(pre_stim, post_stim)
 
 
@@ -266,18 +288,29 @@ def averaging_ERD():
     Returns:
         averaged: the grand-average of ERD
         total: averaged ERP across trials
-        dic2: dictionary containing concatenated ERD for pre- and post- stimulus, etc 
+        dic2: dictionary containing concatenated ERD for pre- and post- stimulus, etc
     """
 
     fig = plt.figure(figsize=(45, 25))
-    total = (dic['8'] + dic['56'] + dic['68'] + dic['74']
-              + dic['86'] + dic['132'] + dic['162']) / len(trials)
-    pre_stimulus = np.mean(total[:fs, :], axis = 0) # prestimulus = -100ms to 0s; thus 1s, which is 125samples
+    total = (
+        dic["8"]
+        + dic["56"]
+        + dic["68"]
+        + dic["74"]
+        + dic["86"]
+        + dic["132"]
+        + dic["162"]
+    ) / len(trials)
+    pre_stimulus = np.mean(
+        total[:fs, :], axis=0
+    )  # prestimulus = -100ms to 0s; thus 1s, which is 125samples
 
-    print(np.mean(total[:baseline_duration_of_900ms_in_samples, :], axis = 0)) # sanity check whether the average during the baseline period is 0
-    
-    post_stimulus = np.mean(total[fs:, :], axis = 0 )# post-stimulus = 0 to 2s
-    
+    print(
+        np.mean(total[:baseline_duration_of_900ms_in_samples, :], axis=0)
+    )  # sanity check whether the average during the baseline period is 0
+
+    post_stimulus = np.mean(total[fs:, :], axis=0)  # post-stimulus = 0 to 2s
+
     pvalues.append(ttest(pre_stimulus, post_stimulus)[1])
 
     # a, b, c = 5, 5, 1
@@ -298,26 +331,29 @@ def averaging_ERD():
     #     plt.axvspan(xmin = 0, xmax = 113, color='r', alpha = 0.2)
     #     c+= 1
     #     plt.legend()
-    
-    
+
     # fig.suptitle(f'ERD across trials subject-wise--{band}')
     # fig.supylabel("Relative smoothness")
     # fig.supxlabel('time (ms)')
     # fig.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/Functional_graph_setup/Results_ERD_across_trial/{band}_smoothness')
 
     # the following code is for the Raincloud plot, in a dataframe
-    averaged_subject = np.mean(total, axis = 1)
+    averaged_subject = np.mean(total, axis=1)
 
     dic2 = defaultdict(dict)
-    dic2['gSmoothness'] = np.squeeze(np.concatenate([pre_stimulus, post_stimulus]).T) # vertically appending the pre and post stimulus data for the subjects, so subjects times each
-    dic2['stim_group'] = np.squeeze(np.concatenate(
-        [['pre-'] * subjects, ['post-'] * subjects]).T)
+    dic2["gSmoothness"] = np.squeeze(
+        np.concatenate([pre_stimulus, post_stimulus]).T
+    )  # vertically appending the pre and post stimulus data for the subjects, so subjects times each
+    dic2["stim_group"] = np.squeeze(
+        np.concatenate([["pre-"] * subjects, ["post-"] * subjects]).T
+    )
     return dic2, averaged_subject, stats_SEM(total), total
 
 
-
-
-dic_of_env_bands = { 'smoothness_theta': theta, 'smoothness_wideband': eloreta_signal}#, 'alpha':alpha, 'lower_beta' : low_beta, 'upper_beta' : high_beta} # ALL the hilbert-transformed envelopes
+dic_of_env_bands = {
+    "smoothness_theta": theta,
+    "smoothness_wideband": eloreta_signal,
+}  # , 'alpha':alpha, 'lower_beta' : low_beta, 'upper_beta' : high_beta} # ALL the hilbert-transformed envelopes
 
 
 """
@@ -326,16 +362,21 @@ The following block is where all the code gets called;
 """
 
 
-for i in range( len (dic_of_env_bands.keys() ) ): # looping over all the envelope bands
+for i in range(len(dic_of_env_bands.keys())):  # looping over all the envelope bands
     band = list(dic_of_env_bands.keys())[i]
-    dic = master( dic_of_env_bands[  band  ]  ) # the main... master function is called given a single envelope
-    
-    assert np.shape(dic['8']) == (total_duration_in_samples, subjects)  # sanity check, done for one trial.. will be the same for the remaining
-    
+    dic = master(
+        dic_of_env_bands[band]
+    )  # the main... master function is called given a single envelope
+
+    assert np.shape(dic["8"]) == (
+        total_duration_in_samples,
+        subjects,
+    )  # sanity check, done for one trial.. will be the same for the remaining
+
     """
     The `dic` contains the smoothness for all the trials during the stimulus periods of interest. The following steps are specific trial-wise analyses
     """
-    pvalues = list() # appending the pvalues from the stat tests
+    pvalues = list()  # appending the pvalues from the stat tests
 
     a = 2
     b = 2
@@ -343,30 +384,41 @@ for i in range( len (dic_of_env_bands.keys() ) ): # looping over all the envelop
     """
     Averaging ERD trials
     """
-    dic_for_plotting_purpose, grand_average, grand_sem, total = averaging_ERD() # Averaging the ERD trials
+    (
+        dic_for_plotting_purpose,
+        grand_average,
+        grand_sem,
+        total,
+    ) = averaging_ERD()  # Averaging the ERD trials
 
     assert np.shape(grand_average) == (total_duration_in_samples,)
     assert np.shape(grand_sem) == (total_duration_in_samples,)
 
     dic_to_write = defaultdict(dict)
-    dic_to_write[f'{list(dic_of_env_bands.keys())[i]}']['average'] = grand_average
-    dic_to_write[f'{list(dic_of_env_bands.keys())[i]}']['sem'] = grand_sem
+    dic_to_write[f"{list(dic_of_env_bands.keys())[i]}"]["average"] = grand_average
+    dic_to_write[f"{list(dic_of_env_bands.keys())[i]}"]["sem"] = grand_sem
 
-    np.savez_compressed(f'/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/power_smoothness_4_in_one_plot/{list(dic_of_env_bands.keys())[i]}', **dic_to_write )
+    np.savez_compressed(
+        f"/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/power_smoothness_4_in_one_plot/{list(dic_of_env_bands.keys())[i]}",
+        **dic_to_write,
+    )
 
     fig = plt.figure(figsize=(25, 15))
     ax = fig.add_subplot(a, b, 1)
 
-    ax.plot(grand_average, color='r')
-    ax.fill_between(range(total_duration_in_samples),
-                    grand_average-grand_sem, grand_average+grand_sem, alpha = 0.2)
-    ax.axvline(125) # The stimulus onset, in samples
-    ax.set_xticks(np.arange(0, total_duration_in_samples+1, 62.5))
+    ax.plot(grand_average, color="r")
+    ax.fill_between(
+        range(total_duration_in_samples),
+        grand_average - grand_sem,
+        grand_average + grand_sem,
+        alpha=0.2,
+    )
+    ax.axvline(125)  # The stimulus onset, in samples
+    ax.set_xticks(np.arange(0, total_duration_in_samples + 1, 62.5))
     ax.set_xticklabels(np.arange(-1000, 2500, 500))
-    ax.set_xlabel('time (ms)')
-    ax.axvspan(xmin = 0, xmax = baseline_duration_of_900ms_in_samples,
-                color='r', alpha = 0.2)
-    
+    ax.set_xlabel("time (ms)")
+    ax.axvspan(xmin=0, xmax=baseline_duration_of_900ms_in_samples, color="r", alpha=0.2)
+
     # width = 0.35
     # ort = "v" # orientation of the raincloud plot
     # pal = "blue_red_r"
@@ -390,11 +442,9 @@ for i in range( len (dic_of_env_bands.keys() ) ): # looping over all the envelop
     # ax.set_xticks(np.arange(0, total_duration_in_samples+1, 62.5))
     # ax.set_xticklabels(np.arange(-1000, 2500, 500))
 
-
-
     # a, b, c = 4, 2, 1
     # """
-    # Iterating over trials, for plotting 
+    # Iterating over trials, for plotting
     # """
     # fig = plt.figure(figsize=(25, 25))
     # for i in range(7):
@@ -422,4 +472,3 @@ for i in range( len (dic_of_env_bands.keys() ) ): # looping over all the envelop
 
 
 #%%
-

@@ -7,9 +7,11 @@ import brainspace.mesh
 
 fsaverage = datasets.fetch_surf_fsaverage()
 mesh = brainspace.mesh.mesh_io.read_surface(
-    'brainnotation/tpl-fsaverage_den-10k_hemi-L_pial.surf.gii')
+    "brainnotation/tpl-fsaverage_den-10k_hemi-L_pial.surf.gii"
+)
 mesh2 = brainspace.mesh.mesh_io.read_surface(
-    'brainnotation/tpl-fsaverage_den-10k_hemi-R_pial.surf.gii')
+    "brainnotation/tpl-fsaverage_den-10k_hemi-R_pial.surf.gii"
+)
 
 
 def plot(data, title, cmap, view, c_range):

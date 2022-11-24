@@ -25,13 +25,14 @@ duration = 21250
 subjects = 25
 regions = 360
 event_type = "19_events"
+total_events = 19
 
 clusters = np.load(
     f"/homes/v20subra/S4B2/AutoAnnotation/dict_of_clustered_events_{event_type}.npz"
 )
 
 fs = 125
-pre_stim = 13
+pre_stim = 25
 post_stim = 63
 second_in_sample = pre_stim + post_stim
 number_of_clusters = 3
@@ -119,14 +120,15 @@ def slicing_averaging(band):
                     mode="zscore",
                     verbose=False,
                 )  # apply baseline correction
-                event_level.append(signal_sliced_bc)
+                # event_level.append(signal_sliced_bc)
+                cluster_level.append(signal_sliced_bc)
+                
 
-            assert np.shape(event_level) == (len(event_time), regions, second_in_sample)
-            cluster_level.append(np.mean(event_level, axis=0))
-
+            # assert np.shape(event_level) == (len(event_time), regions, second_in_sample)
+        
         # cluster_level = standardisation(np.array(cluster_level))
         assert np.shape(cluster_level) == (
-            number_of_clusters,
+            total_events,
             regions,
             second_in_sample,
         )
@@ -139,7 +141,7 @@ for labels, signal in dict_of_unthresholded_signals_for_all_bands.items():
     slicing_averaging(labels)
     assert np.shape(dict_of_sliced_bc_averaged[f"{labels}"]) == (
         subjects,
-        number_of_clusters,
+        total_events,
         regions,
         second_in_sample,
     )
@@ -148,7 +150,7 @@ for labels, signal in dict_of_unthresholded_signals_for_all_bands.items():
 # Thresholding the sliced signal
 
 dict_of_thresholded_signals_for_all_bands = dict()
-percentile = [98, 95, 90, 50, 0]
+percentile = [0]
 
 for perc in percentile:  # each percentile
 
@@ -159,7 +161,7 @@ for perc in percentile:  # each percentile
         for subject in range(subjects):
             per_subject = list()
 
-            for event_group in range(number_of_clusters):
+            for event_group in range(total_events):
 
                 the_array_of_interest_new = np.array(signal)[subject, event_group, :, :]
                 percentile_value = np.percentile(
@@ -173,7 +175,7 @@ for perc in percentile:  # each percentile
                 per_subject.append(ready_array)
 
             assert np.shape(per_subject) == (
-                number_of_clusters,
+                total_events,
                 second_in_sample,
                 regions,
             )
@@ -183,18 +185,17 @@ for perc in percentile:  # each percentile
 
         assert np.shape(all_subject_swapped) == (
             subjects,
-            number_of_clusters,
+            total_events,
             regions,
             second_in_sample,
         )
-
+        
         dict_of_thresholded_signals_for_all_bands[f"{labels}"] = all_subject_swapped
     print("writing")
 
     np.savez(
-        f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal_100ms/{event_type}/{perc}_percentile_with_zscore",
+        f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{event_type}/{perc}_percentile_with_zscore_events_wise",
         **dict_of_thresholded_signals_for_all_bands,
     )
-
 
 # %%

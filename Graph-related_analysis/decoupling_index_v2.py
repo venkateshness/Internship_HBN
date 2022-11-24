@@ -4,10 +4,7 @@ import numpy as np
 import importlib
 import os
 import matplotlib.pyplot as plt
-from pkg_resources import to_filename
-from scipy.fftpack import shift
-from sklearn import cluster
-from torch import eig
+
 
 os.chdir("/homes/v20subra/S4B2/")
 from scipy.stats import binom
@@ -20,18 +17,23 @@ import scipy.linalg as la
 laplacian = graph_setup.NNgraph("SC")
 [eigvals, eigevecs] = la.eigh(laplacian)
 
-total_no_of_events = "19_events"
+total_no_of_events = "30_events"
+number_of_events = 30
 envelope_signal_bandpassed_bc_corrected = np.load(
-    f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{total_no_of_events}/0_percentile_with_zscore.npz"
+    f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{total_no_of_events}/0_percentile_with_zscore_events_wise.npz"
 )
 
 video_duration = 88
 subjects = 25
 regions = 360
-number_of_clusters = 3
 baseline_in_samples = 25
 post_onset_in_samples = 63
 n_surrogate = 19
+n_clusters = 3
+
+clusters = np.load(
+    f"/homes/v20subra/S4B2/AutoAnnotation/dict_of_clustered_events_{total_no_of_events}.npz"
+)
 
 gft_band_wise = defaultdict(dict)
 
@@ -184,8 +186,9 @@ def band_wise_SDI(band):
     SDI_PO = list()
     bc_SDI = list()
     diff_SDI = list()
+    raw_SDImap_differenced = list()
 
-    for cluster_ in range(number_of_clusters):
+    for cluster_ in range(number_of_events):
         signal = envelope_signal_bandpassed_bc_corrected[f"{band}"][:, cluster_]
         psd = gft(signal)
 
@@ -264,6 +267,17 @@ def band_wise_SDI(band):
             surrogate_SDI_post_onset, axis=0
         ), np.min(surrogate_SDI_post_onset, axis=0)
 
+
+        raw_SDImap_idx_BL = np.array ((SDI_baseline > max_baseline) *1 + (SDI_baseline < min_baseline) *1, dtype = bool)
+        raw_SDImap_idx_PO = np.array ((SDI_post_onset > max_post_onset) *1 + (SDI_post_onset < min_post_onset) *1, dtype = bool)
+
+
+        raw_SDImap_bl = SDI_baseline * raw_SDImap_idx_BL
+        raw_SDImap_post_onset = SDI_post_onset * raw_SDImap_idx_PO
+
+        final_raw_SDImap_differenced = raw_SDImap_post_onset - raw_SDImap_bl
+        raw_SDImap_differenced.append(final_raw_SDImap_differenced)
+
         detection_max_baseline = np.sum(SDI_baseline > max_baseline, axis=0)
         detection_min_baseline = np.sum(SDI_baseline < min_baseline, axis=0)
 
@@ -304,14 +318,14 @@ def band_wise_SDI(band):
 
         significant_SDI_baseline = mean_SDI_baseline[idx_baseline]
         significant_SDI_post_onset = mean_SDI_post_onset[idx_post_onset]
-        print(np.shape(significant_SDI_baseline))
+        # print(np.shape(significant_SDI_baseline))
         final_SDI_baseline = np.ones((360,))
         final_SDI_post_onset = np.ones((360,))
 
         final_SDI_baseline[idx_baseline] = significant_SDI_baseline
         final_SDI_post_onset[idx_post_onset] = significant_SDI_post_onset
 
-        print(sum(final_SDI_baseline != 1))
+        # print(sum(final_SDI_baseline != 1))
 
         bc_SDI_values = (
             np.array(final_SDI_post_onset) - np.array(final_SDI_baseline)
@@ -330,7 +344,7 @@ def band_wise_SDI(band):
         bc_SDI.append(bc_SDI_values)
         diff_SDI.append(diff_SDI_values)
 
-    return SDI_BL, SDI_PO, bc_SDI, diff_SDI
+    return SDI_BL, SDI_PO, bc_SDI, diff_SDI, raw_SDImap_differenced
 
 
 # band_wise_SDI('theta')
@@ -341,82 +355,88 @@ def band_wise_SDI(band):
 SDI = defaultdict(dict)
 BC = defaultdict(dict)
 differenced = defaultdict(dict)
+raw_SDImap_differenced = defaultdict(dict)
 
 for labels, signal in envelope_signal_bandpassed_bc_corrected.items():
-    index_bl, index_po, bc_index, diff_index = band_wise_SDI(f"{labels}")
+    index_bl, index_po, bc_index, diff_index, raw_SDImap_differenced_index = band_wise_SDI(f"{labels}")
     SDI[f"{labels}"] = index_bl, index_po
     BC[f"{labels}"] = bc_index
     differenced[f"{labels}"] = diff_index
+    raw_SDImap_differenced[f"{labels}"] = raw_SDImap_differenced_index
+
+counter = 0
+dic_order = defaultdict(dict)
+
+for i, j in clusters.items():
+    dic_order[f'{i}'] = np.arange(counter, counter+ len(j))
+    counter+= len(j)
 
 
-# %%
+## Cluster averaging
+def cluster_averaging(dict_to_average, is_SDI):
+    dic = defaultdict(dict)
+    for band_label, band_signal in dict_to_average.items():
+        cluster_level = list()
+        for event_label, event_index in dic_order.items():
+            if is_SDI:
+                cluster_level.append( np.mean(  np.array(band_signal)[:, event_index], axis = 1) )
+
+            if is_SDI == False:    
+                cluster_level.append( np.mean(  np.array(band_signal)[event_index], axis = 0) )
+        
+        if is_SDI==False:
+            assert np.shape(cluster_level) == (n_clusters, regions)
+        
+        if is_SDI==True:
+            assert np.shape(cluster_level) == (n_clusters, 2, regions)
+    
+        dic[f'{band_label}'] = cluster_level
+    
+    return dic
+
+differenced_f =  cluster_averaging(differenced, is_SDI = False)
+BC_f =  cluster_averaging(BC, is_SDI = False)
+SDI_f =  cluster_averaging(SDI, is_SDI = True)
+
+
+np.savez_compressed(f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/SDI/{total_no_of_events}", **raw_SDImap_differenced)
+
+#%%
 import matplotlib
 from nilearn.regions import signals_to_img_labels
-
-# load nilearn label masker for inverse transform
-from nilearn.input_data import NiftiLabelsMasker, NiftiMasker
 from nilearn.datasets import fetch_icbm152_2009
 from nilearn import image, plotting
-from nilearn import datasets
-from os.path import join as opj
 import matplotlib.pyplot as plt
-from tqdm.notebook import tqdm
-from nilearn import datasets
-fsaverage = datasets.fetch_surf_fsaverage()
-destrieux_atlas = datasets.fetch_atlas_surf_destrieux()
-parcellation = destrieux_atlas['map_right']
-import mne
 
+
+BL_or_PO = ['BL', 'PO']
 if total_no_of_events == "19_events":
     event_type = ["Audio", "+ve Offset", "-ve offset"]
 else:
     event_type = ["C1", "C2", "C3"]
 
-for_j = ["BL", "PO"]
 counter = 1
-for band, signal_band in BC.items():
-    
+for band, signal_band in differenced_f.items():
+    for event_group in range(n_clusters):
         # for j in range(2):
-        if total_no_of_events=='19_events':
-            signal = np.mean (signal_band[:2], axis = 0)
+            signal = signal_band[event_group]
 
-        else:
-            signal = np.mean(signal_band, axis = 0)
-        path_Glasser = "/homes/v20subra/S4B2/GSP/Glasser_masker.nii.gz"
+            path_Glasser = "/homes/v20subra/S4B2/GSP/Glasser_masker.nii.gz"
 
-        mnitemp = fetch_icbm152_2009()
-        mask_mni = image.load_img(mnitemp["mask"])
-        glasser_atlas = image.load_img(path_Glasser)
-        
-        signal = np.expand_dims(signal, axis=0)  # add dimension 1 to signal array
+            mnitemp = fetch_icbm152_2009()
+            mask_mni = image.load_img(mnitemp["mask"])
+            glasser_atlas = image.load_img(path_Glasser)
+            
+            signal = np.expand_dims(signal, axis=0)
 
-        U0_brain = signals_to_img_labels(signal, path_Glasser, mnitemp["mask"])
-        
-        # plotting.view_connectome(diag_signal, atlas['coords'], node_size = 5, node_color = 'auto')
+            U0_brain = signals_to_img_labels(signal, path_Glasser, mnitemp["mask"])
 
-        plot = plotting.plot_img_on_surf(
-            U0_brain, title=f"{band}", threshold=0.1, output_file = f'/homes/v20subra/S4B2/Graph-related_analysis/SDI_results/{total_no_of_events}/grand_average/{counter}')
-        # , output_file = f'/homes/v20subra/S4B2/Graph-related_analysis/SDI_results/{total_no_of_events}/BL_PO_untouched/{c}
-        counter+=1
-        # plot.add_graph(diag_signal, atlas['coords'])
-        
-        plt.show()
-
-
+            plot = plotting.plot_img_on_surf(
+                U0_brain, title=f"{band} / {event_type[event_group]}", threshold=0.05, output_file = f'/homes/v20subra/S4B2/Graph-related_analysis/SDI_results/{total_no_of_events}/Differenced/{counter}')
+            counter+=1
+            
+            plt.show()
 # %%
-import numpy as np
-import matplotlib
-from nilearn.regions import signals_to_img_labels
-
-# load nilearn label masker for inverse transform
-from nilearn.input_data import NiftiLabelsMasker, NiftiMasker
-from nilearn.datasets import fetch_icbm152_2009
-from nilearn import image, plotting
-from nilearn import datasets
-from os.path import join as opj
-import matplotlib.pyplot as plt
-from tqdm.notebook import tqdm
-from nilearn import datasets
 
 # video_watching = np.load(
 #     "/users2/local/Venkatesh/Generated_Data/25_subjects_new/video_watching_bundle_STC_parcellated.npz"
@@ -468,12 +488,9 @@ for labels, band in envelope_signal_bandpassed_bc_corrected.items():
         counter+=1
         plt.show()
 # %%
-import numpy as np
-total_no_of_events = '19_events'
-envelope_signal_bandpassed_bc_corrected = np.load(
-    f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{total_no_of_events}/0_percentile_with_zscore.npz"
-)
 
+
+np.shape(SDI['alpha'])
 # %%
-np.shape(envelope_signal_bandpassed_bc_corrected['theta'])
+
 # %%

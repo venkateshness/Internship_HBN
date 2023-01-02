@@ -20,7 +20,7 @@ import scipy.linalg as la
 laplacian = graph_setup.NNgraph("FC")
 [eigvals, eigevecs] = la.eigh(laplacian)
 
-total_no_of_events = "19_events"
+total_no_of_events = "30_events"
 envelope_signal_bandpassed_bc_corrected = np.load(
     f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{total_no_of_events}/0_percentile_with_zscore.npz"
 )

@@ -403,3 +403,24 @@ np.where(array_for_heatmap[-1] == 4)
 regions = np.load(f"/homes/v20subra/S4B2/GSP/hcp/regions.npy")
 regions
 # %%
+total_no_of_events = '30_events'
+import numpy as np
+
+sdi = np.load(f'/users2/local/Venkatesh/Generated_Data/25_subjects_new/SDI/{total_no_of_events}.npz')
+
+# %%
+array_of_interest = sdi['theta']
+# %%
+array_of_interest_binarized = (array_of_interest < 0 )*-1 + (array_of_interest > 0 )*1
+
+# %%
+import seaborn as sns
+plt.figure(figsize=(25,25))
+sns.heatmap(array_of_interest_binarized[:,0].T, cmap = 'seismic')
+
+
+# %%
+plt.figure(figsize=(25,25))
+sns.heatmap(((np.sum(array_of_interest_binarized, axis = 1) > 4)*1 + (np.sum(array_of_interest_binarized, axis = 1) < -4)*-1).T, cmap='seismic')
+
+# %%

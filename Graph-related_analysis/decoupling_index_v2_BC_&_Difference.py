@@ -22,13 +22,14 @@ laplacian = graph_setup.NNgraph("FC")
 
 total_no_of_events = "30_events"
 envelope_signal_bandpassed_bc_corrected = np.load(
-    f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{total_no_of_events}/0_percentile_with_zscore.npz"
+    f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{total_no_of_events}/0_percentile_with_zscore_events_wise.npz"
 )
+
 
 video_duration = 88
 subjects = 25
 regions = 360
-number_of_clusters = 3
+number_of_clusters = 30
 baseline_in_samples = 25
 post_onset_in_samples = 63
 n_surrogate = 19
@@ -179,9 +180,12 @@ def signal_to_SDI(lf_signal, hf_signal, normalization=False):  # no change
 def band_wise_SDI(band, normalization):
     # GFT
     SDI_BC = list()
+    empirical_SDI_diff = list()
+    surrogate_SDI_diff = list()
     # SDI_PO = list()
 
     for cluster_ in range(number_of_clusters):
+        print(cluster_)
         signal = envelope_signal_bandpassed_bc_corrected[f"{band}"][:, cluster_]
         psd = gft(signal)
 
@@ -215,6 +219,9 @@ def band_wise_SDI(band, normalization):
         empirical_SDIndex_bc, meanSDIndex_bc = signal_to_SDI(
             lf_signal, hf_signal, normalization=normalization
         )
+        # print(np.shape(empirical_SDIndex_bc))
+        empirical_SDI_diff.append(empirical_SDIndex_bc)
+        # np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_new/SDI/empirical_SDIndex_differenced', empirical_SDIndex_differenced = empirical_SDIndex_bc)
 
         ########################################
         # #############Surrogate data#############
@@ -253,44 +260,48 @@ def band_wise_SDI(band, normalization):
         )
         assert np.shape(surrogate_SDIndex_bc) == (n_surrogate, subjects, regions)
 
+        surrogate_SDI_diff.append(surrogate_SDIndex_bc)
+
+        # np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_new/SDI/surrogate_SDI_differenced', surrogate_SDIndex_differenced = surrogate_SDIndex_bc)
+
         ## Comparison between stats and empirical data
-        max_surrogate, min_surrogate = np.max(surrogate_SDIndex_bc, axis=0), np.min(
-            surrogate_SDIndex_bc, axis=0
-        )
+        # max_surrogate, min_surrogate = np.max(surrogate_SDIndex_bc, axis=0), np.min(
+        #     surrogate_SDIndex_bc, axis=0
+        # )
 
-        detection_max = np.sum(empirical_SDIndex_bc > max_surrogate, axis=0)
-        detection_min = np.sum(empirical_SDIndex_bc < min_surrogate, axis=0)
+        # detection_max = np.sum(empirical_SDIndex_bc > max_surrogate, axis=0)
+        # detection_min = np.sum(empirical_SDIndex_bc < min_surrogate, axis=0)
 
-        x = np.arange(1, 101)
-        sf = binom.sf(x, 100, p=0.05)
-        thr = np.min(np.where(sf < 0.05 / 360))
-        thr = np.floor(subjects / 100 * thr) + 1
+        # x = np.arange(1, 101)
+        # sf = binom.sf(x, 100, p=0.05)
+        # thr = np.min(np.where(sf < 0.05 / 360))
+        # thr = np.floor(subjects / 100 * thr) + 1
 
-        significant_max = (detection_max > thr) * 1
-        significant_min = (detection_min > thr) * 1
+        # significant_max = (detection_max > thr) * 1
+        # significant_min = (detection_min > thr) * 1
 
-        idx = np.sort(
-            np.unique(
-                np.hstack(
-                    [np.where(significant_max == 1), np.where(significant_min == 1)]
-                )
-            )
-        )
-        significant_SDI_bc = meanSDIndex_bc[idx]
+        # idx = np.sort(
+        #     np.unique(
+        #         np.hstack(
+        #             [np.where(significant_max == 1), np.where(significant_min == 1)]
+        #         )
+        #     )
+        # )
+        # # significant_SDI_bc = empirical_SDIndex_bc[:, idx]
 
-        final_SDI_bc = np.zeros((360,))
-        final_SDI_bc[idx] = meanSDIndex_bc[idx]
+        # final_SDI_bc = np.zeros((360,))
+        # final_SDI_bc[idx] = empirical_SDIndex_bc[:,idx]
 
-        # final_SDI_baseline[idx_baseline]  = significant_SDI_baseline
-        # final_SDI_post_onset[idx_post_onset]  = significant_SDI_post_onset
+        # # final_SDI_baseline[idx_baseline]  = significant_SDI_baseline
+        # # final_SDI_post_onset[idx_post_onset]  = significant_SDI_post_onset
 
-        # final_SDI_baseline = np.log2(final_SDI_baseline/np.mean(surrogate_SDI_baseline, axis = (0,1)))
-        # final_SDI_post_onset = np.log2(final_SDI_post_onset/np.mean(surrogate_SDI_post_onset, axis = (0,1)))
+        # # final_SDI_baseline = np.log2(final_SDI_baseline/np.mean(surrogate_SDI_baseline, axis = (0,1)))
+        # # final_SDI_post_onset = np.log2(final_SDI_post_onset/np.mean(surrogate_SDI_post_onset, axis = (0,1)))
 
-        SDI_BC.append(final_SDI_bc)
+        # SDI_BC.append(final_SDI_bc)
         # SDI_PO.append(mean_SDI_post_onset)
 
-    return SDI_BC  # , SDI_PO
+    return empirical_SDI_diff, surrogate_SDI_diff  # , SDI_PO
 
 
 # band_wise_SDI('theta')
@@ -298,11 +309,19 @@ def band_wise_SDI(band, normalization):
 # band_wise_SDI('low_beta')
 # band_wise_SDI('high_beta')
 
-normalization_condition = True
+normalization_condition = False
 
-SDI = defaultdict(dict)
+SDI_empi = defaultdict(dict)
+SDI_surrogate = defaultdict(dict)
 for labels, signal in envelope_signal_bandpassed_bc_corrected.items():
-    SDI[f"{labels}"] = band_wise_SDI(f"{labels}", normalization=normalization_condition)
+    SDI_empi[f"{labels}"], SDI_surrogate[f"{labels}"] = band_wise_SDI(f"{labels}", normalization=normalization_condition)
+
+
+
+#%%
+np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_new/SDI/surrogate_SDI_differenced', **SDI_surrogate)
+np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_new/SDI/empirical_SDIndex_differenced', **SDI_empi)
+
 
 
 # %%

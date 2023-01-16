@@ -97,12 +97,12 @@ for i in range(len(thresholds)):
     signal = np.expand_dims(counts[i], axis = 2)
 
     U0_brain = signals_to_img_labels(signal, path_Glasser, mnitemp["mask"])
-    nibabel.nifti1.save(U0_brain,f'/homes/v20subra/S4B2/Graph-related_analysis/OHBM_results/Niftis/{thresholds[i]}')
 
     plot = plotting.plot_img_on_surf(
-        U0_brain, threshold = 1)
+        U0_brain, threshold = 1, vmax = 25)
     counter+=1
-    # plt.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/OHBM_results/decoupled_{i}.png', transparent = True)
+    plt.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/OHBM_results/Round2/strongISC/{i}.png', transparent = True, dpi = 800)
+
 
     plt.show()
 
@@ -423,4 +423,6 @@ sns.heatmap(array_of_interest_binarized[:,0].T, cmap = 'seismic')
 plt.figure(figsize=(25,25))
 sns.heatmap(((np.sum(array_of_interest_binarized, axis = 1) > 4)*1 + (np.sum(array_of_interest_binarized, axis = 1) < -4)*-1).T, cmap='seismic')
 
+# %%
+sdi['theta'].shape
 # %%

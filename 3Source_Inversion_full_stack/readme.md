@@ -1,4 +1,4 @@
-* The `$eLORETA.py` is a full-stack source inversion, which does the following:
+* The `eLORETA_video.py` is a full-stack source inversion, which does the following:
     * Noise Covariance Baseline using subject-specific Resting State eyes-open data
     * Forward Modeling (using Freesurfer & BEM)
     * Inverse Modeling (using eLORETA indeed)

@@ -20,9 +20,12 @@ laplacian = graph_setup.NNgraph("SC")
 total_no_of_events = "30_events"
 number_of_events = 30
 envelope_signal_bandpassed_bc_corrected = np.load(
-    f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{total_no_of_events}/0_percentile_with_zscore_events_wise.npz"
+    f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{total_no_of_events}/envelope_sliced_signal.npz"
 )
-
+# envelope_signal_bandpassed_bc_corrected = np.load(
+#     "/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/0_percentile.npz",
+#     mmap_mode="r",
+# )
 video_duration = 88
 subjects = 25
 regions = 360
@@ -187,6 +190,8 @@ def band_wise_SDI(band):
     bc_SDI = list()
     diff_SDI = list()
     raw_SDImap_differenced = list()
+    raw_SDImap_bl = list()
+    surrogate_baseline_vanilla = list()
 
     for cluster_ in range(number_of_events):
         signal = envelope_signal_bandpassed_bc_corrected[f"{band}"][:, cluster_]
@@ -206,6 +211,7 @@ def band_wise_SDI(band):
             sum_of_freqs = np.trapz(psd_abs_squared_averaged[:i])
             i += 1
         critical_freq = i - 1
+
         ### End of critical freq
 
         # Filters
@@ -226,10 +232,12 @@ def band_wise_SDI(band):
             mean_SDI_post_onset,
         ) = signal_to_SDI(lf_signal, hf_signal)
 
+        print(np.shape(SDI_baseline))
         ########################################
         #############Surrogate data#############
         surrogate_signal = surrogacy(eigevecs, signal)
         surrogate_psd = [gft(surrogate_signal[n]) for n in range(n_surrogate)]
+        
 
         assert np.shape(surrogate_psd) == (
             n_surrogate,
@@ -258,6 +266,7 @@ def band_wise_SDI(band):
             ]
         )
         assert np.shape(surrogate_SDI_baseline) == (n_surrogate, subjects, regions)
+        surrogate_baseline_vanilla.append(surrogate_SDI_baseline)
 
         ## Comparison between stats and empirical data
         max_baseline, min_baseline = np.max(surrogate_SDI_baseline, axis=0), np.min(
@@ -272,11 +281,11 @@ def band_wise_SDI(band):
         raw_SDImap_idx_PO = np.array ((SDI_post_onset > max_post_onset) *1 + (SDI_post_onset < min_post_onset) *1, dtype = bool)
 
 
-        raw_SDImap_bl = SDI_baseline * raw_SDImap_idx_BL
-        raw_SDImap_post_onset = SDI_post_onset * raw_SDImap_idx_PO
+        final_raw_SDImap_bl = SDI_baseline * raw_SDImap_idx_BL
+        final_raw_SDImap_post_onset = SDI_post_onset * raw_SDImap_idx_PO
 
-        final_raw_SDImap_differenced = raw_SDImap_post_onset - raw_SDImap_bl
-        raw_SDImap_differenced.append(final_raw_SDImap_differenced)
+        # final_raw_SDImap_differenced = raw_SDImap_post_onset - raw_SDImap_bl
+        raw_SDImap_bl.append(SDI_baseline)
 
         detection_max_baseline = np.sum(SDI_baseline > max_baseline, axis=0)
         detection_min_baseline = np.sum(SDI_baseline < min_baseline, axis=0)
@@ -318,7 +327,8 @@ def band_wise_SDI(band):
 
         significant_SDI_baseline = mean_SDI_baseline[idx_baseline]
         significant_SDI_post_onset = mean_SDI_post_onset[idx_post_onset]
-        # print(np.shape(significant_SDI_baseline))
+        
+        
         final_SDI_baseline = np.ones((360,))
         final_SDI_post_onset = np.ones((360,))
 
@@ -344,7 +354,7 @@ def band_wise_SDI(band):
         bc_SDI.append(bc_SDI_values)
         diff_SDI.append(diff_SDI_values)
 
-    return SDI_BL, SDI_PO, bc_SDI, diff_SDI, raw_SDImap_differenced
+    return raw_SDImap_bl, surrogate_baseline_vanilla #SDI_BL, SDI_PO, bc_SDI, diff_SDI, 
 
 
 # band_wise_SDI('theta')
@@ -355,14 +365,18 @@ def band_wise_SDI(band):
 SDI = defaultdict(dict)
 BC = defaultdict(dict)
 differenced = defaultdict(dict)
-raw_SDImap_differenced = defaultdict(dict)
+raw_SDImap_baseline = defaultdict(dict)
+surrogate_baseline = defaultdict(dict)
 
 for labels, signal in envelope_signal_bandpassed_bc_corrected.items():
-    index_bl, index_po, bc_index, diff_index, raw_SDImap_differenced_index = band_wise_SDI(f"{labels}")
-    SDI[f"{labels}"] = index_bl, index_po
-    BC[f"{labels}"] = bc_index
-    differenced[f"{labels}"] = diff_index
-    raw_SDImap_differenced[f"{labels}"] = raw_SDImap_differenced_index
+    # index_bl, index_po, bc_index, diff_index, raw_SDImap_bl = band_wise_SDI(f"{labels}")
+    raw_SDImap_bl, surrogate_bl = band_wise_SDI(f"{labels}")
+    # SDI[f"{labels}"] = index_bl, index_po
+    # BC[f"{labels}"] = bc_index
+    # differenced[f"{labels}"] = diff_index
+    # raw_SDImap_baseline[f"{labels}"] = raw_SDImap_bl
+    raw_SDImap_baseline[f"{labels}"] = raw_SDImap_bl
+    surrogate_baseline[f"{labels}"] = surrogate_bl
 
 counter = 0
 dic_order = defaultdict(dict)
@@ -398,8 +412,10 @@ differenced_f =  cluster_averaging(differenced, is_SDI = False)
 BC_f =  cluster_averaging(BC, is_SDI = False)
 SDI_f =  cluster_averaging(SDI, is_SDI = True)
 
+#%%
 
-np.savez_compressed(f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/SDI/{total_no_of_events}", **raw_SDImap_differenced)
+np.savez_compressed(f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/SDI/SDI_baseline_vanilla", **raw_SDImap_baseline)
+np.savez_compressed(f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/SDI/surrogate_SDI_baseline_vanilla", **surrogate_baseline)
 
 #%%
 import matplotlib
@@ -490,7 +506,5 @@ for labels, band in envelope_signal_bandpassed_bc_corrected.items():
 # %%
 
 
-np.shape(SDI['alpha'])
-# %%
-
+np.shape(surrogate_baseline['theta'])
 # %%

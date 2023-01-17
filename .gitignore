@@ -122,3 +122,7 @@ Graph-related_analysis/SDI_results
 Graph-related_analysis/SDIvsCorticalSignal
 
 Graph-related_analysis/OHBM_results
+S4B2/Graph-related_analysis/graph_bootstrapping.py
+S4B2/Graph-related_analysis/graph_power.py
+S4B2/Graph-related_analysis/graph_testbed.py
+S4B2/Graph-related_analysis/4_in_one_plot.py

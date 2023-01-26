@@ -99,9 +99,9 @@ for i in range(len(thresholds)):
     U0_brain = signals_to_img_labels(signal, path_Glasser, mnitemp["mask"])
 
     plot = plotting.plot_img_on_surf(
-        U0_brain, threshold = 1, vmax = 25)
+        U0_brain, threshold = 1, title ='PO')
     counter+=1
-    plt.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/OHBM_results/Round2/strongISC/{i}.png', transparent = True, dpi = 800)
+    # plt.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/OHBM_results/Round2/strongISC/{i}.png', transparent = True, dpi = 800)
 
 
     plt.show()
@@ -424,5 +424,5 @@ plt.figure(figsize=(25,25))
 sns.heatmap(((np.sum(array_of_interest_binarized, axis = 1) > 4)*1 + (np.sum(array_of_interest_binarized, axis = 1) < -4)*-1).T, cmap='seismic')
 
 # %%
-sdi['theta'].shape
+np.argmax(signal_f)
 # %%

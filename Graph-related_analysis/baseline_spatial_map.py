@@ -167,9 +167,9 @@ total_no_of_events = '30_events'
 counts = list()
 thresholds = [1, 3, 5, 7, 9, 11]
 for thr in thresholds:
-    signal = np.sum( (np.array(SDI_f)<0) *1, axis = (0))
+    signal = np.sum( (np.array(SDI_f)>0) *1, axis = (0))
 
-    signal_f = np.expand_dims(np.sum(1 * (signal > thr), axis=0), axis=0) * -1
+    signal_f = np.expand_dims(np.sum(1 * (signal > thr), axis=0), axis=0)
     counts.append(signal_f)
 
 
@@ -200,17 +200,11 @@ for i in range(len(thresholds)):
     # nibabel.nifti1.save(U0_brain,f'/homes/v20subra/S4B2/Graph-related_analysis/OHBM_results/Niftis/{thresholds[i]}')
 
     plot = plotting.plot_img_on_surf(
-        U0_brain, threshold = 1)
+        U0_brain, threshold = 1, title = 'baseline')
     counter+=1
     # plt.savefig(f'/homes/v20subra/S4B2/Graph-related_analysis/OHBM_results/Round2/baseline/{i}.png', transparent = True, dpi=800)
 
     plt.show()
-
-
-# %%
-stage1 = np.sum((np.array(SDI_f)>0)*1, axis = 0)
-
-np.sum( ((stage1>5)*1), axis= 0)
 
 
 # %%

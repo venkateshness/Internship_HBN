@@ -2,11 +2,9 @@
 from math import degrees
 from cv2 import Laplacian
 from scipy import io as sio
-from pygsp import graphs
 import pickle
 import numpy as np
 import scipy
-import torch
 import networkx as nx
 
 
@@ -57,12 +55,42 @@ def NNgraph(graph_type, connectivity_matrix=None):
 
 #%%
 # _, adjacency_FC = NNgraph()
-# NNgraph('SC')
-# # from scipy import stats
-# # from nilearn.plotting import plot_matrix
+laplacian =NNgraph('SC')
+import scipy.linalg as la
+
+[eigvals, eigevecs] = la.eigh(laplacian)
+# # # from scipy import stats
+# import matplotlib.pyplot as plt
+# plt.figure(figsize=(25,25))
+# plt.imshow(adjacency, cmap='gray')
+
 # # plot_matrix(np.corrcoef(, np.random.rand(25,25)))
 
 # from scipy import stats
 # from nilearn.plotting import plot_matrix
 # plot_matrix(np.corrcoef( adjacency_FC, adjacency_SC))
 # # %%
+
+import matplotlib
+from nilearn.regions import signals_to_img_labels
+from nilearn.datasets import fetch_icbm152_2009
+from nilearn import image, plotting
+import matplotlib.pyplot as plt
+
+
+path_Glasser = "/homes/v20subra/S4B2/GSP/Glasser_masker.nii.gz"
+
+mnitemp = fetch_icbm152_2009()
+mask_mni = image.load_img(mnitemp["mask"])
+glasser_atlas = image.load_img(path_Glasser)
+
+signal = np.expand_dims(eigevecs[:,1], axis=0)  # add dimension 1 to signal array
+
+U0_brain = signals_to_img_labels(signal, path_Glasser, mnitemp["mask"])
+
+plotting.plot_img_on_surf(
+U0_brain,
+colorbar=True, views = ['lateral'], cmap='cold_hot', threshold=0.01)# %%
+# plt.savefig('eig_lf.png', transparent=True)
+
+# %%

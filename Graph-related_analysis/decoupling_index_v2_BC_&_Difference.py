@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from pkg_resources import to_filename
 from scipy.fftpack import shift
 from sklearn import cluster
-from torch import eig
 
 os.chdir("/homes/v20subra/S4B2/")
 from scipy.stats import binom
@@ -17,7 +16,7 @@ importlib.reload(graph_setup)
 from collections import defaultdict
 import scipy.linalg as la
 
-laplacian = graph_setup.NNgraph("FC")
+laplacian = graph_setup.NNgraph("SC")
 [eigvals, eigevecs] = la.eigh(laplacian)
 
 total_no_of_events = "30_events"
@@ -179,7 +178,15 @@ def signal_to_SDI(lf_signal, hf_signal, normalization=False):  # no change
 
 def band_wise_SDI(band, normalization):
     # GFT
-    SDI_BC = list()
+    SDI_BL = list()
+    surrogate_SDI_BL = list()
+
+    SDI_PO = list()
+    surrogate_SDI_PO = list()
+
+    SDI_PO_diff_BL = list()
+    surrogate_SDI_PO_diff_BL = list()
+
     empirical_SDI_diff = list()
     surrogate_SDI_diff = list()
     # SDI_PO = list()

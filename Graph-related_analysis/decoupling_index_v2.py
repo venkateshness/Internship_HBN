@@ -22,6 +22,8 @@ number_of_events = 30
 envelope_signal_bandpassed_bc_corrected = np.load(
     f"/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/bc_and_thresholded_signal/{total_no_of_events}/envelope_sliced_signal.npz"
 )
+
+
 # envelope_signal_bandpassed_bc_corrected = np.load(
 #     "/users2/local/Venkatesh/Generated_Data/25_subjects_new/eloreta_cortical_signal_thresholded/0_percentile.npz",
 #     mmap_mode="r",
@@ -232,7 +234,6 @@ def band_wise_SDI(band):
             mean_SDI_post_onset,
         ) = signal_to_SDI(lf_signal, hf_signal)
 
-        print(np.shape(SDI_baseline))
         ########################################
         #############Surrogate data#############
         surrogate_signal = surrogacy(eigevecs, signal)

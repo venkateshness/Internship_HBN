@@ -3,10 +3,8 @@
 from asyncio import events
 from curses.ascii import ETB
 from unicodedata import name
-from graphql import Source
 import mne
 import pathlib
-from mne.externals.pymatreader import read_mat
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -16,6 +14,8 @@ from mpl_toolkits.mplot3d import axes3d
 
 from mne.minimum_norm import read_inverse_operator
 import os
+
+from sklearn import cluster
 os.chdir('/homes/v20subra/S4B2/')
 from Modular_Scripts import inverse
 from mne.datasets import sample
@@ -141,14 +141,14 @@ vals = list()
 from Modular_Scripts import epochs_slicing,inverse
 vals = dict()
 
-for i in range(len(data_present)):
+for i in range(len(subject_list)):
 
     raw_video,events_video = mne.io.read_raw_fif(f'/users2/local/Venkatesh/Generated_Data/importing/video-watching/{data_present[i]}/raw.fif'),np.load(f'/users2/local/Venkatesh/Generated_Data/importing/video-watching/{data_present[i]}/events.npz')['video_watching_events']
     epochs = epochs_slicing.epochs(raw_video,events_video,[83,103,9999], tmin=0, tmax=170, fs = 500, epochs_to_slice='83')
     info_d = mne.create_info(raw_video.info['ch_names'],sfreq=125,ch_types = 'eeg')
     ep = mne.EpochsArray(epochs,mne.create_info(raw_video.info['ch_names'],sfreq=500,ch_types = 'eeg')).resample(125)
     raw = mne.io.RawArray(ep.get_data().reshape(91,21250),info_d)
-    
+
    
     
     if i==0:
@@ -183,6 +183,33 @@ for i in range(len(data_present)):
 # np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_copy_FOR_TESTING/video_watching_bundle_STC_parcellated',video_watching_bundle_STC_parcellated =video_watching_bundle_STC)
 video_watching_bundle_STC = np.load('/users2/local/Venkatesh/Generated_Data/25_subjects_new/video_watching_bundle_STC_parcellated.npz')['video_watching_bundle_STC_parcellated']
 # %%
+
+
+fs = 125
+_200ms_in_samples = 25
+_300ms_in_samples = 38
+
+event_type = "30_events"
+total_events = 19
+
+clusters = np.load(
+    f"/homes/v20subra/S4B2/AutoAnnotation/dict_of_clustered_events_{event_type}.npz"
+)
+high_isc = list()
+for i,j in clusters.items():
+    high_isc.append(j)
+
+high_isc = sorted(np.hstack(high_isc))
+
+
+
+def slicing(stc):
+    for time in high_isc:
+        sliced = stc[time * fs - _200ms_in_samples : time * fs + _300ms_in_samples ]
+
+
+
+
 # %%
 #index_roi = [37,38,39,217,218,219]
 
@@ -388,3 +415,4 @@ np.savez_compressed('/users2/local/Venkatesh/Generated_Data/25_subjects_new/enve
 ####################################
 np.load('/users/local/Venkatesh/Generated_Data/25_subjects_new/envelope_signal_bandpassed_low_high_beta.npz', mmap_mode='r')
 
+#%%

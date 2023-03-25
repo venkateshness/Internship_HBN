@@ -144,3 +144,10 @@ Graph-related_analysis/PLI_graph.py
 Graph-related_analysis/individual_graph_setup.py
 Graph-related_analysis/analysis_clustered_events_activity.py
 Graph-related_analysis/analysis_clustered_events_graph.py
+Graph-related_analysis/2nd_level_maps
+Graph-related_analysis/2nd_level_maps_thresholded_at_0.05
+Graph-related_analysis/Decoding_results
+Graph-related_analysis/averaged_activity.npz
+Graph-related_analysis/cluster_results.npz
+Results_paper
+Graph-related_analysis/stat_significant_activity.npz

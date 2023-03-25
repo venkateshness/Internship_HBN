@@ -8,5 +8,5 @@
     * Hilbert transform on the bands
 
 * The `.ISC_&_noise-floor.py` does the following:
-    * Inter-Subject Correlation of cortical activity using estimated using Correlated Components Analysis (CCA) which was introduced by JP. Dmochowski et al. 2012
+    * Inter-Subject Correlation of cortical activity using estimated using Correlated Components Analysis (CorrCA) which was introduced by JP. Dmochowski et al. 2012
     * Stats -- Null distribution

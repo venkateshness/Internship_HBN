@@ -9,4 +9,4 @@
 * Quantifying Structure-Function relationship using a Graph-Signal Processing (GSP) measure called Structure-Function Decoupling (SDI) introduced in https://doi.org/10.1038/s41467-019-12765-7
 
 
-
+The folders above are ordered sequentially needed for the analysis: Downloading the dataset from AWS -> Loading and preprocessing -> EEG source localization -> Analysis on Graph space.
